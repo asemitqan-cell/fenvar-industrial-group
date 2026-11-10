@@ -187,6 +187,9 @@ $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();msg('loginMessage','Signing in…');
  try{
   const fd=new FormData(e.target);
+  // Remove a previously persisted browser session so an incorrect new password cannot appear to succeed.
+  const clearResult=await db.auth.signOut({scope:'local'});
+  if(clearResult.error){msg('loginMessage','Could not clear the previous browser session: '+clearResult.error.message);return}
   const result=await db.auth.signInWithPassword({email:fd.get('email'),password:fd.get('password')});
   if(result.error){msg('loginMessage','Sign-in failed: '+result.error.message);return}
   if(!result.data?.session){msg('loginMessage','Sign-in returned no active session. Please try again.');return}
