@@ -33,3 +33,5 @@
 .floating-contact.phone{background:linear-gradient(120deg,#b78335,#e8c987);color:#111;border-color:#e8c987}
 .footer-links a{width:42px;height:42px;padding:8px;justify-content:center;border-radius:50%}
 @media(max-width:720px){.top-socials{gap:6px}.top-socials a{width:30px;height:30px}.floating-contacts{right:12px;bottom:82px}.floating-contact{width:46px;height:46px}.nav-actions{gap:8px}}
+
+.footer-phone{font-size:12px;color:#e8c987;white-space:nowrap}.footer-phone:hover{text-decoration:underline}
