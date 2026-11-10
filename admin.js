@@ -145,7 +145,7 @@ async function renderView(view){
    {key:'description',label:'Research notes',render:r=>'<span title="'+esc(r.description)+'">'+esc(r.description||'—')+'</span>'},
    {key:'verification_status',label:'Verification',render:r=>'<select class="inline-select opportunity-verify" data-id="'+r.id+'">'+['unverified','needs_review','verified','rejected'].map(s=>'<option '+(r.verification_status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
    {key:'status',label:'Pipeline',render:r=>'<select class="inline-select opportunity-status" data-id="'+r.id+'">'+['new','qualified','supplier_search','quoting','offer_pending_approval','offered','won','lost','rejected','archived'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
-   {key:'source_url',label:'Source',render:r=>/^https?:\\/\\//i.test(r.source_url||'')?'<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener noreferrer">Open source ↗</a>':'—'}
+    {key:'source_url',label:'Source',render:r=>/^https?:\/\//i.test(r.source_url||'')?'<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener noreferrer">Open source ↗</a>':'—'}
   ],data,r=>'<button class="small-action log-contact" data-id="'+r.id+'">Log communication</button>');
   const comms=await db.from('broker_communications').select('id,opportunity_id,direction,party_type,channel,recipient,subject,body,created_at').order('created_at',{ascending:false}).limit(100);
   if(comms.error)throw comms.error;
