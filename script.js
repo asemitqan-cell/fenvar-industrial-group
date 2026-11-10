@@ -21,3 +21,4 @@ function renderDirectContacts(){
 }
 
 renderDirectContacts();
+document.querySelectorAll('[data-interest]').forEach(a=>a.addEventListener('click',()=>{const sel=form.querySelector('select[name="interest"]');if(sel)sel.value=a.dataset.interest}));
