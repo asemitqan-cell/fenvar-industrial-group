@@ -1,24 +1,38 @@
-const FENVAR_CONTACT={phone:'+201040930136',whatsapp:'201040930136',email:'',facebook:'https://www.facebook.com/share/1HWi25qadk/',linkedin:''};
-const langToggle=document.getElementById('langToggle');const menuToggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');let language='en';function setLanguage(next){language=next;document.documentElement.lang=next;document.body.classList.toggle('ar',next==='ar');document.querySelectorAll('[data-en][data-ar]').forEach(el=>{el.innerHTML=el.dataset[next]});document.querySelectorAll('[data-placeholder-en]').forEach(el=>{el.placeholder=el.dataset[next==='en'?'placeholderEn':'placeholderAr']});document.querySelectorAll('option[data-en][data-ar]').forEach(el=>{el.textContent=el.dataset[next]});langToggle.textContent=next==='en'?'عربي':'English';if(typeof renderDirectContacts==='function')renderDirectContacts()}langToggle.addEventListener('click',()=>setLanguage(language==='en'?'ar':'en'));menuToggle.addEventListener('click',()=>{const open=nav.classList.toggle('open');menuToggle.setAttribute('aria-expanded',String(open))});nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));document.getElementById('year').textContent=new Date().getFullYear();
-const form=document.getElementById('quoteForm');const formMessage=document.getElementById('formMessage');form.addEventListener('submit',async e=>{e.preventDefault();const button=form.querySelector('button[type="submit"]');button.disabled=true;button.textContent=language==='en'?'Sending…':'جارٍ الإرسال…';formMessage.textContent='';const data=Object.fromEntries(new FormData(form).entries());try{const response=await fetch('https://zxeykzxoxylfsdnaimwk.supabase.co/functions/v1/fenvar-website-inquiry',{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_5i-jel2xo4kqyHz707aWsA_RTaJuZzx'},body:JSON.stringify(data)});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||(language==='en'?'Could not send your inquiry.':'تعذر إرسال طلبك.'));formMessage.textContent=language==='en'?'Thank you. Your inquiry has been received.':'شكرًا لك. تم استلام طلبك بنجاح.';form.reset()}catch(err){formMessage.textContent=err.message|| (language==='en'?'Connection error. Please try again.':'حدث خطأ في الاتصال. حاول مرة أخرى.')}finally{button.disabled=false;button.textContent=language==='en'?'Send Inquiry ↗':'إرسال الطلب ↗'}});
-function renderDirectContacts(){
- const links=document.getElementById('directContactLinks');
- const socials=document.getElementById('footerSocials');
- const phone=FENVAR_CONTACT.phone||'';
- const digits=String(FENVAR_CONTACT.whatsapp||phone).replace(/[^0-9]/g,'');
- const phoneHref='tel:'+phone.replace(/[^+0-9]/g,'');
- const waHref='https://wa.me/'+digits;
- const icon=(name)=>name==='whatsapp'?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 2 17.7L.5 23.5l6-1.6A11.8 11.8 0 1 0 20.5 3.5ZM12 21a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.5.9.9-3.4-.2-.4A9.8 9.8 0 1 1 12 21Zm5.4-7.3c-.3-.2-1.7-.9-2-.9s-.5-.2-.7.2-.8.9-1 1.1-.4.2-.7.1a8 8 0 0 1-2.3-1.4 8.7 8.7 0 0 1-1.6-2c-.2-.3 0-.5.2-.7l.5-.6.2-.5-.1-.5c-.1-.2-.7-1.7-1-2.3-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4 1 2.8 1.2 3 .2.4.4.7a11.3 11.3 0 0 0 4.4 3.9c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.7-.7 2-1.4s.3-1.3.2-1.4-.2-.2-.5-.4Z"/></svg>':name==='facebook'?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.3-1.5 1.6-1.5h1.7V3.7c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2H7.3V13h2.8v8h3.4Z"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.4.6 3.7.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.7 21 3 13.3 3 3.8c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.7.1.4 0 .8-.3 1.1l-2.1 2.2Z"/></svg>';
- const contactItems=[];
- if(digits)contactItems.push({label:'WhatsApp',href:waHref,icon:'whatsapp',external:true});
- if(phone)contactItems.push({label:language==='en'?'Call +20 104 093 0136':'اتصل 01040930136',href:phoneHref,icon:'phone'});
- if(FENVAR_CONTACT.facebook)contactItems.push({label:'Facebook',href:FENVAR_CONTACT.facebook,icon:'facebook',external:true});
- if(FENVAR_CONTACT.email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(FENVAR_CONTACT.email))contactItems.push({label:'Email',href:'mailto:'+FENVAR_CONTACT.email,icon:'email'});
- if(links)links.innerHTML=contactItems.map(x=>'<a href="'+x.href+'" '+(x.external?'target="_blank" rel="noopener noreferrer"':'')+'><span class="contact-icon">'+icon(x.icon)+'</span>'+x.label+'</a>').join('');
- if(socials)socials.innerHTML=contactItems.map(x=>'<a href="'+x.href+'" aria-label="'+x.label+'" title="'+x.label+'" '+(x.external?'target="_blank" rel="noopener noreferrer"':'')+'><span class="contact-icon">'+icon(x.icon)+'</span></a>').join('');
- const dock=document.getElementById('floatingContacts');
- if(dock)dock.innerHTML=contactItems.filter(x=>['WhatsApp','Facebook'].includes(x.label)||x.icon==='phone').map(x=>'<a class="floating-contact '+x.icon+'" href="'+x.href+'" aria-label="'+x.label+'" title="'+x.label+'" '+(x.external?'target="_blank" rel="noopener noreferrer"':'')+'>'+icon(x.icon)+'</a>').join('');
-}
-
-renderDirectContacts();
-document.querySelectorAll('[data-interest]').forEach(a=>a.addEventListener('click',()=>{const sel=form.querySelector('select[name="interest"]');if(sel)sel.value=a.dataset.interest}));
+const SB_URL='https://zxeykzxoxylfsdnaimwk.supabase.co',SB_KEY='sb_publishable_5i-jel2xo4kqyHz707aWsA_RTaJuZzx';
+const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+const CATS=[['all','All','الكل'],['furniture','Furniture','موبيليا'],['upvc','UPVC','UPVC'],['glass','Glass','زجاج'],['services','Services','خدمات'],['consulting','Consulting','استشارات']];
+const ITEMS=[['furniture','Bedrooms','أوض نوم','Product','منتج','🛏️','#6366F1'],['furniture','Dining rooms','أوض سفرة','Product','منتج','🍽️','#8B5CF6'],['furniture','Living rooms','أوض معيشة','Product','منتج','🛋️','#0EA5E9'],['upvc','UPVC windows','شبابيك UPVC','Product','منتج','🪟','#4338CA'],['upvc','UPVC doors','أبواب UPVC','Product','منتج','🚪','#7C3AED'],['upvc','Shutters','شتر','Product','منتج','▤','#0891B2'],['upvc','UPVC profiles','قطاعات UPVC','Product','منتج','▦','#4F46E5'],['glass','Tempered glass','زجاج سيكوريت','Product','منتج','◫','#10B981'],['services','Measurement & installation','معاينة وتركيب','Service','خدمة','📐','#F59E0B'],['services','Interior design','تصميم داخلي','Service','خدمة','✏️','#EC4899'],['consulting','Project consulting','استشارة مشروع','Consulting','استشارة','💡','#14B8A6'],['consulting','Material selection','اختيار الخامات','Consulting','استشارة','🧭','#06B6D4']];
+let lang=(navigator.language||'en').startsWith('ar')?'ar':'en',cat='all',user=null,authMode='in',pending=null;
+const $=s=>document.querySelector(s),L=(en,ar)=>lang==='ar'?ar:en;
+function applyLang(){document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.body.classList.toggle('ar',lang==='ar');$('#langBtn').textContent=lang==='ar'?'English':'عربي';
+document.querySelectorAll('[data-en]').forEach(e=>e.textContent=e.dataset[lang]);$('#q').placeholder=$('#q').dataset['ph'+(lang==='ar'?'Ar':'En')]||$('#q').placeholder;$('#q').placeholder=lang==='ar'?$('#q').getAttribute('data-ph-ar'):$('#q').getAttribute('data-ph-en');renderChips();render();authUI();authTexts()}
+function renderChips(){$('#chips').innerHTML=CATS.map(c=>`<button class="${c[0]===cat?'on':''}" data-c="${c[0]}">${L(c[1],c[2])}</button>`).join('')}
+function render(){const t=$('#q').value.trim().toLowerCase();const list=ITEMS.filter(i=>(cat==='all'||i[0]===cat)&&(!t||(i[1]+i[2]+i[3]+i[4]).toLowerCase().includes(t)));
+$('#grid').innerHTML=list.map(i=>`<article class="card"><div class="thumb" style="background:linear-gradient(135deg,${i[6]},#0E1530aa)">${i[5]}</div><div class="cb"><span class="kind">${L(i[3],i[4])}</span><h3>${L(i[1],i[2])}</h3><button class="btn" data-item="${i[1]}">${L('Request','اطلب')}</button></div></article>`).join('');$('#empty').hidden=list.length>0}
+function authUI(){const b=$('#authBtn');b.textContent=user?L('Sign out','خروج'):L('Sign in','دخول');$('#barAuth').textContent=user?L('Sign out','خروج'):L('Account','حسابي')}
+function authTexts(){const up=authMode==='up';$('#authTitle').textContent=up?L('Create account','إنشاء حساب'):L('Sign in','تسجيل الدخول');$('#authSubmit').textContent=up?L('Sign up','سجّل'):L('Sign in','دخول');$('#authSwitch').textContent=up?L('Have an account? Sign in','عندك حساب؟ ادخل'):L('New here? Create an account','جديد؟ اعمل حساب')}
+const open=id=>{$(id).hidden=false},close=()=>document.querySelectorAll('.modal').forEach(m=>m.hidden=true);
+function requestItem(name){if(!user){pending=name;authMode='up';authTexts();$('#authMsg').textContent=L('Please sign up or sign in first to send a request.','سجّل أو ادخل الأول عشان تبعت طلب.');open('#authModal');return}
+$('#reqItem').textContent=name;$('#reqForm').dataset.item=name;$('#reqMsg').textContent='';open('#reqModal')}
+document.addEventListener('click',e=>{const c=e.target.closest('[data-c]');if(c){cat=c.dataset.c;renderChips();render();return}
+const r=e.target.closest('[data-item]');if(r){requestItem(r.dataset.item);return}
+if(e.target.matches('[data-close]')||e.target.classList.contains('modal'))close()});
+$('#q').addEventListener('input',render);$('#langBtn').onclick=()=>{lang=lang==='ar'?'en':'ar';applyLang()};
+$('#barSearch').onclick=()=>{window.scrollTo({top:0,behavior:'smooth'});$('#q').focus()};
+async function authBtn(){if(user){await sb.auth.signOut();return}authMode='in';authTexts();$('#authMsg').textContent='';open('#authModal')}
+$('#authBtn').onclick=authBtn;$('#barAuth').onclick=authBtn;$('#authSwitch').onclick=()=>{authMode=authMode==='in'?'up':'in';authTexts();$('#authMsg').textContent=''};
+$('#authForm').addEventListener('submit',async e=>{e.preventDefault();const m=$('#authMsg');m.className='msg';m.textContent='…';if(!sb){m.textContent=L('Connection error','مشكلة في الاتصال');return}
+const f=new FormData(e.target),email=f.get('email'),password=f.get('password');
+const r=authMode==='up'?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
+if(r.error){m.textContent=r.error.message;return}
+if(authMode==='up'&&!r.data.session){m.className='msg ok';m.textContent=L('Check your email to confirm your account, then sign in.','افتح إيميلك وأكّد الحساب، وبعدين ادخل.');return}
+close();e.target.reset()});
+$('#reqForm').addEventListener('submit',async e=>{e.preventDefault();const m=$('#reqMsg');m.className='msg';m.textContent='…';const d=Object.fromEntries(new FormData(e.target).entries());
+d.email=user.email;d.interest=e.target.dataset.item;
+try{const r=await fetch(SB_URL+'/functions/v1/fenvar-website-inquiry',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify(d)});if(!r.ok)throw 0;m.className='msg ok';m.textContent=L('Sent. We will contact you soon.','اتبعت. هنكلمك قريب.');e.target.reset();setTimeout(close,1600)}catch(_){m.textContent=L('Could not send. Try again.','مقدرناش نبعت. جرّب تاني.')}});
+if(sb){sb.auth.getSession().then(({data})=>{user=data.session?.user||null;authUI()});sb.auth.onAuthStateChange((_,s)=>{const was=user;user=s?.user||null;authUI();if(user&&!was&&pending){const p=pending;pending=null;setTimeout(()=>requestItem(p),300)}})}
+let dp;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;$('#installBtn').hidden=false});
+$('#installBtn').onclick=async()=>{if(dp){dp.prompt();dp=null;$('#installBtn').hidden=true}};
+if(/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone){$('#installBtn').hidden=false;$('#installBtn').onclick=()=>alert(L('Tap Share, then Add to Home Screen.','دوس على Share وبعدين Add to Home Screen.'))}
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+applyLang();
