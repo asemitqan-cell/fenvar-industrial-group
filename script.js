@@ -8,7 +8,7 @@ function renderDirectContacts(){
  const items=[];
  const phone=String(FENVAR_CONTACT.whatsapp||'').replace(/[^0-9]/g,'');
  if(phone)items.push({label:'WhatsApp',href:'https://wa.me/'+phone,icon:'◉'});
- if(FENVAR_CONTACT.email&&/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(FENVAR_CONTACT.email))items.push({label:'Email',href:'mailto:'+FENVAR_CONTACT.email,icon:'✉'});
+ if(FENVAR_CONTACT.email&&/^[^\s@]+@[^\s@]+\\.[^\s@]+$/.test(FENVAR_CONTACT.email))items.push({label:'Email',href:'mailto:'+FENVAR_CONTACT.email,icon:'✉'});
  links.innerHTML=items.length?items.map(x=>'<a href="'+x.href+'" '+(x.label==='WhatsApp'?'target="_blank" rel="noopener noreferrer"':'')+'><span>'+x.icon+'</span>'+x.label+'</a>').join(''):'<span class="contact-pending">'+(language==='en'?'WhatsApp and email details will be published here.':'ستظهر بيانات واتساب والبريد الإلكتروني هنا بعد تأكيدها.')+'</span>';
  const social=[];
  if(FENVAR_CONTACT.facebook)social.push(['Facebook',FENVAR_CONTACT.facebook]);
