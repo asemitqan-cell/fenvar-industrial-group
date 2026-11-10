@@ -16,3 +16,20 @@
 .quote-form{box-shadow:0 18px 55px #0005}.quote-form input:focus,.quote-form select:focus,.quote-form textarea:focus{outline:1px solid var(--gold);border-color:var(--gold)}
 .form-message{min-height:20px}
 @media(max-width:720px){.hero:after{right:5vw;top:13%;width:36vw;height:70%}.floating-quote{right:12px;bottom:12px;padding:11px 13px}.footer{align-items:flex-start}.footer-links{width:100%}}
+
+/* Contact shortcuts */
+.contact-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:0 0 22px}
+.contact-icon svg{width:21px;height:21px;fill:currentColor}
+.top-socials{display:flex;align-items:center;gap:10px}
+.top-socials a{display:grid;place-items:center;width:34px;height:34px;border:1px solid #555;border-radius:50%;color:#e8c987;transition:.2s}
+.top-socials a:hover{background:#e8c987;color:#111;border-color:#e8c987}
+.top-socials .contact-icon svg{width:17px;height:17px}
+.floating-contacts{position:fixed;z-index:30;right:20px;bottom:92px;display:flex;flex-direction:column;gap:11px}
+.floating-contact{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:#fff;background:#151515;border:1px solid #777;box-shadow:0 5px 22px #0009;transition:transform .2s,filter .2s}
+.floating-contact:hover{transform:translateY(-3px);filter:brightness(1.2)}
+.floating-contact .contact-icon svg{width:24px;height:24px}
+.floating-contact.whatsapp{background:#168b54;border-color:#168b54}
+.floating-contact.facebook{background:#1877f2;border-color:#1877f2}
+.floating-contact.phone{background:linear-gradient(120deg,#b78335,#e8c987);color:#111;border-color:#e8c987}
+.footer-links a{width:42px;height:42px;padding:8px;justify-content:center;border-radius:50%}
+@media(max-width:720px){.top-socials{gap:6px}.top-socials a{width:30px;height:30px}.floating-contacts{right:12px;bottom:82px}.floating-contact{width:46px;height:46px}.nav-actions{gap:8px}}
