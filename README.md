@@ -1,52 +1,46 @@
 # FENVAR INDUSTRIAL GROUP
 
-Bilingual English/Arabic public website and private operations dashboard for FENVAR Industrial Group.
+Standalone bilingual (English / Arabic) public website and private export-sales workspace for FENVAR Industrial Group.
 
 ## Public website
 
-- GitHub Pages: https://asemitqan-cell.github.io/fenvar-industrial-group/
+- Live: https://asemitqan-cell.github.io/fenvar-industrial-group/
 - Main files: `index.html`, `styles.css`, `script.js`
-- Responsive dark / silver / gold brand presentation.
-- English/Arabic language switch.
-- Quote request form posts to the Supabase Edge Function:
+- Responsive black / silver / gold industrial brand presentation.
+- English / Arabic language switch.
+- Quote request form submits to the Supabase Edge Function:
   `https://zxeykzxoxylfsdnaimwk.supabase.co/functions/v1/fenvar-website-inquiry`
 
-## Backend
+## Private control center
 
-- Supabase project: `FENVAR` (`zxeykzxoxylfsdnaimwk`)
-- Edge Function: `fenvar-website-inquiry` (active; JWT verification disabled because it is a public website form; the function validates origin and fields, then inserts a lead using the server-side service-role secret).
-- Leads are stored in `public.leads` and associated with the FENVAR company record.
-- The service-role secret must remain configured only in Supabase Function Secrets. Never place it in this repository or browser code.
-
-## Private admin dashboard
-
-- URL: https://asemitqan-cell.github.io/fenvar-industrial-group/admin.html
+- Admin: https://asemitqan-cell.github.io/fenvar-industrial-group/admin.html
 - Files: `admin.html`, `admin.css`, `admin.js`
 - Uses Supabase Auth and the publishable key in the browser.
-- Dashboard access requires an authenticated, active FENVAR profile with the `owner` or `admin` role and the FENVAR company ID.
-- **Owner account provisioning is not complete yet.** The FENVAR Auth project currently has no users/profiles, so the dashboard login cannot be used until the owner account is securely created and linked to the FENVAR company.
+- Access requires an authenticated, active FENVAR profile with `owner` or `admin` role and the FENVAR company ID.
+- Current modules:
+  - Overview metrics and recent leads.
+  - Lead management: create leads, update pipeline status, and set follow-up dates.
+  - Customer directory: add buyers, distributors, manufacturers and other business contacts.
+  - Market opportunities: register global buyers, product requirements, source URLs, verification state and pipeline status.
+  - Customer offers: view quotations and approval states.
 
-## n8n automation
+## Backend and data separation
 
-A workflow shell exists in the n8n account:
-`FENVAR | Weekly Global Buyer Intelligence`
+- Dedicated Supabase project: `FENVAR` (`zxeykzxoxylfsdnaimwk`).
+- Company ID: `910c5fe2-1add-4c9c-9f3c-4434bd43bc6a`.
+- Website function: `fenvar-website-inquiry` (active; public form validates origin and fields, then inserts leads using a server-side service-role secret).
+- Leads, customers, opportunities and offers are stored in the FENVAR project.
+- Row Level Security is enabled on the application tables. Owner/admin policies scope operational records to the authenticated FENVAR company.
+- The service-role secret must remain only in Supabase Function Secrets. Never put it in this repository or browser code.
 
-Current verified state:
-- The workflow is saved but inactive.
-- The last independent inspection found only a Schedule Trigger and one RSS Read node.
-- The RSS node points to `https://www.fenv.com/blog`; it does not yet implement the four-source buyer research pipeline, topic tagging, deduplication, or 50-result limit.
-- Do not publish this workflow until it is completed and tested.
-- Target schedule: every Monday at 08:00 Africa/Cairo.
+## Production follow-up
 
-## Production checklist
-
-1. Provision the first FENVAR owner securely in Supabase Auth and create the matching active `public.profiles` record with role `owner` and the FENVAR company ID.
-2. Test the public quote form end-to-end and verify the lead appears in the FENVAR admin dashboard. Use a clearly identified test inquiry and remove it after verification.
-3. Review and test RLS policies for every table exposed to the browser; keep service-role credentials server-side only.
-4. Complete and manually test the n8n weekly buyer-intelligence workflow, then publish it with the Africa/Cairo timezone.
-5. Replace stock imagery with approved FENVAR product/factory photography and add verified company contact details, certifications, privacy notice, and legal information.
-6. Configure a custom domain, analytics, backups, and operational monitoring.
+1. Test create/update operations in the admin workspace using real FENVAR records.
+2. Add verified company contact details, certifications, privacy notice and legal information.
+3. Replace temporary/stock imagery with approved FENVAR factory and product photography.
+4. Configure a custom domain, analytics, backups and operational monitoring.
+5. Enable leaked-password protection in Supabase Auth.
 
 ## Important separation
 
-This Supabase project is the standalone FENVAR project. Do not connect it to or reuse ITQAN or Smart Growth OS data.
+This is the standalone FENVAR project. Do not connect it to or reuse ITQAN or Smart Growth OS data. No ITQAN resources are modified by this repository.
