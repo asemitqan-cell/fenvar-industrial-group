@@ -53,7 +53,7 @@ function navTo(view){currentView=view;document.querySelectorAll('.nav').forEach(
 function tableHtml(columns,rows,actions=''){
  if(!rows?.length)return '<div class="empty">No records yet. Add the first record using the form above.</div>';
  return '<table><thead><tr>'+columns.map(c=>'<th>'+esc(c.label)+'</th>').join('')+(actions?'<th>Actions</th>':'')+'</tr></thead><tbody>'+
- rows.map(r=>'<tr>'+columns.map(c=>'<td>'+ (c.render?c.render(r):esc(r[c.key]))+'</td>').join('')+(actions?'<td>'+actions(r)+'</td>':'')+'</tr>').join('')+'</tbody></table>';
+ rows.map(r=>'<tr>'+columns.map(c=>'<td>'+ (c.render?c.render(r):esc(r[c.key]))+'</td>').join('')+(actions?'<td>'+(typeof actions==='function'?actions(r):actions)+'</td>':'')+'</tr>').join('')+'</tbody></table>';
 }
 function field(label,id,placeholder='',type='text',required=false){
  return '<label class="field">'+esc(label)+'<input id="'+id+'" type="'+type+'" placeholder="'+esc(placeholder)+'" '+(required?'required':'')+'></label>';
@@ -121,7 +121,7 @@ async function renderView(view){
    {key:'product_name',label:'Product'},
    {key:'verification_status',label:'Verification',render:r=>'<select class="inline-select opportunity-verify" data-id="'+r.id+'">'+['unverified','needs_review','verified','rejected'].map(s=>'<option '+(r.verification_status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
    {key:'status',label:'Pipeline',render:r=>'<select class="inline-select opportunity-status" data-id="'+r.id+'">'+['new','qualified','supplier_search','quoting','offer_pending_approval','offered','won','lost','rejected','archived'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
-   {key:'source_url',label:'Source',render:r=>r.source_url?'<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener">Open source ↗</a>':'—'}
+   {key:'source_url',label:'Source',render:r=>/^https?:\\/\\//i.test(r.source_url||'')?'<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener noreferrer">Open source ↗</a>':'—'}
   ],data,r=>'<button class="small-action log-contact" data-id="'+r.id+'">Log communication</button>');
   const comms=await db.from('broker_communications').select('id,opportunity_id,direction,party_type,channel,recipient,subject,body,created_at').order('created_at',{ascending:false}).limit(100);
   if(comms.error)throw comms.error;
