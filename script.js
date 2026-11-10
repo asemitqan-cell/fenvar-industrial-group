@@ -1,18 +1,23 @@
-const FENVAR_CONTACT={whatsapp:'',email:'',facebook:'',linkedin:''};
+const FENVAR_CONTACT={phone:'+201040930136',whatsapp:'201040930136',email:'',facebook:'https://www.facebook.com/share/1HWi25qadk/',linkedin:''};
 const langToggle=document.getElementById('langToggle');const menuToggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');let language='en';function setLanguage(next){language=next;document.documentElement.lang=next;document.body.classList.toggle('ar',next==='ar');document.querySelectorAll('[data-en][data-ar]').forEach(el=>{el.innerHTML=el.dataset[next]});document.querySelectorAll('[data-placeholder-en]').forEach(el=>{el.placeholder=el.dataset[next==='en'?'placeholderEn':'placeholderAr']});document.querySelectorAll('option[data-en][data-ar]').forEach(el=>{el.textContent=el.dataset[next]});langToggle.textContent=next==='en'?'عربي':'English';if(typeof renderDirectContacts==='function')renderDirectContacts()}langToggle.addEventListener('click',()=>setLanguage(language==='en'?'ar':'en'));menuToggle.addEventListener('click',()=>{const open=nav.classList.toggle('open');menuToggle.setAttribute('aria-expanded',String(open))});nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));document.getElementById('year').textContent=new Date().getFullYear();
 const form=document.getElementById('quoteForm');const formMessage=document.getElementById('formMessage');form.addEventListener('submit',async e=>{e.preventDefault();const button=form.querySelector('button[type="submit"]');button.disabled=true;button.textContent=language==='en'?'Sending…':'جارٍ الإرسال…';formMessage.textContent='';const data=Object.fromEntries(new FormData(form).entries());try{const response=await fetch('https://zxeykzxoxylfsdnaimwk.supabase.co/functions/v1/fenvar-website-inquiry',{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_5i-jel2xo4kqyHz707aWsA_RTaJuZzx'},body:JSON.stringify(data)});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||(language==='en'?'Could not send your inquiry.':'تعذر إرسال طلبك.'));formMessage.textContent=language==='en'?'Thank you. Your inquiry has been received.':'شكرًا لك. تم استلام طلبك بنجاح.';form.reset()}catch(err){formMessage.textContent=err.message|| (language==='en'?'Connection error. Please try again.':'حدث خطأ في الاتصال. حاول مرة أخرى.')}finally{button.disabled=false;button.textContent=language==='en'?'Send Inquiry ↗':'إرسال الطلب ↗'}});
 function renderDirectContacts(){
  const links=document.getElementById('directContactLinks');
  const socials=document.getElementById('footerSocials');
- if(!links||!socials)return;
- const items=[];
- const phone=String(FENVAR_CONTACT.whatsapp||'').replace(/[^0-9]/g,'');
- if(phone)items.push({label:'WhatsApp',href:'https://wa.me/'+phone,icon:'◉'});
- if(FENVAR_CONTACT.email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(FENVAR_CONTACT.email))items.push({label:'Email',href:'mailto:'+FENVAR_CONTACT.email,icon:'✉'});
- links.innerHTML=items.length?items.map(x=>'<a href="'+x.href+'" '+(x.label==='WhatsApp'?'target="_blank" rel="noopener noreferrer"':'')+'><span>'+x.icon+'</span>'+x.label+'</a>').join(''):'<span class="contact-pending">'+(language==='en'?'WhatsApp and email details will be published here.':'ستظهر بيانات واتساب والبريد الإلكتروني هنا بعد تأكيدها.')+'</span>';
- const social=[];
- if(FENVAR_CONTACT.facebook)social.push(['Facebook',FENVAR_CONTACT.facebook]);
- if(FENVAR_CONTACT.linkedin)social.push(['LinkedIn',FENVAR_CONTACT.linkedin]);
- socials.innerHTML=social.map(x=>'<a href="'+x[1]+'" target="_blank" rel="noopener noreferrer">'+x[0]+' ↗</a>').join('');
+ const phone=FENVAR_CONTACT.phone||'';
+ const digits=String(FENVAR_CONTACT.whatsapp||phone).replace(/[^0-9]/g,'');
+ const phoneHref='tel:'+phone.replace(/[^+0-9]/g,'');
+ const waHref='https://wa.me/'+digits;
+ const icon=(name)=>name==='whatsapp'?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 2 17.7L.5 23.5l6-1.6A11.8 11.8 0 1 0 20.5 3.5ZM12 21a9.8 9.8 0 0 1-5-1.4l-.4-.2-3.5.9.9-3.4-.2-.4A9.8 9.8 0 1 1 12 21Zm5.4-7.3c-.3-.2-1.7-.9-2-.9s-.5-.2-.7.2-.8.9-1 1.1-.4.2-.7.1a8 8 0 0 1-2.3-1.4 8.7 8.7 0 0 1-1.6-2c-.2-.3 0-.5.2-.7l.5-.6.2-.5-.1-.5c-.1-.2-.7-1.7-1-2.3-.2-.5-.5-.4-.7-.4h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4 1 2.8 1.2 3 .2.4.4.7a11.3 11.3 0 0 0 4.4 3.9c.6.3 1.1.5 1.5.6.6.2 1.2.2 1.7.1.5-.1 1.7-.7 2-1.4s.3-1.3.2-1.4-.2-.2-.5-.4Z"/></svg>':name==='facebook'?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.3-1.5 1.6-1.5h1.7V3.7c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2H7.3V13h2.8v8h3.4Z"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.2 1.2.4 2.4.6 3.7.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.7 21 3 13.3 3 3.8c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.7.1.4 0 .8-.3 1.1l-2.1 2.2Z"/></svg>';
+ const contactItems=[];
+ if(digits)contactItems.push({label:'WhatsApp',href:waHref,icon:'whatsapp',external:true});
+ if(phone)contactItems.push({label:language==='en'?'Call':'اتصال',href:phoneHref,icon:'phone'});
+ if(FENVAR_CONTACT.facebook)contactItems.push({label:'Facebook',href:FENVAR_CONTACT.facebook,icon:'facebook',external:true});
+ if(FENVAR_CONTACT.email&&/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(FENVAR_CONTACT.email))contactItems.push({label:'Email',href:'mailto:'+FENVAR_CONTACT.email,icon:'email'});
+ if(links)links.innerHTML=contactItems.map(x=>'<a href="'+x.href+'" '+(x.external?'target="_blank" rel="noopener noreferrer"':'')+'><span class="contact-icon">'+icon(x.icon)+'</span>'+x.label+'</a>').join('');
+ if(socials)socials.innerHTML=contactItems.map(x=>'<a href="'+x.href+'" aria-label="'+x.label+'" title="'+x.label+'" '+(x.external?'target="_blank" rel="noopener noreferrer"':'')+'><span class="contact-icon">'+icon(x.icon)+'</span></a>').join('');
+ const dock=document.getElementById('floatingContacts');
+ if(dock)dock.innerHTML=contactItems.filter(x=>['WhatsApp','Facebook'].includes(x.label)||x.icon==='phone').map(x=>'<a class="floating-contact '+x.icon+'" href="'+x.href+'" aria-label="'+x.label+'" title="'+x.label+'" '+(x.external?'target="_blank" rel="noopener noreferrer"':'')+'>'+icon(x.icon)+'</a>').join('');
 }
+
 renderDirectContacts();
