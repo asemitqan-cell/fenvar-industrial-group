@@ -114,11 +114,13 @@ async function renderView(view){
    selectField('Verification','oVerify',[['unverified','Unverified'],['needs_review','Needs review'],['verified','Verified'],['rejected','Rejected']]),
    selectField('Pipeline status','oStatus',[['new','New'],['qualified','Qualified'],['supplier_search','Supplier search'],['quoting','Quoting'],['offer_pending_approval','Offer pending approval'],['offered','Offered'],['won','Won'],['lost','Lost'],['rejected','Rejected'],['archived','Archived']])
   ]);
-  const{data,error}=await db.from('broker_opportunities').select('id,buyer_name,buyer_company,buyer_email,country,product_name,verification_status,status,source_url,created_at').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}).limit(150);
+  const{data,error}=await db.from('broker_opportunities').select('id,buyer_name,buyer_company,buyer_email,buyer_phone,country,city,product_name,description,confidence_score,verification_status,status,source_url,source_name,created_at').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}).limit(150);
   if(error)throw error;
   wrap.innerHTML=tableHtml([
-   {key:'buyer_company',label:'Buyer / Company'},{key:'buyer_name',label:'Contact'},{key:'buyer_email',label:'Email'},{key:'country',label:'Country'},
-   {key:'product_name',label:'Product'},
+   {key:'buyer_company',label:'Buyer / Company'},{key:'buyer_name',label:'Contact'},{key:'buyer_email',label:'Email'},{key:'buyer_phone',label:'Phone'},
+   {key:'country',label:'Country'},{key:'city',label:'City'},{key:'product_name',label:'Product'},
+   {key:'confidence_score',label:'Fit score',render:r=>'<strong>'+Number(r.confidence_score||0)+'/100</strong>'},
+   {key:'description',label:'Research notes',render:r=>'<span title="'+esc(r.description)+'">'+esc(r.description||'—')+'</span>'},
    {key:'verification_status',label:'Verification',render:r=>'<select class="inline-select opportunity-verify" data-id="'+r.id+'">'+['unverified','needs_review','verified','rejected'].map(s=>'<option '+(r.verification_status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
    {key:'status',label:'Pipeline',render:r=>'<select class="inline-select opportunity-status" data-id="'+r.id+'">'+['new','qualified','supplier_search','quoting','offer_pending_approval','offered','won','lost','rejected','archived'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
    {key:'source_url',label:'Source',render:r=>/^https?:\\/\\//i.test(r.source_url||'')?'<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener noreferrer">Open source ↗</a>':'—'}
@@ -197,6 +199,8 @@ $('viewActions').addEventListener('submit',async e=>{
  await loadData();
 });
 $('tableWrap').addEventListener('click',async e=>{
+ const logBtn=e.target.closest('.log-contact');
+ if(logBtn){const pick=$('mOpportunity');if(pick){pick.value=logBtn.dataset.id;pick.focus();$('communicationForm')?.scrollIntoView({behavior:'smooth',block:'center'});}return;}
  const btn=e.target.closest('.convert-lead');if(!btn)return;
  const id=btn.dataset.id;btn.disabled=true;btn.textContent='Converting…';
  const lead=await db.from('leads').select('*').eq('id',id).eq('company_id',COMPANY_ID).maybeSingle();
