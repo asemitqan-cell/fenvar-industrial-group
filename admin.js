@@ -87,7 +87,7 @@ async function renderView(view){
   wrap.innerHTML=tableHtml([
    {key:'name',label:'Contact'},{key:'company_name',label:'Company'},{key:'email',label:'Email'},{key:'phone',label:'Phone'},
    {key:'country',label:'Country'},{key:'interest',label:'Interest'},
-   {key:'status',label:'Status',render:r=>'<select class="inline-select lead-status" data-id="'+r.id+'">'+['new','contacted','qualified','proposal','won','lost'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
+   {key:'status',label:'Status',render:r=>'<select class="inline-select lead-status" data-id="'+r.id+'">'+['new','contacted','qualified','quoted','won','lost'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
    {key:'follow_up_at',label:'Follow-up',render:r=>'<input class="inline-date lead-followup" data-id="'+r.id+'" type="date" value="'+(r.follow_up_at?new Date(r.follow_up_at).toISOString().slice(0,10):'')+'">'}
   ],data);
   return;
@@ -111,8 +111,8 @@ async function renderView(view){
    field('Email','oEmail','buyer@company.com','email'),field('Phone','oPhone','Phone / WhatsApp'),
    field('Country','oCountry','Country'),field('City','oCity','City'),
    field('Product required','oProduct','UPVC profiles','text',true),field('Source URL','oUrl','https://…','url'),
-   selectField('Verification','oVerify',[['unverified','Unverified'],['pending','Pending verification'],['verified','Verified'],['rejected','Rejected']]),
-   selectField('Pipeline status','oStatus',[['new','New'],['researching','Researching'],['contacted','Contacted'],['negotiating','Negotiating'],['converted','Converted'],['closed','Closed']])
+   selectField('Verification','oVerify',[['unverified','Unverified'],['needs_review','Needs review'],['verified','Verified'],['rejected','Rejected']]),
+   selectField('Pipeline status','oStatus',[['new','New'],['qualified','Qualified'],['supplier_search','Supplier search'],['quoting','Quoting'],['offer_pending_approval','Offer pending approval'],['offered','Offered'],['won','Won'],['lost','Lost'],['rejected','Rejected'],['archived','Archived']])
   ]);
   const{data,error}=await db.from('broker_opportunities').select('id,buyer_name,buyer_company,buyer_email,country,product_name,verification_status,status,source_url,created_at').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}).limit(150);
   if(error)throw error;
