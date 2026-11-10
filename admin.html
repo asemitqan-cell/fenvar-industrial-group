@@ -1,5 +1,38 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FENVAR Control Center</title><link rel="stylesheet" href="admin.css?v=930657d"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>FENVAR Control Center</title><link rel="stylesheet" href="admin.css?v=930657d"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+(function(){
+  var pendingMessage = '';
+  function showDiagnostic(message){
+    pendingMessage = message || '';
+    var box = document.getElementById('loginMessage');
+    if (box && pendingMessage) box.textContent = pendingMessage;
+  }
+  window.addEventListener('error', function(event){
+    if (event.target && event.target.tagName === 'SCRIPT') {
+      var src = event.target.src || '';
+      if (src.indexOf('supabase') !== -1) {
+        showDiagnostic('تعذر تحميل مكتبة تسجيل الدخول من مزود Supabase. افحص اتصال الإنترنت أو حجب CDN.');
+      } else if (src.indexOf('admin.js') !== -1) {
+        showDiagnostic('تعذر تحميل ملف تشغيل لوحة التحكم (admin.js).');
+      }
+      return;
+    }
+    if (event.message) showDiagnostic('توقف تشغيل لوحة التحكم بسبب خطأ JavaScript: ' + event.message);
+  }, true);
+  window.addEventListener('unhandledrejection', function(event){
+    var reason = event.reason;
+    showDiagnostic('حدث خطأ أثناء تشغيل لوحة التحكم: ' + (reason && reason.message ? reason.message : String(reason || 'سبب غير معروف')));
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    if (pendingMessage) showDiagnostic(pendingMessage);
+    var form = document.getElementById('loginForm');
+    if (form) form.addEventListener('submit', function(){
+      showDiagnostic('تم الضغط على تسجيل الدخول. جارٍ تشغيل التحقق...');
+    }, true);
+  });
+})();
+</script>
+</head>
 <body><div class="shell"><aside class="sidebar"><a class="brand" href="index.html"><b>F</b><span>FENVAR<small>CONTROL CENTER</small></span></a><div class="side-label">WORKSPACE</div>
 <button class="nav active" data-view="overview">Overview</button><button class="nav" data-view="leads">Lead Management</button><button class="nav" data-view="customers">Customers</button><button class="nav" data-view="opportunities">Market Opportunities</button><button class="nav" data-view="offers">Customer Offers</button><div class="side-foot"><span class="dot"></span> Secure workspace</div></aside>
 <main class="main"><header><div><p class="eyebrow">FENVAR INDUSTRIAL GROUP</p><h1>Control Center</h1></div><div class="header-right"><span id="userEmail"></span><button id="logout" class="ghost" hidden>Sign out</button></div></header>
