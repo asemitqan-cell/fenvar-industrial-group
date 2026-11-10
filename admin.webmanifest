@@ -1,0 +1,1 @@
+{"name":"FENVAR Admin","short_name":"FENVAR Admin","description":"FENVAR control panel","start_url":"./admin.html","scope":"./admin.html","display":"standalone","background_color":"#0B2A2E","theme_color":"#0F766E","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
