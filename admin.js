@@ -82,14 +82,14 @@ async function renderView(view){
    field('Country','fCountry','Country'),field('City','fCity','City'),
    field('Product interest','fInterest','UPVC profiles / accessories'),selectField('Source','fSource',[['manual','Manual entry'],['website','Website'],['referral','Referral'],['linkedin','LinkedIn'],['trade_show','Trade show']])
   ]);
-  const{data,error}=await db.from('leads').select('id,name,company_name,email,phone,country,interest,status,follow_up_at,created_at').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}).limit(100);
+  const{data,error}=await db.from('leads').select('id,customer_id,name,company_name,email,phone,country,interest,status,follow_up_at,created_at').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}).limit(100);
   if(error)throw error;
   wrap.innerHTML=tableHtml([
    {key:'name',label:'Contact'},{key:'company_name',label:'Company'},{key:'email',label:'Email'},{key:'phone',label:'Phone'},
    {key:'country',label:'Country'},{key:'interest',label:'Interest'},
    {key:'status',label:'Status',render:r=>'<select class="inline-select lead-status" data-id="'+r.id+'">'+['new','contacted','qualified','quoted','won','lost'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
    {key:'follow_up_at',label:'Follow-up',render:r=>'<input class="inline-date lead-followup" data-id="'+r.id+'" type="date" value="'+(r.follow_up_at?new Date(r.follow_up_at).toISOString().slice(0,10):'')+'">'}
-  ],data);
+  ],data,r=>r.customer_id?'<span class="muted">Customer linked</span>':'<button class="small-action convert-lead" data-id="'+r.id+'">Convert to customer</button>');
   return;
  }
  if(view==='customers'){
@@ -118,16 +118,45 @@ async function renderView(view){
   if(error)throw error;
   wrap.innerHTML=tableHtml([
    {key:'buyer_company',label:'Buyer / Company'},{key:'buyer_name',label:'Contact'},{key:'buyer_email',label:'Email'},{key:'country',label:'Country'},
-   {key:'product_name',label:'Product'},{key:'verification_status',label:'Verification'},
-   {key:'status',label:'Pipeline'},{key:'source_url',label:'Source',render:r=>r.source_url?'<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener">Open source ↗</a>':'—'}
-  ],data);
+   {key:'product_name',label:'Product'},
+   {key:'verification_status',label:'Verification',render:r=>'<select class="inline-select opportunity-verify" data-id="'+r.id+'">'+['unverified','needs_review','verified','rejected'].map(s=>'<option '+(r.verification_status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
+   {key:'status',label:'Pipeline',render:r=>'<select class="inline-select opportunity-status" data-id="'+r.id+'">'+['new','qualified','supplier_search','quoting','offer_pending_approval','offered','won','lost','rejected','archived'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
+   {key:'source_url',label:'Source',render:r=>r.source_url?'<a href="'+esc(r.source_url)+'" target="_blank" rel="noopener">Open source ↗</a>':'—'}
+  ],data,r=>'<button class="small-action log-contact" data-id="'+r.id+'">Log communication</button>');
+  const comms=await db.from('broker_communications').select('id,opportunity_id,direction,party_type,channel,recipient,subject,body,created_at').order('created_at',{ascending:false}).limit(100);
+  if(comms.error)throw comms.error;
+  $('viewActions').innerHTML += '<form id="communicationForm" class="create-form"><div class="form-heading"><strong>Log buyer communication</strong><span>Internal record only — does not send a message</span></div><div class="form-grid">'+
+   selectField('Buyer opportunity','mOpportunity',data.map(o=>[o.id,(o.buyer_company||o.buyer_name||'Buyer')+' — '+(o.country||'')]))+
+   selectField('Direction','mDirection',[['outbound','Outbound'],['inbound','Inbound'],['internal','Internal note']])+
+   selectField('Channel','mChannel',[['email','Email'],['whatsapp','WhatsApp'],['phone','Phone'],['linkedin','LinkedIn'],['internal','Internal']])+
+   field('Subject','mSubject','Subject')+field('Recipient','mRecipient','Name or email')+
+   '<label class="field">Message / notes<textarea id="mBody" rows="3" placeholder="Record the conversation or next step"></textarea></label></div><div class="form-bottom"><button class="primary" type="submit">Save communication</button><span id="commMessage" class="message"></span></div></form>'+
+   '<div class="panel"><div class="panel-head"><h3>Recent communications</h3><span>Latest 100 records</span></div><div class="table-wrap">'+tableHtml([{key:'created_at',label:'Date',render:r=>new Date(r.created_at).toLocaleString()},{key:'recipient',label:'Recipient'},{key:'channel',label:'Channel'},{key:'direction',label:'Direction'},{key:'subject',label:'Subject'},{key:'body',label:'Notes'}],comms.data)+'</div></div>';
   return;
  }
  if(view==='offers'){
-  const{data,error}=await db.from('broker_customer_offers').select('offer_number,customer_name,customer_company,currency,customer_total,status,validity_until,created_at').order('created_at',{ascending:false}).limit(100);
-  if(error)throw error;
-  $('viewActions').innerHTML='<p class="muted">Offers are linked to a market opportunity. The approval and quotation workflow will be added after the buyer pipeline is populated.</p>';
-  wrap.innerHTML=tableHtml([{key:'offer_number',label:'Offer No.'},{key:'customer_name',label:'Contact'},{key:'customer_company',label:'Company'},{key:'customer_total',label:'Total'},{key:'currency',label:'Currency'},{key:'status',label:'Status'},{key:'validity_until',label:'Valid until'}],data);
+  const [oppRes,offerRes]=await Promise.all([
+   db.from('broker_opportunities').select('id,buyer_name,buyer_company,buyer_email,buyer_phone,country,product_name').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}),
+   db.from('broker_customer_offers').select('id,opportunity_id,offer_number,customer_name,customer_company,customer_email,currency,supplier_cost,shipping_cost,other_costs,margin_type,margin_value,customer_total,status,validity_until,created_at').order('created_at',{ascending:false}).limit(100)
+  ]);
+  if(oppRes.error)throw oppRes.error;if(offerRes.error)throw offerRes.error;
+  const opps=oppRes.data||[];
+  $('viewActions').innerHTML=actionForm('Create a customer quotation',[
+   selectField('Buyer opportunity','qOpportunity',opps.map(o=>[o.id,(o.buyer_company||o.buyer_name||'Buyer')+' — '+(o.country||'')+' / '+o.product_name])),
+   field('Offer number','qNumber','FEN-2026-001'),field('Contact name','qName','Buyer contact'),field('Company','qCompany','Buyer company'),
+   field('Email','qEmail','buyer@company.com','email'),field('Phone','qPhone','International phone'),
+   field('Supplier cost','qSupplier','0','number'),field('Shipping cost','qShipping','0','number'),
+   field('Other costs','qOther','0','number'),selectField('Margin type','qMarginType',[['percent','Percentage'],['fixed','Fixed amount']]),
+   field('Margin value','qMargin','15','number'),selectField('Currency','qCurrency',[['USD','USD'],['EUR','EUR'],['GBP','GBP'],['AED','AED'],['SAR','SAR'],['EGP','EGP']]),
+   field('Valid until','qValidity','','date'),field('Delivery terms','qDelivery','FOB / CIF / EXW'),field('Payment terms','qPayment','Advance / LC / TT')
+  ],'Save draft quotation');
+  $('viewActions').innerHTML+='<p class="muted">The total is calculated as supplier + shipping + other costs, plus the selected margin. New quotations are saved as drafts and are not sent to customers.</p>';
+  wrap.innerHTML=tableHtml([
+   {key:'offer_number',label:'Offer No.'},{key:'customer_name',label:'Contact'},{key:'customer_company',label:'Company'},
+   {key:'customer_total',label:'Total',render:r=>Number(r.customer_total||0).toLocaleString(undefined,{maximumFractionDigits:2})+' '+r.currency},
+   {key:'status',label:'Status',render:r=>'<select class="inline-select offer-status" data-id="'+r.id+'">'+['draft','pending_approval','approved','sent','accepted','rejected','expired','cancelled'].map(s=>'<option '+(r.status===s?'selected':'')+' value="'+s+'">'+s+'</option>').join('')+'</select>'},
+   {key:'validity_until',label:'Valid until'}
+  ],offerRes.data);
  }
 }
 $('loginForm').addEventListener('submit',async e=>{
@@ -139,6 +168,12 @@ $('logout').addEventListener('click',async()=>{await db.auth.signOut();showLogin
 $('refresh').addEventListener('click',loadData);
 document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>navTo(b.dataset.view)));
 $('viewActions').addEventListener('submit',async e=>{
+ if(e.target.id==='communicationForm'){
+  e.preventDefault();msg('commMessage','Saving…');
+  const{error}=await db.from('broker_communications').insert({opportunity_id:val('mOpportunity'),direction:val('mDirection'),party_type:'customer',channel:val('mChannel'),recipient:val('mRecipient')||null,subject:val('mSubject')||null,body:val('mBody')||null});
+  if(error){msg('commMessage','Could not save: '+error.message);return}
+  await renderView('opportunities');msg('appMessage','Communication record saved. No message was sent.');return;
+ }
  if(e.target.id!=='createForm')return;e.preventDefault();msg('formMessage','Saving…');
  let table,payload;
  if(currentView==='leads'){
@@ -147,21 +182,40 @@ $('viewActions').addEventListener('submit',async e=>{
   table='customers';payload={company_id:COMPANY_ID,name:val('cName'),contact_person:val('cPerson')||null,email:val('cEmail')||null,phone:val('cPhone')||null,whatsapp:val('cPhone')||null,country:val('cCountry')||null,city:val('cCity')||null,customer_type:val('cType'),status:val('cStatus'),source:'admin'};
  }else if(currentView==='opportunities'){
   table='broker_opportunities';payload={company_id:COMPANY_ID,source_type:'manual',buyer_company:val('oBuyer'),buyer_name:val('oContact')||null,buyer_email:val('oEmail')||null,buyer_phone:val('oPhone')||null,country:val('oCountry')||null,city:val('oCity')||null,product_name:val('oProduct'),source_url:val('oUrl')||null,verification_status:val('oVerify'),status:val('oStatus')};
+ }else if(currentView==='offers'){
+  const base=Number(val('qSupplier')||0)+Number(val('qShipping')||0)+Number(val('qOther')||0);
+  const margin=Number(val('qMargin')||0);
+  if(!Number.isFinite(base)||!Number.isFinite(margin)||base<0||margin<0){msg('formMessage','Costs and margin must be valid non-negative numbers.');return}
+  const total=base+(val('qMarginType')==='percent'?base*margin/100:margin);
+  const offerNo=val('qNumber')||('FEN-'+new Date().getFullYear()+'-'+Date.now().toString().slice(-6));
+  const opp=await db.from('broker_opportunities').select('id').eq('id',val('qOpportunity')).eq('company_id',COMPANY_ID).maybeSingle();
+  if(opp.error||!opp.data){msg('formMessage','Select a valid FENVAR buyer opportunity first.');return}
+  table='broker_customer_offers';payload={opportunity_id:val('qOpportunity'),offer_number:offerNo,customer_name:val('qName')||null,customer_company:val('qCompany')||null,customer_email:val('qEmail')||null,customer_phone:val('qPhone')||null,currency:val('qCurrency'),supplier_cost:Number(val('qSupplier')||0),shipping_cost:Number(val('qShipping')||0),other_costs:Number(val('qOther')||0),margin_type:val('qMarginType'),margin_value:margin,customer_total:Number(total.toFixed(2)),validity_until:val('qValidity')||null,delivery_terms:val('qDelivery')||null,payment_terms:val('qPayment')||null,status:'draft'};
  }else return;
  const{error}=await db.from(table).insert(payload);
  if(error){msg('formMessage','Could not save: '+error.message);return}
  await loadData();
 });
+$('tableWrap').addEventListener('click',async e=>{
+ const btn=e.target.closest('.convert-lead');if(!btn)return;
+ const id=btn.dataset.id;btn.disabled=true;btn.textContent='Converting…';
+ const lead=await db.from('leads').select('*').eq('id',id).eq('company_id',COMPANY_ID).maybeSingle();
+ if(lead.error||!lead.data){msg('appMessage','Could not load lead: '+(lead.error?.message||'not found'));btn.disabled=false;return}
+ if(lead.data.customer_id){msg('appMessage','This lead is already linked to a customer.');await renderView('leads');return}
+ const{data:customer,error}=await db.from('customers').insert({company_id:COMPANY_ID,name:lead.data.company_name||lead.data.name,contact_person:lead.data.name,phone:lead.data.phone,email:lead.data.email,country:lead.data.country,city:lead.data.city,customer_type:'business',status:'active',source:lead.data.source,notes:lead.data.message||lead.data.interest}).select('id').single();
+ if(error){msg('appMessage','Customer creation failed: '+error.message);btn.disabled=false;return}
+ const linked=await db.from('leads').update({customer_id:customer.id,status:'won',updated_at:new Date().toISOString()}).eq('id',id).eq('company_id',COMPANY_ID);
+ if(linked.error){await db.from('customers').delete().eq('id',customer.id).eq('company_id',COMPANY_ID);msg('appMessage','Could not link lead; the new customer record was rolled back: '+linked.error.message);btn.disabled=false;return}
+ msg('appMessage','Lead converted to a customer successfully.');await loadData();
+});
 $('tableWrap').addEventListener('change',async e=>{
- const el=e.target;if(!el.dataset.id)return;
- if(el.classList.contains('lead-status')){
-  const{error}=await db.from('leads').update({status:el.value,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
-  if(error)msg('appMessage','Status update failed: '+error.message);else msg('appMessage','Lead status updated.');
- }
- if(el.classList.contains('lead-followup')){
-  const{error}=await db.from('leads').update({follow_up_at:el.value?new Date(el.value+'T09:00:00').toISOString():null,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
-  if(error)msg('appMessage','Follow-up update failed: '+error.message);else msg('appMessage','Follow-up date saved.');
- }
+ const el=e.target;if(!el.dataset.id)return;let result;
+ if(el.classList.contains('lead-status'))result=await db.from('leads').update({status:el.value,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
+ if(el.classList.contains('lead-followup'))result=await db.from('leads').update({follow_up_at:el.value?new Date(el.value+'T09:00:00').toISOString():null,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
+ if(el.classList.contains('opportunity-status'))result=await db.from('broker_opportunities').update({status:el.value,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
+ if(el.classList.contains('opportunity-verify'))result=await db.from('broker_opportunities').update({verification_status:el.value,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
+ if(el.classList.contains('offer-status'))result=await db.from('broker_customer_offers').update({status:el.value,updated_at:new Date().toISOString(),...(el.value==='pending_approval'?{approval_requested_at:new Date().toISOString()}:{}),...(el.value==='approved'?{approved_at:new Date().toISOString()}:{}),...(el.value==='sent'?{sent_at:new Date().toISOString()}:{})}).eq('id',el.dataset.id);
+ if(result){if(result.error)msg('appMessage','Update failed: '+result.error.message);else msg('appMessage','Record updated.')}
 });
 db.auth.onAuthStateChange(()=>{});
 checkSession();
