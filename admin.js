@@ -16,15 +16,37 @@ const val=id=>($(id)?.value||'').trim();
 function msg(id,text){if($(id))$(id).textContent=text||''}
 function showLogin(){$('loginPanel').hidden=false;$('appPanel').hidden=true;$('logout').hidden=true}
 async function checkSession(){
- const{data:{session}}=await db.auth.getSession();
- if(!session){showLogin();return}
- const{data:profile,error}=await db.from('profiles').select('id,company_id,role,is_active,full_name').eq('id',session.user.id).maybeSingle();
- if(error||!profile||!profile.is_active||profile.company_id!==COMPANY_ID||!['owner','admin'].includes(profile.role)){
-  await db.auth.signOut();showLogin();msg('loginMessage','This account is not authorized for this FENVAR workspace.');return;
+ try{
+  const sessionResult=await db.auth.getSession();
+  if(sessionResult.error){showLogin();msg('loginMessage','Session check failed: '+sessionResult.error.message);return}
+  const session=sessionResult.data?.session;
+  if(!session){showLogin();return}
+  const profileResult=await db.from('profiles').select('id,company_id,role,is_active,full_name').eq('id',session.user.id).maybeSingle();
+  if(profileResult.error){
+   showLogin();
+   msg('loginMessage','Could not verify your FENVAR permissions: '+profileResult.error.message);
+   return;
+  }
+  const profile=profileResult.data;
+  if(!profile){
+   await db.auth.signOut();showLogin();msg('loginMessage','Access denied: no FENVAR profile is linked to this account.');return;
+  }
+  if(!profile.is_active){
+   await db.auth.signOut();showLogin();msg('loginMessage','Access denied: this FENVAR profile is inactive.');return;
+  }
+  if(profile.company_id!==COMPANY_ID){
+   await db.auth.signOut();showLogin();msg('loginMessage','Access denied: this account belongs to a different workspace.');return;
+  }
+  if(!['owner','admin'].includes(profile.role)){
+   await db.auth.signOut();showLogin();msg('loginMessage','Access denied: owner or admin permission is required.');return;
+  }
+  $('userEmail').textContent=session.user.email||profile.full_name||'';
+  $('loginPanel').hidden=true;$('appPanel').hidden=false;$('logout').hidden=false;
+  await loadData();
+ }catch(e){
+  showLogin();
+  msg('loginMessage','Unexpected sign-in check error: '+(e?.message||String(e)));
  }
- $('userEmail').textContent=session.user.email||profile.full_name||'';
- $('loginPanel').hidden=true;$('appPanel').hidden=false;$('logout').hidden=false;
- await loadData();
 }
 async function count(table,filters=[]){
  let q=db.from(table).select('id',{count:'exact',head:true});
@@ -163,8 +185,16 @@ async function renderView(view){
 }
 $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();msg('loginMessage','Signing in…');
- const fd=new FormData(e.target);const{error}=await db.auth.signInWithPassword({email:fd.get('email'),password:fd.get('password')});
- if(error){msg('loginMessage',error.message);return}msg('loginMessage','');await checkSession();
+ try{
+  const fd=new FormData(e.target);
+  const result=await db.auth.signInWithPassword({email:fd.get('email'),password:fd.get('password')});
+  if(result.error){msg('loginMessage','Sign-in failed: '+result.error.message);return}
+  if(!result.data?.session){msg('loginMessage','Sign-in returned no active session. Please try again.');return}
+  msg('loginMessage','');
+  await checkSession();
+ }catch(err){
+  msg('loginMessage','Unexpected sign-in error: '+(err?.message||String(err)));
+ }
 });
 $('logout').addEventListener('click',async()=>{await db.auth.signOut();showLogin()});
 $('refresh').addEventListener('click',loadData);
