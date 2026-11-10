@@ -218,7 +218,10 @@ $('tableWrap').addEventListener('change',async e=>{
  if(el.classList.contains('lead-followup'))result=await db.from('leads').update({follow_up_at:el.value?new Date(el.value+'T09:00:00').toISOString():null,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
  if(el.classList.contains('opportunity-status'))result=await db.from('broker_opportunities').update({status:el.value,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
  if(el.classList.contains('opportunity-verify'))result=await db.from('broker_opportunities').update({verification_status:el.value,updated_at:new Date().toISOString()}).eq('id',el.dataset.id).eq('company_id',COMPANY_ID);
- if(el.classList.contains('offer-status'))result=await db.from('broker_customer_offers').update({status:el.value,updated_at:new Date().toISOString(),...(el.value==='pending_approval'?{approval_requested_at:new Date().toISOString()}:{}),...(el.value==='approved'?{approved_at:new Date().toISOString()}:{}),...(el.value==='sent'?{sent_at:new Date().toISOString()}:{})}).eq('id',el.dataset.id);
+ if(el.classList.contains('offer-status')){
+  const approvalUser=el.value==='approved'?(await db.auth.getUser()).data.user:null;
+  result=await db.from('broker_customer_offers').update({status:el.value,updated_at:new Date().toISOString(),...(el.value==='pending_approval'?{approval_requested_at:new Date().toISOString()}:{}),...(el.value==='approved'?{approved_at:new Date().toISOString(),approved_by:approvalUser?.id||null}:{}),...(el.value==='sent'?{sent_at:new Date().toISOString()}:{})}).eq('id',el.dataset.id);
+ }
  if(result){if(result.error)msg('appMessage','Update failed: '+result.error.message);else msg('appMessage','Record updated.')}
 });
 db.auth.onAuthStateChange(()=>{});
