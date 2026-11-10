@@ -5,11 +5,11 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 let currentView='overview';
 const viewMeta={
- overview:['Overview','Business snapshot'],
- leads:['Lead Management','All incoming inquiries and follow-ups'],
- customers:['Customers','Your buyer and distributor directory'],
- opportunities:['Market Opportunities','Global buyer and sourcing pipeline'],
- offers:['Customer Offers','Commercial offers and approvals']
+ overview:['الرئيسية','أحدث طلبات العملاء'],
+ leads:['طلبات العملاء','كل طلبات عروض الأسعار والمتابعة'],
+ customers:['العملاء','دليل العملاء والمستوردين'],
+ opportunities:['فرص التصدير','الشركات المستهدفة حول العالم'],
+ offers:['عروض الأسعار','مراجعة العروض واعتمادها']
 };
 const esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const val=id=>($(id)?.value||'').trim();
@@ -93,12 +93,12 @@ async function renderView(view){
  if(view==='overview'){
   const{data,error}=await db.from('leads').select('name,company_name,email,country,interest,status,created_at').eq('company_id',COMPANY_ID).order('created_at',{ascending:false}).limit(8);
   if(error)throw error;
-  wrap.innerHTML=tableHtml([{key:'name',label:'Contact'},{key:'company_name',label:'Company'},{key:'email',label:'Email'},{key:'country',label:'Country'},{key:'interest',label:'Interest'},{key:'status',label:'Status'},{key:'created_at',label:'Received',render:r=>r.created_at?new Date(r.created_at).toLocaleDateString():'—'}],data);
-  $('viewActions').innerHTML='<p class="muted">Use the workspace sections to manage leads, customers, opportunities and commercial offers.</p>';
+  wrap.innerHTML=tableHtml([{key:'name',label:'اسم العميل'},{key:'company_name',label:'الشركة'},{key:'email',label:'البريد الإلكتروني'},{key:'country',label:'الدولة'},{key:'interest',label:'المنتج المطلوب'},{key:'status',label:'الحالة'},{key:'created_at',label:'تاريخ الطلب',render:r=>r.created_at?new Date(r.created_at).toLocaleDateString():'—'}],data);
+  $('viewActions').innerHTML='<p class="muted">اختر القسم المناسب من القائمة لمتابعة طلبات العملاء أو عروض الأسعار أو فرص التصدير.</p>';
   return;
  }
  if(view==='leads'){
-  $('viewActions').innerHTML=actionForm('Add a lead',[
+  $('viewActions').innerHTML=actionForm('إضافة طلب عميل',[
    field('Contact name','fName','Full name','text',true),field('Company','fCompany','Company / importer'),
    field('Email','fEmail','name@company.com','email'),field('Phone / WhatsApp','fPhone','+20…'),
    field('Country','fCountry','Country'),field('City','fCity','City'),
@@ -115,7 +115,7 @@ async function renderView(view){
   return;
  }
  if(view==='customers'){
-  $('viewActions').innerHTML=actionForm('Add a buyer / distributor',[
+  $('viewActions').innerHTML=actionForm('إضافة عميل أو موزع',[
    field('Company / buyer name','cName','Legal or trading name','text',true),field('Contact person','cPerson','Contact name'),
    field('Email','cEmail','buyer@company.com','email'),field('Phone / WhatsApp','cPhone','International format'),
    field('Country','cCountry','Country'),field('City','cCity','City'),
@@ -128,7 +128,7 @@ async function renderView(view){
   return;
  }
  if(view==='opportunities'){
-  $('viewActions').innerHTML=actionForm('Add a global market opportunity',[
+  $('viewActions').innerHTML=actionForm('إضافة فرصة تصدير',[
    field('Buyer / company','oBuyer','Company name','text',true),field('Contact person','oContact','Contact name'),
    field('Email','oEmail','buyer@company.com','email'),field('Phone','oPhone','Phone / WhatsApp'),
    field('Country','oCountry','Country'),field('City','oCity','City'),
@@ -165,7 +165,7 @@ async function renderView(view){
   ]);
   if(oppRes.error)throw oppRes.error;if(offerRes.error)throw offerRes.error;
   const opps=oppRes.data||[];
-  $('viewActions').innerHTML=actionForm('Create a customer quotation',[
+  $('viewActions').innerHTML=actionForm('إعداد عرض سعر',[
    selectField('Buyer opportunity','qOpportunity',opps.map(o=>[o.id,(o.buyer_company||o.buyer_name||'Buyer')+' — '+(o.country||'')+' / '+o.product_name])),
    field('Offer number','qNumber','FEN-2026-001'),field('Contact name','qName','Buyer contact'),field('Company','qCompany','Buyer company'),
    field('Email','qEmail','buyer@company.com','email'),field('Phone','qPhone','International phone'),
@@ -173,8 +173,8 @@ async function renderView(view){
    field('Other costs','qOther','0','number'),selectField('Margin type','qMarginType',[['percent','Percentage'],['fixed','Fixed amount']]),
    field('Margin value','qMargin','15','number'),selectField('Currency','qCurrency',[['USD','USD'],['EUR','EUR'],['GBP','GBP'],['AED','AED'],['SAR','SAR'],['EGP','EGP']]),
    field('Valid until','qValidity','','date'),field('Delivery terms','qDelivery','FOB / CIF / EXW'),field('Payment terms','qPayment','Advance / LC / TT')
-  ],'Save draft quotation');
-  $('viewActions').innerHTML+='<p class="muted">The total is calculated as supplier + shipping + other costs, plus the selected margin. New quotations are saved as drafts and are not sent to customers.</p>';
+  ],'حفظ مسودة العرض');
+  $('viewActions').innerHTML+='<p class="muted">يتم حساب الإجمالي من التكلفة والشحن والمصاريف وهامش الربح. يُحفظ العرض كمسودة ولا يُرسل للعميل قبل موافقتك.</p>';
   wrap.innerHTML=tableHtml([
    {key:'offer_number',label:'Offer No.'},{key:'customer_name',label:'Contact'},{key:'customer_company',label:'Company'},
    {key:'customer_total',label:'Total',render:r=>Number(r.customer_total||0).toLocaleString(undefined,{maximumFractionDigits:2})+' '+r.currency},
