@@ -560,4 +560,92 @@ loadUL();
 setInterval(()=>{if(Date.now()<hold||document.hidden)return;const s=el.querySelector('.sl');if(!s)return;const w=s.offsetWidth+10,max=el.scrollWidth-el.clientWidth,rtl=getComputedStyle(el).direction==='rtl',pos=Math.abs(el.scrollLeft);if(pos>=max-4)el.scrollTo({left:0,behavior:'smooth'});else el.scrollBy({left:(rtl?-1:1)*w,behavior:'smooth'})},3800)})();
 applyLang();
 
-</script></body></html>
+</script><script>
+/* Horizon social layer: reactions, comments, provider profile page */
+(function(){
+if(!sb)return;
+const EM=[['like','👍'],['love','❤️'],['haha','😂'],['wow','😮']];
+let RX={},CM={},PP={};
+document.body.insertAdjacentHTML('beforeend','<div class="modal" id="profModal" hidden><div class="sheet st"><button type="button" class="x" data-close>×</button><div id="pfBody"></div></div></div>');
+const css=document.createElement('style');css.textContent=`
+.post header.pw{direction:ltr;cursor:pointer;text-align:left}.post header.pw>div{min-width:0}
+.avp{width:38px;height:38px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;color:#fff;font-weight:700;background:linear-gradient(135deg,var(--a),var(--b))}.avp img{width:100%;height:100%;object-fit:cover}
+.soc{display:flex;gap:6px;padding:0 14px 12px;flex-wrap:wrap}.rx{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:999px;padding:6px 11px;font-size:14px;display:flex;gap:5px;align-items:center;cursor:pointer}.rx i{font-style:normal;font-size:12px;color:var(--mut)}.rx.on{border-color:var(--a);background:rgba(15,118,110,.12)}
+.cmbox{padding:0 14px 14px}.cmi{padding:8px 0;border-top:1px solid var(--line);font-size:13px}.cmi b{display:block;font-size:12px}.cmi small{color:var(--mut)}.cmi button{border:0;background:none;color:var(--mut);cursor:pointer}
+.cmf{display:flex;gap:8px;margin-top:8px}.cmf input{flex:1;min-width:0;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:inherit}
+.pfh{text-align:center;padding:6px 0 12px}.pfh .avp{width:92px;height:92px;font-size:34px;margin:0 auto 10px}.pfh h3{margin:0}.pfh p{margin:6px 0;color:var(--mut);font-size:13px}.pfs{display:flex;justify-content:center;gap:22px;margin:10px 0}.pfs b{display:block;font-size:17px}.pfs small{color:var(--mut)}
+`;document.head.appendChild(css);
+
+const nameOf=id=>(PP[id]&&PP[id].full_name)||L('Provider','مقدم خدمة');
+const avEl=(id,c)=>{const p=PP[id]||{},st=`--a:${c.c[0]};--b:${c.c[1]}`;return `<span class="avp" style="${st}">${p.avatar_url?`<img src="${esc(p.avatar_url)}" alt="">`:esc((nameOf(id)||'?').trim().charAt(0).toUpperCase())}</span>`};
+const rxOf=id=>RX[id]||{c:{},m:null};
+function socBar(l){const r=rxOf(l.id);return `<div class="soc" data-sid="${esc(l.id)}">${EM.map(e=>`<button type="button" class="rx ${r.m===e[0]?'on':''}" data-rx="${e[0]}" data-rl="${esc(l.id)}">${e[1]}<i>${r.c[e[0]]||''}</i></button>`).join('')}<button type="button" class="rx" data-cm="${esc(l.id)}">💬<i>${CM[l.id]||''}</i></button></div><div class="cmbox" data-cb="${esc(l.id)}" hidden></div>`}
+function postX(it,noHead){const l=it.ul,c=it.c;return `<article class="post">${noHead?'':`<header class="pw" data-prof="${esc(l.owner)}">${avEl(l.owner,c)}<div><b>${esc(nameOf(l.owner))}</b><small>${esc(N(c))} · ${l.kind==='service'?L('Service','خدمة','Service'):L('Product','منتج','Produkt')}</small></div></header>`}<div class="pimg" style="background:${grad(c.c)}">${it.src?mediaEl(it.src):ico(c.id)}</div><div class="pb"><div style="min-width:0"><h3>${esc(l.title)}</h3>${ulMeta(l)}</div><button class="btn" data-msg="${esc(l.id)}">${msgLbl(l)}</button></div>${socBar(l)}</article>`}
+window.ulPost=it=>postX(it,false);
+
+async function loadSocial(){
+ const ids=UL.map(l=>l.id);if(!ids.length)return;
+ const ow=[...new Set(UL.map(l=>l.owner))];
+ try{
+  const [a,b,p]=await Promise.all([sb.from('hz_reactions').select('listing_id,user_id,kind').in('listing_id',ids),sb.from('hz_comments').select('listing_id').in('listing_id',ids),sb.from('hz_public_profiles').select('*').in('id',ow)]);
+  RX={};(a.data||[]).forEach(x=>{const r=RX[x.listing_id]||(RX[x.listing_id]={c:{},m:null});r.c[x.kind]=(r.c[x.kind]||0)+1;if(user&&x.user_id===user.id)r.m=x.kind});
+  CM={};(b.data||[]).forEach(x=>CM[x.listing_id]=(CM[x.listing_id]||0)+1);
+  (p.data||[]).forEach(x=>PP[x.id]=x);
+ }catch(_){}
+ FEED=null;feedMore(true);
+}
+const _lu=window.loadUL;
+window.loadUL=async function(){await _lu();await loadSocial()};
+loadSocial();setTimeout(loadSocial,1500);setTimeout(loadSocial,4500);
+sb.auth.onAuthStateChange(()=>setTimeout(loadSocial,300));
+
+function needLogin(){authMode='up';authTexts();$('#authMsg').textContent=L('Sign in first.','سجّل أو ادخل الأول.');open('#authModal')}
+function refreshBars(id){document.querySelectorAll('.soc').forEach(el=>{if(el.dataset.sid===id){const l=UL.find(x=>x.id===id);if(l)el.outerHTML=socBar(l).split('<div class="cmbox')[0]}})}
+async function react(id,k){
+ if(!user)return needLogin();
+ const r=RX[id]||(RX[id]={c:{},m:null});
+ if(r.m)r.c[r.m]=Math.max(0,(r.c[r.m]||1)-1);
+ if(r.m===k){r.m=null;refreshBars(id);await sb.from('hz_reactions').delete().eq('listing_id',id).eq('user_id',user.id);return}
+ r.m=k;r.c[k]=(r.c[k]||0)+1;refreshBars(id);
+ await sb.from('hz_reactions').upsert({listing_id:id,user_id:user.id,kind:k});
+}
+async function drawComments(id){
+ document.querySelectorAll('.cmbox').forEach(async box=>{
+  if(box.dataset.cb!==id||box.hidden)return;
+  const r=await sb.from('hz_comments').select('*').eq('listing_id',id).order('created_at');
+  const d=r.data||[];CM[id]=d.length;
+  box.innerHTML=d.map(c=>`<div class="cmi"><b>${esc(c.user_name||'')}</b>${esc(c.body)}<br><small>${new Date(c.created_at).toLocaleDateString()}</small>${user&&c.user_id===user.id?` <button data-cdel="${esc(c.id)}" data-cl="${esc(id)}">×</button>`:''}</div>`).join('')+`<form class="cmf" data-cf="${esc(id)}"><input maxlength="500" placeholder="${L('Write a comment…','اكتب تعليق…')}" required><button class="btn">${L('Send','ابعت')}</button></form>`;
+  document.querySelectorAll('.soc').forEach(s=>{if(s.dataset.sid===id){const b=s.querySelector('[data-cm] i');if(b)b.textContent=CM[id]||''}});
+ });
+}
+async function openProfile(uid){
+ open('#profModal');const b=$('#pfBody');b.innerHTML='<div class="dots" style="text-align:center;margin:30px"><i></i><i></i><i></i></div>';
+ if(!PP[uid]){try{const r=await sb.from('hz_public_profiles').select('*').eq('id',uid).maybeSingle();if(r.data)PP[uid]=r.data}catch(_){}}
+ const p=PP[uid]||{},ls=UL.filter(l=>l.owner===uid),c0=CATALOG.find(x=>x.id===(ls[0]||{}).cat)||CATALOG[0];
+ const likes=ls.reduce((n,l)=>n+Object.values(rxOf(l.id).c).reduce((a,v)=>a+v,0),0),mine=user&&user.id===uid;
+ b.innerHTML=`<div class="pfh">${avEl(uid,c0)}<h3>${esc(nameOf(uid))}</h3>${p.brand?`<p><b>${esc(p.brand)}</b></p>`:''}${p.bio?`<p>${esc(p.bio)}</p>`:''}<div class="pfs"><div><b>${ls.length}</b><small>${L('Posts','منشورات')}</small></div><div><b>${likes}</b><small>${L('Reactions','تفاعلات')}</small></div></div>${mine?`<button class="btn" data-pedit>${L('Edit my profile','عدّل بروفايلي')}</button>`:''}</div><div id="pfList">${ls.map(l=>postX({ul:l,c:CATALOG.find(x=>x.id===l.cat)||CATALOG[0],src:(l.photos||[])[0]||''},true)).join('')||`<p class="empty">${L('No posts yet.','لسه مفيش منشورات.')}</p>`}</div>`;
+}
+function editProfile(){
+ const p=PP[user.id]||{};
+ $('#pfBody').innerHTML=`<h3>${L('My profile','بروفايلي')}</h3><form id="pfForm"><label><span>${L('Name','الاسم')}</span><input name="n" maxlength="60" required value="${esc(p.full_name||(PROF&&PROF.full_name)||'')}"></label><label><span>${L('Shop / brand name (optional)','اسم المحل / البراند (اختياري)')}</span><input name="br" maxlength="60" value="${esc(p.brand||'')}"></label><label><span>${L('About you','نبذة عنك')}</span><textarea name="bio" rows="4" maxlength="400">${esc(p.bio||'')}</textarea></label><label class="phbtn">${L('+ Profile photo','+ صورة البروفايل')}<input class="fi" type="file" name="av" accept="image/*"></label><p class="msg" id="pfMsg"></p><button class="btn">${L('Save','حفظ')}</button></form>`;
+ $('#pfForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),m=$('#pfMsg');m.textContent='…';
+  try{let url=p.avatar_url||null;const fl=f.get('av');
+   if(fl&&fl.size){const bl=await shrink(fl),path=`${user.id}/avatar_${Date.now()}.jpg`,u=await sb.storage.from('listings').upload(path,bl,{contentType:'image/jpeg'});if(u.error)throw u.error;url=sb.storage.from('listings').getPublicUrl(path).data.publicUrl}
+   const r=await sb.from('hz_profiles').upsert({id:user.id,email:user.email,full_name:String(f.get('n')).trim(),brand:String(f.get('br')).trim()||null,bio:String(f.get('bio')).trim()||null,avatar_url:url});if(r.error)throw r.error;
+   PP[user.id]={id:user.id,full_name:String(f.get('n')).trim(),brand:String(f.get('br')).trim(),bio:String(f.get('bio')).trim(),avatar_url:url};await loadProf();FEED=null;feedMore(true);openProfile(user.id)}
+  catch(err){m.textContent=L('Could not save. Try again.','معرفناش نحفظ. جرّب تاني.')}}}
+document.addEventListener('click',e=>{const t=e.target;let x;
+ if(x=t.closest('[data-rx]')){react(x.dataset.rl,x.dataset.rx);return}
+ if(x=t.closest('[data-cm]')){const id=x.dataset.cm,bx=x.closest('article').querySelector('.cmbox');bx.hidden=!bx.hidden;if(!bx.hidden)drawComments(id);return}
+ if(x=t.closest('[data-cdel]')){sb.from('hz_comments').delete().eq('id',x.dataset.cdel).then(()=>drawComments(x.dataset.cl));return}
+ if(x=t.closest('[data-prof]')){openProfile(x.dataset.prof);return}
+ if(t.closest('[data-pedit]')){editProfile()}
+});
+document.addEventListener('submit',async e=>{const f=e.target.closest('[data-cf]');if(!f)return;e.preventDefault();
+ if(!user)return needLogin();
+ const inp=f.querySelector('input'),v=inp.value.trim();if(!v)return;inp.value='';
+ const nm=(PROF&&PROF.full_name)||(user.email||'').split('@')[0];
+ await sb.from('hz_comments').insert({listing_id:f.dataset.cf,user_name:nm,body:v.slice(0,500)});drawComments(f.dataset.cf)});
+})();
+</script>
+</body></html>
