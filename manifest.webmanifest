@@ -1,1 +1,37 @@
-{"id": "horizon-app", "name": "Horizon", "short_name": "Horizon", "description": "On the horizon.. No limits", "start_url": "./index.html", "scope": "./", "display": "standalone", "background_color": "#FBFBFD", "theme_color": "#0F766E", "icons": [{"src": "hz-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"}, {"src": "hz-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}, {"src": "hz-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"}, {"src": "hz-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}
+{
+ "id": "horizon-app",
+ "name": "Horizon",
+ "short_name": "Horizon",
+ "description": "On the horizon.. No limits",
+ "start_url": "./index.html",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#071C20",
+ "theme_color": "#071C20",
+ "icons": [
+  {
+   "src": "hz-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "hz-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "hz-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "hz-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
