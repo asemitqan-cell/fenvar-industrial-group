@@ -475,7 +475,7 @@ livestock:[['kind','Service','الخدمة','s',O('Veterinary:بيطري,Livesto
 realestate:[['kind','Service','الخدمة','s',O('Brokerage:وساطة,Valuation:تقييم,Property management:إدارة عقارات,Other:أخرى')],['area','Areas you cover','المناطق','t']]}};
 const CAT_FOR={product:['furniture','wood','glass','upvc','perfumes','cars','realestate','food','learning','used'],service:['services','consulting','translation','health','events','learning','cars','realestate','livestock']};
 const SEEN=id=>'fv_seen_'+id;
-let stTab='items',curConv=null,ad=null,pendingChat=null,stTimer=null,stFlash='';
+let stTab='items',curConv=null,ad=null,pendingChat=null,stTimer=null,stFlash='',MYPROV=null;
 
 function attrTags(l){const qs=((FORMS[l.kind]||{})[l.cat])||[];return qs.filter(q=>l.attrs&&l.attrs[q[0]]).slice(0,3).map(q=>{const v=l.attrs[q[0]],o=(q[4]||[]).find(x=>x[0]===v);return esc(o?L(o[0],o[1]):v)})}
 function ulMeta(l){const pr=l.price!=null&&l.price!==''?esc(Number(l.price).toLocaleString())+' '+esc(l.currency||''):'';return `<small class="um">${[pr,esc(l.city||'')].filter(Boolean).join(' · ')}</small><div class="tg">${attrTags(l).map(x=>`<span>${x}</span>`).join('')}</div>`}
@@ -493,9 +493,9 @@ setInterval(pollUnread,30000);
 
 /* store modal */
 function showStore(tab,conv){stTab=tab;curConv=conv||null;open('#storeModal');setBar('barStore');renderStore()}
-const stHead=()=>`<h3>${L('My store','متجري','Mein Shop')}</h3><div class="seg stt">${[['items','My listings','إعلاناتي'],['msgs','Messages','الرسائل'],['add','+ Add','+ إضافة']].map(t=>`<button data-st="${t[0]}" class="${stTab===t[0]||(stTab==='chat'&&t[0]==='msgs')?'on':''}">${L(t[1],t[2])}</button>`).join('')}</div>`;
+const stHead=()=>`<h3>${L('My store','متجري','Mein Shop')}</h3><div class="seg stt">${[['items','My listings','إعلاناتي'],['msgs','Messages','الرسائل'],['add','+ Add','+ إضافة'],['prov','Provider ✓','مقدم خدمة']].map(t=>`<button data-st="${t[0]}" class="${stTab===t[0]||(stTab==='chat'&&t[0]==='msgs')?'on':''}">${L(t[1],t[2])}</button>`).join('')}</div>`;
 async function renderStore(){clearInterval(stTimer);const b=$('#stBody');if(!user){b.innerHTML='';return}
-if(stTab==='add')return renderAdd();if(stTab==='chat')return renderChat();
+if(stTab==='add'||stTab==='prov')await loadMyProv();if(stTab==='add')return renderAdd();if(stTab==='prov')return renderProv();if(stTab==='chat')return renderChat();
 b.innerHTML=stHead()+'<div class="dots" style="text-align:center;margin:26px"><i></i><i></i><i></i></div>';
 if(stTab==='items'){const r=await sb.from('hz_listings').select('*').eq('owner',user.id).order('created_at',{ascending:false});
 if(r.error){b.innerHTML=stHead()+`<p class="msg">${L('The store is not activated yet (database setup missing).','المتجر لسه مش متفعّل (إعداد قاعدة البيانات ناقص).')}</p>`;return}
@@ -506,9 +506,9 @@ if(r.error){b.innerHTML=stHead()+`<p class="msg">${L('Messages are not activated
 b.innerHTML=stHead()+(r.data.length?r.data.map(c=>`<button class="crow" data-conv="${esc(c.id)}"><b>${esc(c.listing_title)}</b><small>${c.seller_id===user.id?L('A customer is asking','عميل بيسأل'):L('Your question to the seller','سؤالك للبائع')}</small><span>${esc(c.last_text||'')}</span>${unread(c)?'<i class="udot"></i>':''}</button>`).join(''):`<p class="empty">${L('No messages yet.','مفيش رسائل لسه.')}</p>`)}
 pollUnread()}
 async function renderChat(){const b=$('#stBody'),id=curConv;const r=await sb.from('hz_conversations').select('*').eq('id',id).maybeSingle();const c=r.data;if(!c){stTab='msgs';return renderStore()}
-b.innerHTML=`<button class="pill" data-st="msgs">${L('← Back','← رجوع')}</button><h3 style="margin:10px 0 6px">${esc(c.listing_title)}</h3><div id="chatBox" class="chatb"></div><form id="chatForm" class="chatf"><input id="chatIn" autocomplete="off" placeholder="${L('Write a message…','اكتب رسالة…')}"><button class="btn">${L('Send','إرسال')}</button></form>`;
+b.innerHTML=`<button class="pill" data-st="msgs">${L('← Back','← رجوع')}</button><h3 style="margin:10px 0 6px">${esc(c.listing_title)}</h3><div id="dealBar"></div><div id="chatBox" class="chatb"></div><form id="chatForm" class="chatf"><input id="chatIn" autocomplete="off" placeholder="${L('Write a message…','اكتب رسالة…')}"><button class="btn">${L('Send','إرسال')}</button></form>`;
 const load=async()=>{const bx=$('#chatBox');if(!bx||$('#storeModal').hidden||stTab!=='chat'){clearInterval(stTimer);return}const m=await sb.from('hz_messages').select('*').eq('conversation_id',id).order('created_at');const d=m.data||[],end=bx.scrollHeight-bx.scrollTop-bx.clientHeight<60;
-bx.innerHTML=d.map(x=>`<div class="bub ${x.sender_id===user.id?'me':''}">${esc(x.body)}</div>`).join('')||`<p class="empty">${L('Say hello 👋','ابدأ بالسلام 👋')}</p>`;if(end)bx.scrollTop=bx.scrollHeight;try{localStorage.setItem(SEEN(id),d.length?d[d.length-1].created_at:new Date().toISOString())}catch(_){}pollUnread()};
+bx.innerHTML=d.map(x=>`<div class="bub ${x.sender_id===user.id?'me':''}">${esc(x.body)}</div>`).join('')||`<p class="empty">${L('Say hello 👋','ابدأ بالسلام 👋')}</p>`;if(end)bx.scrollTop=bx.scrollHeight;try{localStorage.setItem(SEEN(id),d.length?d[d.length-1].created_at:new Date().toISOString())}catch(_){}if(window.drawDeal)drawDeal(id);pollUnread()};
 await load();$('#chatBox').scrollTop=1e6;
 $('#chatForm').onsubmit=async e=>{e.preventDefault();const v=$('#chatIn').value.trim();if(!v)return;$('#chatIn').value='';await sb.from('hz_messages').insert({conversation_id:id,sender_id:user.id,body:v.slice(0,2000)});await load();$('#chatBox').scrollTop=1e6};
 stTimer=setInterval(load,5000)}
@@ -525,6 +525,7 @@ const qHTML=q=>`<label><span>${L(q[1],q[2])}</span>${q[3]==='s'?`<select name="a
 function drawPh(){const e=$('#adPh');if(e)e.innerHTML=ad.files.map((f,i)=>`<div class="pht">${f.type.startsWith('video/')?`<video src="${URL.createObjectURL(f)}" muted playsinline></video>`:`<img src="${URL.createObjectURL(f)}" alt="">`}<button type="button" data-rp="${i}">×</button></div>`).join('')}
 function renderAdd(){const b=$('#stBody');if(!ad)ad={kind:null,cat:null,files:[]};let h=stHead();
 if(!ad.kind){b.innerHTML=h+`<p class="tag">${L('What do you want to add?','عايز تضيف إيه؟')}</p><button class="row" data-ak="product">${L('A product I want to sell','منتج عايز أبيعه')}</button><button class="row" data-ak="service">${L('A service I offer','خدمة بقدّمها')}</button>`;return}
+if(ad.kind==='service'&&!MYPROV){b.innerHTML=h+`<button class="pill" data-ab>${L('← Back','← رجوع')}</button><p class="tag" style="margin:12px 0">${L('To offer a service, first register your professional details (license / card). It takes 2 minutes and adds a ✓ badge after review.','عشان تقدّم خدمة لازم تسجّل بياناتك المهنية الأول (الكارنيه / الترخيص). بياخد دقيقتين، وبعد المراجعة بتظهر علامة ✓ جنب اسمك.')}</p><button class="btn" data-st="prov">${L('Register as a provider','سجّل كمقدم خدمة')}</button>`;return}
 if(!ad.cat){b.innerHTML=h+`<button class="pill" data-ab>${L('← Back','← رجوع')}</button><p class="tag" style="margin-top:12px">${L('Pick the section that fits best','اختار القسم الأنسب')}</p><div class="cgrid">${CAT_FOR[ad.kind].map(id=>{const c=CATALOG.find(x=>x.id===id);return c?`<button class="pillc" data-ac="${id}" style="--a:${c.c[0]}">${ico(id)}<span>${N(c)}</span></button>`:''}).join('')}</div>`;return}
 const qs=FORMS[ad.kind][ad.cat]||[],sv=ad.kind==='service';
 b.innerHTML=h+`<button class="pill" data-ab>${L('← Back','← رجوع')}</button><h4 style="margin:12px 0 8px">${esc(catName(ad.cat))} · ${sv?L('Service','خدمة'):L('Product','منتج')}</h4><form id="adForm"><label><span>${sv?L('Service title','اسم الخدمة'):L('Title','عنوان الإعلان')}</span><input name="title" required maxlength="80"></label>${qs.map(qHTML).join('')}<label><span>${sv?L('Service details (what you do, how you work)','تفاصيل الخدمة (بتعمل إيه وإزاي)'):L('Description (optional)','وصف (اختياري)')}</span><textarea name="desc" rows="4" maxlength="1500" ${sv?'required':''}></textarea></label><div class="two"><label><span>${sv?L('Price from (optional)','السعر يبدأ من (اختياري)'):L('Price','السعر')}</span><input name="price" type="number" min="0" step="any" inputmode="decimal"></label><label><span>${L('Currency','العملة')}</span><select name="cur"><option>EGP</option><option>USD</option><option>EUR</option><option>SAR</option><option>AED</option></select></label></div><label><span>${L('City / area','المدينة / المنطقة')}</span><input name="city" maxlength="60"></label><div id="adPh" class="ph3"></div><label class="phbtn">${sv?L('+ Add photos, GIF or a short video (optional)','+ ضيف صور أو GIF أو فيديو قصير (اختياري)'):L('+ Add photos, GIF or a short video (up to 4)','+ ضيف صور أو GIF أو فيديو قصير (لحد 4)')}<input id="adFiles" class="fi" type="file" accept="image/*,video/mp4,video/webm,video/quicktime" multiple></label><label><span>${L('Your name','اسمك')}</span><input name="fname" required maxlength="60" value="${esc(PROF&&PROF.full_name||'')}"></label><label><span>${L('Phone / WhatsApp','رقم التليفون / واتساب')}</span><input name="fphone" type="tel" required maxlength="25" value="${esc(PROF&&PROF.phone||'')}"></label><p class="msg" id="adMsg"></p><button class="btn" id="adGo">${L('Send for review','ابعت للمراجعة')}</button></form>`;
@@ -573,14 +574,17 @@ const css=document.createElement('style');css.textContent=`
 .soc{display:flex;gap:6px;padding:0 14px 12px;flex-wrap:wrap}.rx{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:999px;padding:6px 11px;font-size:14px;display:flex;gap:5px;align-items:center;cursor:pointer}.rx i{font-style:normal;font-size:12px;color:var(--mut)}.rx.on{border-color:var(--a);background:rgba(15,118,110,.12)}
 .cmbox{padding:0 14px 14px}.cmi{padding:8px 0;border-top:1px solid var(--line);font-size:13px}.cmi b{display:block;font-size:12px}.cmi small{color:var(--mut)}.cmi button{border:0;background:none;color:var(--mut);cursor:pointer}
 .cmf{display:flex;gap:8px;margin-top:8px}.cmf input{flex:1;min-width:0;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:inherit}
-.pfh{text-align:center;padding:6px 0 12px}.pfh .avp{width:92px;height:92px;font-size:34px;margin:0 auto 10px}.pfh h3{margin:0}.pfh p{margin:6px 0;color:var(--mut);font-size:13px}.pfs{display:flex;justify-content:center;gap:22px;margin:10px 0}.pfs b{display:block;font-size:17px}.pfs small{color:var(--mut)}
+.vf{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#0EA5E9;color:#fff;font-size:10px;margin-inline-start:4px;vertical-align:middle}.stv{display:block;color:var(--g);font-size:12px;font-weight:700}.rv{border-top:1px solid var(--line);padding:10px 0;font-size:13px}.rv small{color:var(--mut)}.pfx{margin:3px 0}.pfh{text-align:center;padding:6px 0 12px}.pfh .avp{width:92px;height:92px;font-size:34px;margin:0 auto 10px}.pfh h3{margin:0}.pfh p{margin:6px 0;color:var(--mut);font-size:13px}.pfs{display:flex;justify-content:center;gap:22px;margin:10px 0}.pfs b{display:block;font-size:17px}.pfs small{color:var(--mut)}
 `;document.head.appendChild(css);
 
+const vb=id=>(PP[id]&&PP[id].verified)?' <span class="vf" title="Verified">✓</span>':'';
+const rt=id=>{const p=PP[id]||{};return Number(p.rating_count)>0?`<small class="stv">★ ${Number(p.rating_avg).toFixed(1)} (${p.rating_count})</small>`:''};
+const starS=n=>'★'.repeat(n)+'☆'.repeat(5-n);
 const nameOf=id=>(PP[id]&&PP[id].full_name)||L('Provider','مقدم خدمة');
 const avEl=(id,c)=>{const p=PP[id]||{},st=`--a:${c.c[0]};--b:${c.c[1]}`;return `<span class="avp" style="${st}">${p.avatar_url?`<img src="${esc(p.avatar_url)}" alt="">`:esc((nameOf(id)||'?').trim().charAt(0).toUpperCase())}</span>`};
 const rxOf=id=>RX[id]||{c:{},m:null};
 function socBar(l){const r=rxOf(l.id);return `<div class="soc" data-sid="${esc(l.id)}">${EM.map(e=>`<button type="button" class="rx ${r.m===e[0]?'on':''}" data-rx="${e[0]}" data-rl="${esc(l.id)}">${e[1]}<i>${r.c[e[0]]||''}</i></button>`).join('')}<button type="button" class="rx" data-cm="${esc(l.id)}">💬<i>${CM[l.id]||''}</i></button></div><div class="cmbox" data-cb="${esc(l.id)}" hidden></div>`}
-function postX(it,noHead){const l=it.ul,c=it.c;return `<article class="post">${noHead?'':`<header class="pw" data-prof="${esc(l.owner)}">${avEl(l.owner,c)}<div><b>${esc(nameOf(l.owner))}</b><small>${esc(N(c))} · ${l.kind==='service'?L('Service','خدمة','Service'):L('Product','منتج','Produkt')}</small></div></header>`}<div class="pimg" style="background:${grad(c.c)}">${it.src?mediaEl(it.src):ico(c.id)}</div><div class="pb"><div style="min-width:0"><h3>${esc(l.title)}</h3>${ulMeta(l)}</div><button class="btn" data-msg="${esc(l.id)}">${msgLbl(l)}</button></div>${socBar(l)}</article>`}
+function postX(it,noHead){const l=it.ul,c=it.c;return `<article class="post">${noHead?'':`<header class="pw" data-prof="${esc(l.owner)}">${avEl(l.owner,c)}<div><b>${esc(nameOf(l.owner))}${vb(l.owner)}</b><small>${esc(N(c))} · ${l.kind==='service'?L('Service','خدمة','Service'):L('Product','منتج','Produkt')}</small>${rt(l.owner)}</div></header>`}<div class="pimg" style="background:${grad(c.c)}">${it.src?mediaEl(it.src):ico(c.id)}</div><div class="pb"><div style="min-width:0"><h3>${esc(l.title)}</h3>${ulMeta(l)}</div><button class="btn" data-msg="${esc(l.id)}">${msgLbl(l)}</button></div>${socBar(l)}</article>`}
 window.ulPost=it=>postX(it,false);
 
 async function loadSocial(){
@@ -621,9 +625,11 @@ async function drawComments(id){
 async function openProfile(uid){
  open('#profModal');const b=$('#pfBody');b.innerHTML='<div class="dots" style="text-align:center;margin:30px"><i></i><i></i><i></i></div>';
  if(!PP[uid]){try{const r=await sb.from('hz_public_profiles').select('*').eq('id',uid).maybeSingle();if(r.data)PP[uid]=r.data}catch(_){}}
+ let rv=[];try{const r=await sb.from('hz_ratings').select('*').eq('provider_id',uid).order('created_at',{ascending:false}).limit(20);rv=r.data||[]}catch(_){}
  const p=PP[uid]||{},ls=UL.filter(l=>l.owner===uid),c0=CATALOG.find(x=>x.id===(ls[0]||{}).cat)||CATALOG[0];
  const likes=ls.reduce((n,l)=>n+Object.values(rxOf(l.id).c).reduce((a,v)=>a+v,0),0),mine=user&&user.id===uid;
- b.innerHTML=`<div class="pfh">${avEl(uid,c0)}<h3>${esc(nameOf(uid))}</h3>${p.brand?`<p><b>${esc(p.brand)}</b></p>`:''}${p.bio?`<p>${esc(p.bio)}</p>`:''}<div class="pfs"><div><b>${ls.length}</b><small>${L('Posts','منشورات')}</small></div><div><b>${likes}</b><small>${L('Reactions','تفاعلات')}</small></div></div>${mine?`<button class="btn" data-pedit>${L('Edit my profile','عدّل بروفايلي')}</button>`:''}</div><div id="pfList">${ls.map(l=>postX({ul:l,c:CATALOG.find(x=>x.id===l.cat)||CATALOG[0],src:(l.photos||[])[0]||''},true)).join('')||`<p class="empty">${L('No posts yet.','لسه مفيش منشورات.')}</p>`}</div>`;
+ const n=Number(p.rating_count)||0,av=Number(p.rating_avg)||0;
+ b.innerHTML=`<div class="pfh">${avEl(uid,c0)}<h3>${esc(nameOf(uid))}${vb(uid)}</h3>${p.business_name||p.brand?`<p><b>${esc(p.business_name||p.brand)}</b></p>`:''}${p.profession?`<p>${esc(p.profession)}${p.experience_years?' · '+esc(p.experience_years)+' '+L('yrs experience','سنة خبرة'):''}</p>`:''}<p class="stv" style="font-size:15px">${n?`${starS(Math.round(av))} ${av.toFixed(1)} <small>(${n} ${L('reviews','تقييم')})</small>`:`<small>${L('No reviews yet','لسه مفيش تقييمات')}</small>`}</p>${p.bio?`<p>${esc(p.bio)}</p>`:''}${p.areas?`<p class="pfx">📍 ${esc(p.areas)}</p>`:''}${p.work_hours?`<p class="pfx">🕒 ${esc(p.work_hours)}</p>`:''}<div class="pfs"><div><b>${ls.length}</b><small>${L('Posts','منشورات')}</small></div><div><b>${Number(p.deals_count)||0}</b><small>${L('Deals','اتفاقات')}</small></div><div><b>${likes}</b><small>${L('Reactions','تفاعلات')}</small></div></div>${mine?`<button class="btn" data-pedit>${L('Edit my profile','عدّل بروفايلي')}</button> <button class="btn" data-pprov>${L('Provider details','بيانات مقدم الخدمة')}</button>`:''}</div>${rv.length?`<h4 style="margin:6px 0">${L('Reviews','التقييمات')}</h4><div>${rv.map(x=>`<div class="rv"><b>${esc(x.rater_name||'')}</b> <span class="stv" style="display:inline">${starS(x.stars)}</span>${x.comment?`<br>${esc(x.comment)}`:''}<br><small>${new Date(x.created_at).toLocaleDateString()}</small></div>`).join('')}</div>`:''}<div id="pfList">${ls.map(l=>postX({ul:l,c:CATALOG.find(x=>x.id===l.cat)||CATALOG[0],src:(l.photos||[])[0]||''},true)).join('')||`<p class="empty">${L('No posts yet.','لسه مفيش منشورات.')}</p>`}</div>`;
 }
 function editProfile(){
  const p=PP[user.id]||{};
@@ -646,6 +652,133 @@ document.addEventListener('submit',async e=>{const f=e.target.closest('[data-cf]
  const inp=f.querySelector('input'),v=inp.value.trim();if(!v)return;inp.value='';
  const nm=(PROF&&PROF.full_name)||(user.email||'').split('@')[0];
  await sb.from('hz_comments').insert({listing_id:f.dataset.cf,user_name:nm,body:v.slice(0,500)});drawComments(f.dataset.cf)});
+})();
+</script>
+<script>
+/* Horizon trust layer: provider verification form, "deal done", star ratings, owner review */
+(function(){
+if(!sb)return;
+const css=document.createElement('style');css.textContent=`
+.deal{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:8px 0;background:var(--card);font-size:13px}
+.deal p{margin:4px 0}.deal .row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.stars{display:flex;gap:2px;justify-content:center;direction:ltr}.stars button{border:0;background:none;font-size:32px;line-height:1;color:#CBD5E1;cursor:pointer;padding:0 3px}.stars button.on{color:#F59E0B}
+.deal textarea,#pvForm textarea,#pvForm select{width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:inherit;font:inherit}
+.pvh{font-size:13px;color:var(--mut);margin:6px 0 12px;line-height:1.7}
+.pvc{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:var(--card);font-size:13px;line-height:1.7}
+.pvc img{max-width:100%;max-height:220px;border-radius:10px;display:block;margin:8px 0;cursor:pointer}
+.pvc .row2{display:flex;gap:8px;flex-wrap:wrap}.pvc .btn,.deal .btn{padding:8px 14px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:10px 0}.chk input{margin-top:3px}
+`;document.head.appendChild(css);
+const stT=n=>'★'.repeat(n)+'☆'.repeat(5-n);
+const isOwner=()=>user&&OWNER_EMAILS.includes((user.email||'').toLowerCase());
+let provFlash='';
+
+window.loadMyProv=async function(){
+ if(!user){MYPROV=null;return}
+ try{const r=await sb.from('hz_providers').select('*').eq('user_id',user.id).maybeSingle();MYPROV=r.data||null}catch(_){MYPROV=null}
+};
+
+/* ---------- provider registration (My store > Provider tab) ---------- */
+window.renderProv=function(){
+ const b=$('#stBody'),p=MYPROV||{};
+ const ST={pending:[L('Under review','قيد المراجعة'),'#B45309'],approved:[L('Verified ✓','موثّق ✓'),'#067647'],rejected:[L('Rejected','مرفوض'),'#B42318']};
+ const s=ST[p.status],v=k=>esc(p[k]==null?'':p[k]);
+ const typ=[['individual','Individual / freelancer','فرد / شغل حر'],['company','Company / workshop','شركة / ورشة / مؤسسة']];
+ b.innerHTML=stHead()+(provFlash?`<p class="msg ok">${esc(provFlash)}</p>`:'')+
+ `<p class="pvh">${L('Register your professional details so customers can trust you. Our team reviews them, then a ✓ badge appears next to your name. Your license photo is visible to the admin only.','سجّل بياناتك المهنية عشان الناس تثق فيك. فريق Horizon بيراجعها، وبعد التوثيق بتظهر علامة ✓ جنب اسمك. صورة الكارنيه مش بتظهر لأي حد غير الإدارة.')}</p>`+
+ (s?`<p class="msg" style="color:${s[1]}"><b>${s[0]}</b>${p.status==='rejected'&&p.reject_reason?' · '+esc(p.reject_reason):''}${p.status==='approved'?' · '+L('Changing the license number, photo or profession sends it for review again.','لو غيّرت رقم الكارنيه أو صورته أو التخصص هيرجع للمراجعة.'):''}</p>`:'')+
+ `<form id="pvForm">
+ <label><span>${L('Account type','نوع الحساب')}</span><select name="ptype">${typ.map(x=>`<option value="${x[0]}" ${(p.provider_type||'individual')===x[0]?'selected':''}>${L(x[1],x[2])}</option>`).join('')}</select></label>
+ <label><span>${L('Full name (as on the license)','الاسم بالكامل (زي الكارنيه)')}</span><input name="fn" required maxlength="80" value="${esc(p.full_name||(PROF&&PROF.full_name)||'')}"></label>
+ <label><span>${L('Business / shop name (optional)','الاسم التجاري / اسم المحل (اختياري)')}</span><input name="bn" maxlength="80" value="${v('business_name')}"></label>
+ <label><span>${L('Profession / specialty','المهنة / التخصص')}</span><input name="pf" required maxlength="80" placeholder="${L('e.g. Carpenter, Interior designer, Doctor','مثلًا: نجار، مصمم داخلي، طبيب')}" value="${v('profession')}"></label>
+ <label><span>${L('Practice license / card number','رقم كارنيه المزاولة / الترخيص')}</span><input name="ln" required maxlength="60" value="${v('license_no')}"></label>
+ <label><span>${L('Issued by (syndicate / authority)','جهة الإصدار (نقابة / جهة)')}</span><input name="li" maxlength="80" value="${v('license_issuer')}"></label>
+ <label><span>${L('License expiry date (optional)','تاريخ انتهاء الكارنيه (اختياري)')}</span><input name="le" type="date" value="${v('license_expiry')}"></label>
+ <label><span>${L('Commercial register / tax card no. (optional)','رقم السجل التجاري / البطاقة الضريبية (اختياري)')}</span><input name="cr" maxlength="60" value="${v('commercial_reg')}"></label>
+ <div class="two"><label><span>${L('Years of experience','سنوات الخبرة')}</span><input name="ex" type="number" min="0" max="70" inputmode="numeric" value="${v('experience_years')}"></label>
+ <label><span>${L('WhatsApp / phone','واتساب / تليفون')}</span><input name="wa" type="tel" required maxlength="25" value="${esc(p.whatsapp||(PROF&&PROF.phone)||'')}"></label></div>
+ <label><span>${L('Areas you serve','المناطق اللي بتخدمها')}</span><input name="ar" maxlength="120" value="${v('areas')}"></label>
+ <label><span>${L('Working hours','مواعيد العمل')}</span><input name="wh" maxlength="80" value="${v('work_hours')}"></label>
+ <label><span>${L('Website / social link (optional)','موقع / لينك سوشيال (اختياري)')}</span><input name="wb" type="url" maxlength="200" value="${v('website')}"></label>
+ <label><span>${L('About you & qualifications','نبذة عنك ومؤهلاتك')}</span><textarea name="ab" rows="4" maxlength="800">${v('about')}</textarea></label>
+ <label class="phbtn">${p.license_doc?L('✓ License photo uploaded — tap to replace','✓ صورة الكارنيه مرفوعة — دوس عشان تبدّلها'):L('+ License / card photo (required)','+ صورة الكارنيه / الترخيص (مطلوبة)')}<input class="fi" type="file" name="doc" accept="image/*"></label>
+ <label class="chk"><input type="checkbox" name="ok" required><span>${L('I confirm the data is correct and agree to the platform terms.','أقر إن البيانات صحيحة وأوافق على شروط المنصة.')}</span></label>
+ <p class="msg" id="pvMsg"></p><button class="btn" id="pvGo">${p.status?L('Save & resubmit','احفظ وابعت للمراجعة'):L('Send for verification','ابعت للتوثيق')}</button></form>`;
+ provFlash='';
+ $('#pvForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),m=$('#pvMsg'),go=$('#pvGo');m.className='msg';m.textContent='';go.disabled=true;
+  try{
+   let path=p.license_doc||null;const fl=f.get('doc');
+   if(fl&&fl.size){const bl=await shrink(fl);path=`${user.id}/license_${Date.now()}.jpg`;const u=await sb.storage.from('provider-docs').upload(path,bl,{contentType:'image/jpeg'});if(u.error)throw u.error}
+   if(!path){m.textContent=L('Add a photo of the license.','ضيف صورة الكارنيه.');go.disabled=false;return}
+   const t=k=>String(f.get(k)||'').trim()||null,ex=String(f.get('ex')||'').trim();
+   const row={provider_type:f.get('ptype'),full_name:t('fn'),business_name:t('bn'),profession:t('pf'),license_no:t('ln'),license_issuer:t('li'),license_expiry:t('le'),license_doc:path,commercial_reg:t('cr'),experience_years:ex===''?null:+ex,areas:t('ar'),work_hours:t('wh'),website:t('wb'),whatsapp:t('wa'),about:t('ab')};
+   await sb.from('hz_profiles').upsert({id:user.id,email:user.email,full_name:row.full_name,phone:row.whatsapp});
+   const r=MYPROV?await sb.from('hz_providers').update(row).eq('user_id',user.id):await sb.from('hz_providers').insert(Object.assign({user_id:user.id},row));
+   if(r.error)throw r.error;
+   await loadMyProv();await loadProf();provFlash=L('Sent. We will review it soon.','اتبعت. هنراجعه قريب.');renderProv();$('#stBody').scrollTop=0
+  }catch(err){go.disabled=false;m.textContent=L('Could not save. Try again.','معرفناش نحفظ. جرّب تاني.')+' ['+(err.message||'error')+']'}}
+};
+
+/* ---------- "deal done" + stars inside the chat ---------- */
+window.drawDeal=async function(cid){
+ const el=$('#dealBar');if(!el||!user)return;
+ const r=await sb.from('hz_conversations').select('*').eq('id',cid).maybeSingle(),c=r.data;if(!c)return;
+ const st=c.deal_status||'none',me=user.id,buyer=c.buyer_id===me;
+ let mine=null;if(st==='agreed'&&buyer){const q=await sb.from('hz_ratings').select('stars,comment').eq('conversation_id',cid).maybeSingle();mine=q.data}
+ const sig=[cid,st,c.deal_by,mine&&mine.stars,mine&&mine.comment].join('|');
+ if(el.dataset.sig===sig)return;el.dataset.sig=sig;el.dataset.cid=cid;
+ let h='';
+ if(st==='none')h=`<button class="btn" data-deal="mark">✅ ${L('Deal done','تم الاتفاق')}</button><p class="tag">${L('Tap when you both agreed. The other side confirms.','دوس لما تتفقوا. والطرف التاني بيأكّد.')}</p>`;
+ else if(st==='proposed'&&c.deal_by===me)h=`<p>⏳ ${L('Waiting for the other side to confirm.','مستني تأكيد الطرف التاني.')}</p><div class="row2"><button class="pill" data-deal="cancel">${L('Cancel','إلغاء')}</button></div>`;
+ else if(st==='proposed')h=`<p>🤝 ${L('The other side says you agreed.','الطرف التاني بيقول إنكم اتفقتوا.')}</p><div class="row2"><button class="btn" data-deal="mark">✅ ${L('Confirm deal','أكّد الاتفاق')}</button><button class="pill" data-deal="cancel">${L('Not yet','لسه')}</button></div>`;
+ else if(buyer){const n=mine?mine.stars:0;h=`<p class="msg ok">🤝 ${L('Deal confirmed. How was it?','تم الاتفاق. إيه تقييمك؟')}</p><div class="stars" data-n="${n}">${[1,2,3,4,5].map(i=>`<button type="button" data-star="${i}" class="${i<=n?'on':''}">★</button>`).join('')}</div><textarea id="rvTxt" rows="2" maxlength="500" placeholder="${L('Write a short review (optional)','اكتب رأيك باختصار (اختياري)')}">${esc(mine&&mine.comment||'')}</textarea><p class="msg" id="rvMsg"></p><div class="row2"><button class="btn" data-rate>${mine?L('Update rating','عدّل التقييم'):L('Send rating','ابعت التقييم')}</button></div>`}
+ else h=`<p class="msg ok">🤝 ${L('Deal confirmed. The customer can now rate you.','تم الاتفاق. العميل هيقدر يقيّمك.')}</p>`;
+ el.innerHTML=`<div class="deal">${h}</div>`;
+};
+document.addEventListener('click',async e=>{const t=e.target;let x;
+ if(x=t.closest('[data-deal]')){const cid=curConv;if(!cid)return;x.disabled=true;
+  const r=await sb.rpc('hz_deal',{p_conv:cid,p_action:x.dataset.deal});
+  if(r.error){alert(L('Could not update. Make sure the database setup was run.','معرفناش نحدّث. اتأكد إن إعداد قاعدة البيانات اتنفّذ.'));x.disabled=false;return}
+  const el=$('#dealBar');if(el)el.dataset.sig='';drawDeal(cid);return}
+ if(x=t.closest('[data-star]')){const bx=x.closest('.stars'),n=+x.dataset.star;bx.dataset.n=n;bx.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.star<=n));return}
+ if(t.closest('[data-rate]')){const cid=curConv,n=+(($('#dealBar .stars')||{dataset:{}}).dataset.n||0),m=$('#rvMsg');
+  if(!n){m.textContent=L('Pick 1 to 5 stars.','اختار من 1 لـ 5 نجوم.');return}
+  const r=await sb.rpc('hz_rate',{p_conv:cid,p_stars:n,p_comment:($('#rvTxt')||{}).value||null});
+  if(r.error){m.textContent=L('Could not send the rating.','معرفناش نبعت التقييم.');return}
+  const el=$('#dealBar');if(el)el.dataset.sig='';await drawDeal(cid);const mm=$('#rvMsg');if(mm){mm.className='msg ok';mm.textContent=L('Thank you for your rating!','شكرًا على تقييمك!')}
+  if(window.loadUL)loadUL();return}
+ if(x=t.closest('[data-pprov]')){$('#profModal').hidden=true;showStore('prov');return}
+ if(x=t.closest('[data-pimg]')){window.open(x.dataset.pimg,'_blank','noopener');return}
+ if(x=t.closest('[data-admf]')){admF=x.dataset.admf;drawAdm();return}
+ if(x=t.closest('[data-pv]')){const u=x.dataset.u,a=x.dataset.pv;let patch;
+  if(a==='approve')patch={status:'approved',verified:true,reject_reason:null};
+  else if(a==='reject'){const why=prompt(L('Reason for rejection?','سبب الرفض؟'));if(why===null)return;patch={status:'rejected',verified:false,reject_reason:why.trim()||null}}
+  else patch={status:'pending',verified:false};
+  const r=await sb.from('hz_providers').update(patch).eq('user_id',u);if(r.error){alert(r.error.message);return}drawAdm()}
+});
+
+/* ---------- owner: review provider requests ---------- */
+let admF='pending';
+document.body.insertAdjacentHTML('beforeend','<div class="modal" id="admModal" hidden><div class="sheet st"><button type="button" class="x" data-close>×</button><div id="admBody"></div></div></div>');
+const ob=document.createElement('button');ob.className='row';ob.id='ownProvRow';ob.hidden=true;const anchor=$('#ownRow');if(anchor)anchor.after(ob);
+ob.onclick=()=>{$('#accModal').hidden=true;open('#admModal');drawAdm()};
+async function drawAdm(){
+ const b=$('#admBody');if(!isOwner()){b.innerHTML='';return}
+ const tabs=[['pending','Pending','قيد المراجعة'],['approved','Verified','موثّقين'],['rejected','Rejected','مرفوضين']];
+ const head=`<h3>${L('Provider requests','طلبات مقدمي الخدمة')}</h3><div class="seg stt">${tabs.map(x=>`<button data-admf="${x[0]}" class="${admF===x[0]?'on':''}">${L(x[1],x[2])}</button>`).join('')}</div>`;
+ b.innerHTML=head+'<div class="dots" style="text-align:center;margin:26px"><i></i><i></i><i></i></div>';
+ const r=await sb.from('hz_providers').select('*').eq('status',admF).order('created_at',{ascending:false});
+ if(r.error){b.innerHTML=head+`<p class="msg">${L('Database setup is missing.','إعداد قاعدة البيانات ناقص.')}</p>`;return}
+ const rows=r.data||[];
+ const urls=await Promise.all(rows.map(async p=>{if(!p.license_doc)return'';try{const s=await sb.storage.from('provider-docs').createSignedUrl(p.license_doc,600);return s.data?s.data.signedUrl:''}catch(_){return''}}));
+ b.innerHTML=head+(rows.map((p,i)=>`<div class="pvc"><b>${esc(p.full_name||'')}</b>${p.business_name?' · '+esc(p.business_name):''}<br>${esc(p.profession||'')} · ${p.provider_type==='company'?L('Company','شركة'):L('Individual','فرد')}${p.experience_years!=null?' · '+esc(p.experience_years)+' '+L('yrs','سنة'):''}<br>${L('License','الكارنيه')}: <b>${esc(p.license_no||'')}</b>${p.license_issuer?' · '+esc(p.license_issuer):''}${p.license_expiry?' · '+L('expires','ينتهي')+' '+esc(p.license_expiry):''}${p.commercial_reg?`<br>${L('Register / tax','سجل / ضريبة')}: ${esc(p.commercial_reg)}`:''}${p.areas?`<br>${L('Areas','المناطق')}: ${esc(p.areas)}`:''}${p.work_hours?`<br>${L('Hours','المواعيد')}: ${esc(p.work_hours)}`:''}${p.whatsapp?`<br>📞 <a href="tel:${esc(p.whatsapp)}">${esc(p.whatsapp)}</a>`:''}${p.website?`<br><a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website)}</a>`:''}${p.about?`<br>${esc(p.about)}`:''}${urls[i]?`<img src="${esc(urls[i])}" data-pimg="${esc(urls[i])}" alt="">`:`<br><small class="msg">${L('No license photo','مفيش صورة كارنيه')}</small>`}${p.reject_reason?`<br><small class="msg">${esc(p.reject_reason)}</small>`:''}<div class="row2">${p.status!=='approved'?`<button class="btn" data-pv="approve" data-u="${esc(p.user_id)}">✓ ${L('Approve','وافق')}</button>`:`<button class="pill" data-pv="revoke" data-u="${esc(p.user_id)}">${L('Revoke','اسحب التوثيق')}</button>`}${p.status!=='rejected'?`<button class="pill" data-pv="reject" data-u="${esc(p.user_id)}">${L('Reject','ارفض')}</button>`:''}</div></div>`).join('')||`<p class="empty">${L('Nothing here.','مفيش حاجة هنا.')}</p>`);
+}
+const _sy2=window.syncUI;
+window.syncUI=function(){_sy2&&_sy2();ob.hidden=!isOwner();ob.textContent=L('Review provider requests','مراجعة طلبات مقدمي الخدمة')};
+if(window.syncUI)syncUI();
+sb.auth.onAuthStateChange((_,s)=>{setTimeout(()=>{if(s&&s.user)loadMyProv();else MYPROV=null},50)});
+loadMyProv();
 })();
 </script>
 </body></html>

@@ -1,5 +1,5 @@
 // Horizon service worker: network-first, so new GitHub uploads show up immediately.
-const V='hz-v12';
+const V='hz-v13';
 self.addEventListener('install',e=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil(
   caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim())
