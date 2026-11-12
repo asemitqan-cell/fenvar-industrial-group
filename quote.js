@@ -7,7 +7,7 @@
 const T=(en,ar)=>typeof L==='function'?L(en,ar):ar;
 const E=s=>typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $q=s=>document.querySelector(s);
-const MAP={upvc:'upvc',glass:'upvc',wood:'wood',furniture:'wood',health:'nursing'};
+const MAP={upvc:'upvc',glass:'upvc',wood:'wood',furniture:'wood',health:'nursing',iron:'iron'};
 const INTENT=/(عرض\s*(ال)?سعر|عروض\s*(ال)?[اأ]سعار|كوتيشن|تسعير|quotation|\bquote\b|price\s*quote|\bangebot\b)/i;
 const PRICEW=/(بكام|بكم|كام\s*سعر|سعر|اسعار|أسعار|تكلفة|تكلف|price|cost|how much|preis)/i;
 const SEC_WORDS=[['installment',/(قسط|تقسيط|بالقسط|installment)/i],['nursing',/(تمريض|ممرض|حقن|كانيولا|رعاية مسنين|nursing)/i],['accessories',/(مفصلة|كالون|ترباس|مقبض|عين سحرية|اكسسوار|إكسسوار)/i],['upvc',/(upvc|يو\s*بي\s*في\s*سي|قطاع|قطاعات|شباك|شبابيك|شتر|بلكونة|دبل جلاس|سيكوريت|زجاج)/i],['wood',/(خشب|أبلكاش|ابلكاش|mdf|مطبخ|دولاب|موبيليا)/i],['iron',/(حديد|حدادة|درابزين|بوابة|سلم)/i]];
@@ -184,9 +184,6 @@ function picker(seed){ensureModal();show();Q.res=null;
  $q('#qtBody').innerHTML=`<div class="qt-b"><h3>🧾 ${T('Request a quote','طلب عرض سعر')}</h3><p class="qt-s">${T('Pick a section','اختار القسم')}</p><div class="hs-g">${sections().map(s=>`<button type="button" class="hs-r" data-qpick="${s.id}"><span class="hs-i" style="--c:#0F766E">${s.ico}</span><span class="hs-t">${s.ar}</span></button>`).join('')}</div></div>`;
  Q.seed=seed||''}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qpick]');if(b&&$q('#qtModal')&&$q('#qtModal').contains(b))openQuote(b.dataset.qpick,Q.seed)});
-function homeCard(){const h=$q('#home');if(!h||h.querySelector('.qt-home')||!sections().length)return;
- h.insertAdjacentHTML('afterbegin',`<button type="button" class="btn qt-home" style="margin:10px 0;width:100%">🧾 ${T('Request a quote','طلب عرض سعر')}</button>`);h.querySelector('.qt-home').onclick=()=>picker('')}
-function bootHome(){const h=$q('#home');if(!h){setTimeout(bootHome,300);return}homeCard();new MutationObserver(homeCard).observe(h,{childList:true})}
-bootHome();
+
 window.hzQuote=openQuote;
 })();
