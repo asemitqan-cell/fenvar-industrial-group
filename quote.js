@@ -30,10 +30,38 @@ function ensureModal(){if($q('#qtModal'))return;
 
 function show(){ensureModal();$q('#qtModal').hidden=false}
 function hide(){const m=$q('#qtModal');if(m)m.hidden=true}
-function sections(){return window.HZ_SECTIONS||[]}
+const FB=(function(){const U={m2:'متر مربع',m:'متر طولي',piece:'قطعة',set:'طقم',kg:'كجم',ton:'طن',service:'خدمة',visit:'زيارة',hour:'ساعة',shift:'شيفت 12 ساعة',day:'يوم',month:'شهر'};
+const COL=['color','اللون','t'],BR=['brand','الماركة','t'],SZ=['size','المقاسات','t'],TH=['thick','السُمك (مم)','n'],MT=['mat','الخامة','t'];
+const INST=[['m2','piece'],['تركيب','فك وتركيب','تركيب وتشطيب']];
+const S=[
+{id:'upvc',ico:'🪟',ar:'UPVC',groups:[
+ {k:'sector',ar:'القطاعات',u:['m2','piece'],pre:['شباك مفصلي','شباك سحاب','باب بلكونة','باب مفصلي','فيكس','قلاب'],f:[BR,COL,SZ]},
+ {k:'glass',ar:'الزجاج',u:['m2'],pre:['زجاج مفرد','دبل جلاس','سيكوريت','عاكس','ملون'],f:[TH,COL]},
+ {k:'acc',ar:'الإكسسوارات',u:['piece','set'],pre:['مقبض','قفل','سلك حشرات'],f:[BR,COL]},
+ {k:'install',ar:'التركيب',u:['m2','piece'],pre:INST[1],f:[]}]},
+{id:'wood',ico:'🪵',ar:'الخشب',groups:[
+ {k:'raw',ar:'الخامات',u:['m2','piece','m'],pre:['زان','موسكي','سويد','أبلكاش','MDF','HDF','قشرة / فينير'],f:[TH,SZ,['origin','المصدر',['محلي','مستورد']]]},
+ {k:'work',ar:'التصنيع',u:['m','m2','piece'],pre:['مطبخ خشب','دولاب','باب خشب','دريسنج','سرير','تفصيل حسب الطلب'],f:[MT,['finish','التشطيب',['دوكو','بويه','لاكيه','قشرة','طبيعي']]]},
+ {k:'install',ar:'التركيب',u:['m2','piece','m'],pre:INST[1],f:[]}]},
+{id:'iron',ico:'🔩',ar:'الحديد',groups:[
+ {k:'raw',ar:'الخامات',u:['ton','kg','m','piece'],pre:['حديد تسليح','كمرة','زاوية','ماسورة','صاج','شبك'],f:[SZ,TH,['grade','الدرجة','t']]},
+ {k:'work',ar:'أعمال الحدادة',u:['m2','m','piece','ton'],pre:['باب حديد','شباك حديد','سلم','درابزين','بوابة','مظلة','هنجر / شيد'],f:[TH,['paint','الدهان',['زيت','بويه فرن','جلفنة','بدون']]]},
+ {k:'install',ar:'التركيب',u:['m2','m','piece'],pre:INST[1],f:[]}]},
+{id:'accessories',ico:'🧰',ar:'الإكسسوارات',groups:[
+ {k:'doors',ar:'الأبواب',u:['piece','set'],pre:['مفصلة','كالون','مقبض','قفل','ترباس','عين سحرية'],f:[BR,['finish','اللون / التشطيب','t'],MT]},
+ {k:'kitchen',ar:'المطبخ والدواليب',u:['piece','set','m'],pre:['مفصلة هيدروليك','سكة درج','مقبض مطبخ','رجل','سلة'],f:[BR,['finish','اللون / التشطيب','t'],MT]},
+ {k:'other',ar:'أخرى',u:['piece','set','m','m2'],pre:[],f:[BR,COL,SZ]}]},
+{id:'installment',ico:'💳',ar:'البيع بالقسط',groups:[
+ {k:'plan',ar:'منتجات وخطط',u:['piece','set'],pre:[],inst:1,f:[['down','المقدم %','n'],['months','عدد الشهور','n'],['rate','الفايدة السنوية %','n'],['fee','مصاريف إدارية','n'],['docs','المستندات المطلوبة','t']]}]},
+{id:'nursing',ico:'🩺',ar:'التمريض',groups:[
+ {k:'service',ar:'الخدمات',u:['visit','hour','shift','day','month'],pre:['حقن عضل / وريد','تغيير على جرح','قياس سكر وضغط','تركيب كانيولا / محلول','قسطرة','رعاية مسنين','رعاية بعد عملية','سحب عينات منزلي'],f:[['area','المناطق','t'],['incl','المستلزمات',['تشمل','لا تشمل']]]},
+ {k:'extra',ar:'إضافات',u:['piece','visit','day'],pre:['زيادة ليلي','زيادة إجازة','مواصلات'],f:[]}]}
+];
+return {S:S,U:U}})();
+function sections(){return window.HZ_SECTIONS||FB.S}
 function sec(id){return sections().find(s=>s.id===id)}
 function instM(it,sub){const sp=it.specs||{},m=+sp.months;if(!m)return '';const fin=sub*(1-(+sp.down||0)/100),tot=fin*(1+(+sp.rate||0)/100*m/12)+(+sp.fee||0);return ` <span class="qt-s">(${T('monthly','القسط الشهري')} ≈ ${Math.round(tot/m).toLocaleString()} × ${m})</span>`}
-function unit(u){return (window.HZ_UNITS||{})[u]||u||''}
+function unit(u){return (window.HZ_UNITS||FB.U||{})[u]||u||''}
 function guess(q){for(const [id,re] of SEC_WORDS)if(re.test(q))return id;return null}
 
 async function loadPrices(secId){
@@ -101,7 +129,7 @@ function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTM
 
 async function openQuote(secId,seed){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
- if(!user){Q.pend=[secId,seed];if(typeof needLogin==='function')needLogin();return true}
+ if(!user){Q.pend=[secId,seed];if(typeof toast==='function')toast(T('Sign in first to request a quote.','سجّل دخول الأول عشان تطلب عرض سعر.'));if(typeof needLogin==='function')needLogin();return true}
  Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=seed||'';Q.budget='';
  show();$q('#qtBody').innerHTML='<p class="hs-box">…</p>';
  await loadPrices(id);Q.lines=[newLine()];draw();return true}
@@ -137,9 +165,10 @@ function intercept(getEl,e){const el=getEl();if(!el)return;const q=(el.value||''
  if(!(INTENT.test(q)||(PRICEW.test(q)&&g0)))return;
  const id=g0||(MAP[cat]?MAP[cat]:null);
  if(!id){e.stopImmediatePropagation();e.preventDefault();el.value='';const ch0=$q('#chat');if(ch0)ch0.hidden=true;picker(q);return}
+ if(!sec(MAP[id]||id))return;
  e.stopImmediatePropagation();e.preventDefault();el.value='';
  const ch=$q('#chat');if(ch)ch.hidden=true;const ai=$q('#ai');if(ai)ai.hidden=true;
- openQuote(id,q)}
+ try{openQuote(id,q)}catch(err){if(typeof toast==='function')toast(String(err&&err.message||err))}}
 document.addEventListener('click',e=>{if(e.target.closest('#aiGo'))intercept(()=>$q('#q'),e);else if(e.target.closest('#cGo'))intercept(()=>$q('#cIn'),e)},true);
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target&&e.target.id==='q')intercept(()=>$q('#q'),e);else if(e.target&&e.target.id==='cIn')intercept(()=>$q('#cIn'),e)},true);
 
