@@ -565,7 +565,7 @@ applyLang();
 (function(){
 if(!sb)return;
 const EM=[['love','❤️']];
-let RX={},CM={},PP={};
+let RX={},CM={},PP={};window.HZPP=PP;
 document.body.insertAdjacentHTML('beforeend','<div class="modal" id="profModal" hidden><div class="sheet st"><button type="button" class="x" data-close>×</button><div id="pfBody"></div></div></div>');
 const css=document.createElement('style');css.textContent=`
 .post header.pw{direction:ltr;cursor:pointer;text-align:left}.post header.pw>div{min-width:0}
@@ -1070,7 +1070,7 @@ const D0='00000000-0000-4000-8000-0000000000',did=n=>D0+n.toString(16).padStart(
 const dimg=(e,a,b,t)=>'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="800" height="800" fill="url(#g)"/><circle cx="650" cy="150" r="190" fill="#fff" opacity=".12"/><circle cx="120" cy="700" r="230" fill="#fff" opacity=".1"/><text x="400" y="440" font-size="260" text-anchor="middle">${e}</text><rect x="100" y="570" width="600" height="90" rx="45" fill="#000" opacity=".3"/><text x="400" y="632" font-size="40" font-family="Arial,sans-serif" font-weight="700" fill="#fff" text-anchor="middle">${t}</text></svg>`);
 const av=(c,a,b)=>dimg(c,a,b,'').replace(/font-size%3D%22260%22/,'font-size%3D%22300%22');
 const OW=[['أحمد للأثاث العصري','🛋️','#B45309','#78350F','أثاث وغرف نوم بتصميم مودرن','القاهرة'],['نور للزجاج والألومنيوم','🪟','#0891B2','#164E63','سيكوريت وUPVC وتركيب','الجيزة'],['تك ستور','📱','#2563EB','#1E3A8A','موبايلات وإلكترونيات أصلية','القاهرة'],['مطبخ ماما سلمى','🍰','#DB2777','#831843','أكل وحلويات منزلية','الإسكندرية'],['د. ياسمين للتغذية','🥗','#16A34A','#14532D','تغذية علاجية وأنظمة رياضية','أونلاين'],['العقارية الأولى','🏢','#475569','#0F172A','عقارات وسيارات','القاهرة الجديدة']];
-OW.forEach((o,i)=>{PP[did(0xa0+i)]={id:did(0xa0+i),full_name:o[0],brand:o[0],bio:o[4],areas:o[5],verified:true,rating_avg:4.3+i*.1,rating_count:20+i*9,avatar_url:av(o[1],o[2],o[3])}});
+OW.forEach((o,i)=>{HZPP[did(0xa0+i)]={id:did(0xa0+i),full_name:o[0],brand:o[0],bio:o[4],areas:o[5],verified:true,rating_avg:4.3+i*.1,rating_count:20+i*9,avatar_url:av(o[1],o[2],o[3])}});
 const T=(own,cat,kind,title,desc,price,city,e,a,b,sum)=>({own,cat,kind,title,description:desc,price,city,e,a,b,sum});
 const LS0=[T(0,'furniture','product','غرفة نوم مودرن كاملة','غرفة نوم 6 قطع خشب زان مع التوصيل والتركيب.',38000,'القاهرة','🛏️','#B45309','#78350F','خشب زان · ضمان سنتين'),
 T(0,'wood','product','مطبخ MDF بتصميم عصري','مطبخ بالمتر بتصميم حسب مساحتك مع معاينة مجانية.',5500,'الجيزة','🪵','#92400E','#451A03','سعر المتر · أكرليك'),
