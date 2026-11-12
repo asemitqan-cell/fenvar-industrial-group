@@ -31,6 +31,7 @@ const S=[
  {k:'service',ar:'الخدمات',u:['visit','hour','shift','day','month'],pre:['حقن عضل / وريد','تغيير على جرح','قياس سكر وضغط','تركيب كانيولا / محلول','قسطرة','رعاية مسنين','رعاية بعد عملية','سحب عينات منزلي'],f:[['area','المناطق','t'],['incl','المستلزمات',['تشمل','لا تشمل']]]},
  {k:'extra',ar:'إضافات',u:['piece','visit','day'],pre:['زيادة ليلي','زيادة إجازة','مواصلات'],f:[]}]}
 ];
+window.HZ_SECTIONS=S;window.HZ_UNITS=U;
 const PR={sec:null,gi:0,rows:null,del:[],msg:'',err:0,busy:0};
 const g$=()=>PR.sec.groups[PR.gi];
 const mk=(g,n,it,pre)=>({id:it?it.id:null,g:g.k,name:n,pre,unit:it?it.unit:g.u[0],price:it&&it.price!=null?it.price:'',specs:(it&&it.specs)||{},note:(it&&it.note)||'',open:0});
