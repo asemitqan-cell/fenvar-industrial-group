@@ -598,7 +598,7 @@ async function loadSocial(){
  FEED=null;feedMore(true);
 }
 const _lu=window.loadUL;
-window.loadUL=async function(){await _lu();await loadSocial()};
+window.loadUL=async function(){await _lu();if(window.hzDemo)hzDemo();await loadSocial()};
 loadSocial();setTimeout(loadSocial,1500);setTimeout(loadSocial,4500);
 sb.auth.onAuthStateChange(()=>setTimeout(loadSocial,300));
 
@@ -636,7 +636,7 @@ async function openProfile(uid){PFuid=uid;
  const post=l=>{const c=CATALOG.find(x=>x.id===l.cat)||CATALOG[0];let h=postX({ul:l,c,src:(l.photos||[])[0]||''},true);
   if(!mine)return h;if(l.status!=='approved')h=h.split('<div class="soc"')[0]+'</article>';const s=ST[l.status]||ST.pending;
   return h.replace(/<\/article>\s*$/,`<div class="mg"><span class="stg" style="--c:${s[1]}">${s[0]}</span><button type="button" class="pill" data-ledit="${esc(l.id)}">✏️ ${L('Edit','تعديل')}</button><button type="button" class="pill" data-ldel="${esc(l.id)}">🗑 ${L('Delete','حذف')}</button></div>${l.status==='rejected'&&l.reject_reason?`<p class="msg" style="padding:0 14px 12px">${esc(l.reject_reason)}</p>`:''}</article>`)};
- PFL=ls;PFpost=post;PFc0=c0;
+ if(mine&&!ls.length&&window.hzDemoMine)ls=hzDemoMine(uid);PFL=ls;PFpost=post;PFc0=c0;
  const ic=d=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
  const tile=l=>{const c=CATALOG.find(x=>x.id===l.cat)||CATALOG[0],st=ST[l.status]||ST.pending;return `<button type="button" class="gt" data-gp="${esc(l.id)}" style="background:${grad(c.c)}">${(l.photos||[])[0]?mediaEl(l.photos[0]):ico(c.id)}${mine&&l.status!=='approved'?`<em style="background:${st[1]}">${st[0]}</em>`:''}</button>`};
  const dot=(document.getElementById('barNotif')||{classList:{contains:()=>false}}).classList.contains('un');
@@ -884,6 +884,7 @@ sb.auth.onAuthStateChange(()=>setTimeout(pollNotif,300));
 #hzCb{margin:6px 0 10px}.bkb{border:0;background:var(--card);color:var(--ink);padding:7px 14px;border-radius:999px;font-weight:700;margin:0 0 10px;cursor:pointer;border:1px solid var(--line)}
 #avModal{align-items:center!important;justify-content:center;background:rgba(0,0,0,.9)!important}#avModal .sheet{background:none!important;box-shadow:none!important;height:auto!important;max-height:none!important;border-radius:0!important;padding:20px!important;color:#fff;max-width:420px;text-align:center}
 .av-big{width:min(80vw,340px);aspect-ratio:1;margin:0 auto 14px}.av-big .avp{width:100%;height:100%;font-size:110px;margin:0;border:0;box-shadow:0 20px 60px rgba(0,0,0,.5)}.av-n{font-size:18px;font-weight:800;margin:0 0 14px}.av-ac{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.av-ac label{margin:0;cursor:pointer}.av-x{position:absolute;top:calc(14px + env(safe-area-inset-top));inset-inline-end:14px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:26px;cursor:pointer}.ig-avb{border:0;background:none;padding:0;cursor:pointer;display:block;border-radius:50%}
+#hzDemoB{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:90;background:#111827;color:#fff;font-size:12px;padding:8px 12px;border-radius:999px;display:flex;gap:8px;align-items:center;max-width:94%;box-shadow:0 6px 20px rgba(0,0,0,.3)}#hzDemoB button{border:0;background:#fff;color:#111827;border-radius:999px;padding:4px 10px;font-weight:700;cursor:pointer}
 #toastHz{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:#0B2A2E;color:#fff;padding:11px 18px;border-radius:14px;font-size:14px;z-index:300;opacity:0;pointer-events:none;transition:.3s;max-width:88%;text-align:center}#toastHz.on{opacity:1;transform:translateX(-50%)}#toastHz.ok{background:#067647}
 #setModal .sheet,#profModal .sheet,#postModal .sheet{max-width:560px!important;width:100%;height:100%!important;max-height:100%!important;border-radius:0!important;padding:0 0 calc(28px + env(safe-area-inset-bottom))!important;background:var(--bg)!important}
 #setModal,#profModal,#postModal{align-items:stretch!important;justify-content:center}#profModal .x,#postModal .x,#setModal .x{display:none}
@@ -1061,6 +1062,43 @@ const r=await sb.auth.signInWithOtp({phone:n,options:{channel:'whatsapp'}});if(r
 $('#phT').textContent=L('Enter the code','اكتب الكود');$('#phB').innerHTML=`<p class="tag">${L('We sent a code on WhatsApp to','بعتنا كود على واتساب للرقم')} <b dir="ltr">${esc(n)}</b></p><label><span>${L('6-digit code','الكود (6 أرقام)')}</span><input name="c" inputmode="numeric" maxlength="6" required autocomplete="one-time-code"></label><p class="msg" id="phM"></p><button class="btn">${L('Confirm','تأكيد')}</button><button type="button" class="link" id="phBack">${L('Change number','غيّر الرقم')}</button>`;return}
 const r=await sb.auth.verifyOtp({phone:PHN,token:f.c.value.trim(),type:'sms'});if(r.error){m.textContent=L('The code is wrong or expired.','الكود غلط أو انتهى.');return}close();toast(L('Welcome!','أهلاً بيك!'),1)});
 document.addEventListener('click',e=>{if(e.target.closest('#phBack'))ph1()})}
+
+/* ===== demo mode: open index.html?demo=1 (nothing is saved) ===== */
+const HZD=(()=>{try{const q=new URLSearchParams(location.search).get('demo');if(q==='1')localStorage.setItem('hz_demo','1');if(q==='0')localStorage.removeItem('hz_demo');return localStorage.getItem('hz_demo')==='1'}catch(_){return false}})();
+if(HZD){
+const D0='00000000-0000-4000-8000-0000000000',did=n=>D0+n.toString(16).padStart(2,'0'),isD=id=>String(id||'').startsWith(D0);
+const dimg=(e,a,b,t)=>'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="800" height="800" fill="url(#g)"/><circle cx="650" cy="150" r="190" fill="#fff" opacity=".12"/><circle cx="120" cy="700" r="230" fill="#fff" opacity=".1"/><text x="400" y="440" font-size="260" text-anchor="middle">${e}</text><rect x="100" y="570" width="600" height="90" rx="45" fill="#000" opacity=".3"/><text x="400" y="632" font-size="40" font-family="Arial,sans-serif" font-weight="700" fill="#fff" text-anchor="middle">${t}</text></svg>`);
+const av=(c,a,b)=>dimg(c,a,b,'').replace(/font-size%3D%22260%22/,'font-size%3D%22300%22');
+const OW=[['أحمد للأثاث العصري','🛋️','#B45309','#78350F','أثاث وغرف نوم بتصميم مودرن','القاهرة'],['نور للزجاج والألومنيوم','🪟','#0891B2','#164E63','سيكوريت وUPVC وتركيب','الجيزة'],['تك ستور','📱','#2563EB','#1E3A8A','موبايلات وإلكترونيات أصلية','القاهرة'],['مطبخ ماما سلمى','🍰','#DB2777','#831843','أكل وحلويات منزلية','الإسكندرية'],['د. ياسمين للتغذية','🥗','#16A34A','#14532D','تغذية علاجية وأنظمة رياضية','أونلاين'],['العقارية الأولى','🏢','#475569','#0F172A','عقارات وسيارات','القاهرة الجديدة']];
+OW.forEach((o,i)=>{PP[did(0xa0+i)]={id:did(0xa0+i),full_name:o[0],brand:o[0],bio:o[4],areas:o[5],verified:true,rating_avg:4.3+i*.1,rating_count:20+i*9,avatar_url:av(o[1],o[2],o[3])}});
+const T=(own,cat,kind,title,desc,price,city,e,a,b,sum)=>({own,cat,kind,title,description:desc,price,city,e,a,b,sum});
+const LS0=[T(0,'furniture','product','غرفة نوم مودرن كاملة','غرفة نوم 6 قطع خشب زان مع التوصيل والتركيب.',38000,'القاهرة','🛏️','#B45309','#78350F','خشب زان · ضمان سنتين'),
+T(0,'wood','product','مطبخ MDF بتصميم عصري','مطبخ بالمتر بتصميم حسب مساحتك مع معاينة مجانية.',5500,'الجيزة','🪵','#92400E','#451A03','سعر المتر · أكرليك'),
+T(1,'glass','product','سيكوريت 10 مم للواجهات','زجاج سيكوريت بقص حسب المقاس وتركيب.',1200,'الجيزة','🪟','#0891B2','#164E63','سعر المتر · 10 مم'),
+T(1,'upvc','product','شبابيك UPVC عزل صوت وحرارة','شبابيك بزجاج مزدوج وأكسسوارات ألماني.',3400,'القاهرة','🚪','#0E7490','#0C4A6E','عزل ممتاز · ضمان 10 سنين'),
+T(2,'electronics','product','آيفون 14 برو 256 جيجا','جديد متبرشم بضمان وكيل معتمد.',42000,'القاهرة','📱','#2563EB','#1E3A8A','جديد · 256 جيجا'),
+T(2,'electronics','product','سماعات لاسلكية بعزل ضوضاء','بطارية 30 ساعة وصوت نقي.',1850,'القاهرة','🎧','#7C3AED','#4C1D95','جديد · ضمان سنة'),
+T(2,'appliances','product','شاشة 55 بوصة 4K سمارت','شاشة بنظام أندرويد ومدخلات متعددة.',14500,'الجيزة','📺','#0891B2','#0F172A','4K · سمارت'),
+T(5,'realestate','product','شقة 150م² تشطيب سوبر لوكس','الدور الثالث، 3 غرف وريسبشن، قريبة من الخدمات.',2850000,'القاهرة الجديدة','🏢','#475569','#0F172A','150م² · 3 غرف'),
+T(5,'cars','product','تويوتا كورولا 2021 فبريكا','ماشية 42 ألف كم، فل كامل، رخصة سارية.',780000,'القاهرة','🚗','#DC2626','#7F1D1D','2021 · 42 ألف كم'),
+T(3,'food','product','بوكس حلويات منزلية 12 قطعة','حلويات طازجة بتتعمل على الطلب.',350,'الإسكندرية','🍰','#DB2777','#831843','12 قطعة · توصيل'),
+T(4,'health','service','كشف تغذية علاجية أونلاين','خطة غذائية مخصصة ومتابعة أسبوعية.',250,'أونلاين','🥗','#16A34A','#14532D','جلسة 30 دقيقة'),
+T(4,'learning','service','كورس إنجليزي للمبتدئين','8 أسابيع مع محادثة وتمارين.',900,'أونلاين','📚','#7C3AED','#2563EB','8 أسابيع'),
+T(3,'perfumes','product','عطر عود فاخر 100 مل','ثبات عالي ومناسب للمناسبات.',1100,'القاهرة','🧴','#B45309','#1C1917','100 مل'),
+T(5,'livestock','product','قطط شيرازي مع شهادة تطعيم','عمر شهرين، متطعمة ومتعودة على البيت.',6500,'القاهرة','🐱','#F59E0B','#B45309','شهادة تطعيم'),
+T(5,'used','product','دراجة هوائية بحالة ممتازة','استعمال خفيف وصيانة دورية.',3200,'الجيزة','🚲','#16A34A','#14532D','مستعمل · ممتاز'),
+T(3,'events','service','تنظيم حفلات أعياد ميلاد الأطفال','ديكور وألعاب وتورتة وتصوير.',4500,'الإسكندرية','🎈','#EC4899','#7C3AED','حتى 25 طفل'),
+T(1,'consulting','service','استشارة تصميم داخلي','مقابلة وتصور أولي ومقترح ألوان وخامات.',400,'أونلاين','📐','#475569','#1E293B','جلسة ساعة'),
+T(1,'services','service','صيانة وتركيب مكيفات','فني معتمد مع ضمان على التركيب.',300,'القاهرة','🛠️','#0891B2','#0F172A','زيارة + فحص')];
+const mk=(x,i,uid,st)=>({id:did(0x10+i),owner:uid||did(0xa0+x.own),kind:x.kind,cat:x.cat,title:x.title,description:x.description,price:x.price,currency:'EGP',city:x.city,attrs:{},summary:x.sum,photos:[dimg(x.e,x.a,x.b,x.title.slice(0,28)),dimg(x.e,x.b,x.a,x.sum)],status:st||'approved',created_at:new Date(Date.now()-i*36e5).toISOString()});
+window.hzDemo=()=>{LS0.forEach((x,i)=>{const l=mk(x,i);if(!UL.some(u=>u.id===l.id))UL.push(l)})};
+window.hzDemoMine=uid=>[0,4,7,9,10,12].map((k,j)=>{const l=mk(LS0[k],0x40+j,uid,j===4?'pending':j===5?'rejected':'approved');l.id=did(0x60+j);return l});
+document.addEventListener('click',e=>{const x=e.target.closest('[data-rx],[data-cm],[data-msg]');if(!x)return;const id=x.dataset.rl||x.dataset.cm||x.dataset.msg;if(!isD(id))return;e.stopImmediatePropagation();e.preventDefault();
+if(x.dataset.rx){const on=x.classList.toggle('on'),i=x.querySelector('i');x.firstChild.nodeValue=on?'❤️':'🤍';i.textContent=Math.max(0,(+i.textContent||0)+(on?1:-1))||''}else toast(L('Demo post: comments and messages are off.','ده منشور تجريبي: التعليقات والرسائل مقفولة.'))},true);
+document.body.insertAdjacentHTML('beforeend',`<div id="hzDemoB">👀 ${L('Demo mode: these posts are not real and are not saved.','عرض تجريبي: المنشورات دي مش حقيقية ومش بتتحفظ.')} <button type="button" id="hzDemoOff">${L('Turn off','إيقاف')}</button></div>`);
+$('#hzDemoOff').onclick=()=>{try{localStorage.removeItem('hz_demo')}catch(_){}location.href=location.pathname+'?demo=0'};
+window.loadUL&&loadUL();
+}
 syncUI();
 })();
 </script>
