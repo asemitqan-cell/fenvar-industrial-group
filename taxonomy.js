@@ -416,13 +416,13 @@ function wire(){const b=$('#qrB');let T1,T2,st=0,sx=0,sy=0,tg=null,tx0=0,ty0=0;
 /* واجهة اختيار السورة/الجزء/العلامات داخل قسم الديني */
 let qtab='s';
 function idx(){const l=ld('hz_ql',0),mk=Object.keys(M);const tabs=[['s','السور'],['j','الأجزاء'],['m','علاماتي ('+mk.length+')']];let body='';
- if(qtab=='s')body=`<div class="qg">${SN.map((n,i)=>`<button data-q="${SP[i]}">${i+1}. ${n}</button>`).join('')}</div>`;
- else if(qtab=='j')body=`<div class="qg">${Array.from({length:30},(_,i)=>`<button data-q="${i?2+i*20:1}">جزء ${ar(i+1)}</button>`).join('')}</div>`;
- else body=mk.length?mk.map(k=>{const[s,i]=k.split(':');return `<button class="qgi" style="display:block;width:100%;margin:6px 0;text-align:start" data-q="${M[k].p}"><span style="color:${MC[M[k].c]}">●</span> سورة ${SN[s-1]} · آية ${ar(i)} · صفحة ${ar(M[k].p)}</button>`}).join(''):'<p class="um">لسه ماعلّمتش على أي آية. اضغط على الآية ضغطة طويلة واختار "علامة".</p>';
- return `<div class="rl"><button type="button" class="pill" data-rel="" style="margin-bottom:12px">← رجوع</button><h3 class="rt-h">📖 المصحف</h3>${l?`<button type="button" class="btn" data-q="${l}" style="margin-bottom:10px">كمّل من صفحة ${ar(l)}</button>`:''}<div style="display:flex;gap:6px;margin:8px 0">${tabs.map(t=>`<button type="button" class="pill ${qtab==t[0]?'on':''}" data-qt="${t[0]}">${t[1]}</button>`).join('')}</div>${body}<p class="um">اضغط على آية: معناها. ضغطة أطول: التفسير. أطول كمان: خيارات وعلامة. 🎧 فوق: اسمع بصوت شيخ.</p></div>`}
+ if(qtab=='s')body=`<div class="qg">${SN.map((n,i)=>`<button data-hzq="${SP[i]}">${i+1}. ${n}</button>`).join('')}</div>`;
+ else if(qtab=='j')body=`<div class="qg">${Array.from({length:30},(_,i)=>`<button data-hzq="${i?2+i*20:1}">جزء ${ar(i+1)}</button>`).join('')}</div>`;
+ else body=mk.length?mk.map(k=>{const[s,i]=k.split(':');return `<button class="qgi" style="display:block;width:100%;margin:6px 0;text-align:start" data-hzq="${M[k].p}"><span style="color:${MC[M[k].c]}">●</span> سورة ${SN[s-1]} · آية ${ar(i)} · صفحة ${ar(M[k].p)}</button>`}).join(''):'<p class="um">لسه ماعلّمتش على أي آية. اضغط على الآية ضغطة طويلة واختار "علامة".</p>';
+ return `<div class="rl"><button type="button" class="pill" data-rel="" style="margin-bottom:12px">← رجوع</button><h3 class="rt-h">📖 المصحف</h3>${l?`<button type="button" class="btn" data-hzq="${l}" style="margin-bottom:10px">كمّل من صفحة ${ar(l)}</button>`:''}<div style="display:flex;gap:6px;margin:8px 0">${tabs.map(t=>`<button type="button" class="pill ${qtab==t[0]?'on':''}" data-hzqt="${t[0]}">${t[1]}</button>`).join('')}</div>${body}<p class="um">اضغط على آية: معناها. ضغطة أطول: التفسير. أطول كمان: خيارات وعلامة. 🎧 فوق: اسمع بصوت شيخ.</p></div>`}
 const oUI=window.relUI;window.relUI=function(){if(typeof relV==='string'&&relV==='quran')return idx();return oUI.apply(this,arguments)};
 const oGo=window.relGo;window.relGo=function(v){if(v==='quran'){relV='quran';render();return}return oGo.apply(this,arguments)};
-document.addEventListener('click',e=>{const t=e.target.closest('[data-qt]');if(t){qtab=t.dataset.qt;render();return}const q=e.target.closest('[data-q]');if(q){open(+q.dataset.q)}});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-hzqt]');if(t){qtab=t.dataset.hzqt;render();return}const q=e.target.closest('[data-hzq]');if(q){open(+q.dataset.hzq)}});
 window.hzQuran=open;
 })();
 
