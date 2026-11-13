@@ -571,3 +571,53 @@ function boot(){const g=$('#grid');if(!g){setTimeout(boot,300);return}new Mutati
 boot();
 try{renderChips();render()}catch(_){}
 })();
+
+/* ---------- 11) عنوان القسم برمز متحرك + مستطيل الرئيسية أعرض + إخفاء "رائج في" ---------- */
+(function(){
+'use strict';
+const $=s=>document.querySelector(s),E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const AN={kids:'bounce',sports:'pump',religion:'glow',travel:'fly',food:'wig',kitchen:'wig',tools:'wig',crafts:'wig',embroidery:'wig',tailoring:'wig',knit:'wig',health:'beat',aid:'beat',healthsport:'beat',news:'pulse',countries:'spin',g_culture:'spin',tech:'pulse',electronics:'pulse',itx:'pulse',dev:'pulse',itdata:'pulse',itlearn:'pulse',edu:'bounce',events:'bounce',gifts:'bounce',cars:'fly',realestate:'float',offers:'beat',perfumes:'glow',bride:'beat',g_products:'bounce',g_services:'wig'};
+function title(){const g=$('#grid');if(!g)return;let t=$('#hzTitle');const q=(($('#q')||{}).value||'').trim();const c=typeof cat!=='undefined'?CATALOG.find(x=>x.id===cat):null;
+ if(!c||cat==='all'||q){if(t)t.hidden=true;return}
+ if(!t){t=document.createElement('div');t.id='hzTitle';const cb=$('#hzCb');if(cb&&cb.parentNode===g.parentNode)cb.after(t);else g.before(t)}
+ const key=cat+'|'+(typeof lang!=='undefined'?lang:'');t.hidden=false;
+ if(t.dataset.k!==key){t.dataset.k=key;const nm=typeof N==='function'?N(c):c.ar;
+  const ic=c.e?`<span class="hz-te">${c.e}</span>`:`<svg viewBox="0 0 24 24" class="gi">${IC[c.id]||IC.all}</svg>`;
+  t.style.setProperty('--a',c.c[0]);t.style.setProperty('--b',c.c[1]);
+  t.innerHTML=`<span class="hz-tb an-${AN[c.id]||'float'}">${ic}<i class="hz-sh"></i></span><span class="hz-tx"><small>${typeof L==='function'?L('Section','قسم'):'قسم'}</small><b>${E(nm)}</b></span>`}
+ const h=g.querySelector(':scope>div>h3');if(h&&typeof N==='function'&&h.textContent.replace(/[^\p{L}\s]/gu,'').trim()===N(c).trim())h.style.display='none'}
+function boot(){const g=$('#grid');if(!g){setTimeout(boot,300);return}new MutationObserver(()=>{try{title()}catch(e){}}).observe(g,{childList:true});$('#q')&&$('#q').addEventListener('input',()=>setTimeout(title,0));title()}
+boot();
+const st=document.createElement('style');st.textContent=`
+#secTrend{display:none!important}
+#hzHomeW{margin:10px 14px 6px!important}
+#hzHomeW button{width:100%;justify-content:center;padding:11px 20px!important;font-size:15px!important}
+#hzTitle{display:flex;align-items:center;gap:12px;margin:6px 14px 10px}
+#hzTitle[hidden]{display:none}
+.hz-tb{position:relative;width:54px;height:54px;border-radius:18px;display:grid;place-items:center;flex:none;overflow:hidden;color:#fff;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 10px 20px -8px var(--a)}
+.hz-te{font-size:28px;line-height:1;display:block}.hz-tb .gi{width:28px;height:28px}
+.hz-sh{position:absolute;top:-20%;left:-60%;width:40%;height:140%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-20deg);animation:hzShine 3s ease-in-out infinite}
+.hz-tx{display:grid;line-height:1.2}.hz-tx small{color:var(--mut);font-size:12px}.hz-tx b{font-size:21px}
+.hz-te,.hz-tb .gi{animation:hzFloat 2.8s ease-in-out infinite}
+.an-bounce .hz-te{animation:hzBounce 1.4s ease-in-out infinite}
+.an-pump .hz-te{animation:hzPump 1.1s ease-in-out infinite}
+.an-glow .hz-te{animation:hzGlow 2.4s ease-in-out infinite}
+.an-fly .hz-te{animation:hzFly 2.6s ease-in-out infinite}
+.an-wig .hz-te{animation:hzWig 1.8s ease-in-out infinite}
+.an-beat .hz-te{animation:hzBeat 1.3s ease-in-out infinite}
+.an-pulse .hz-te{animation:hzPulse 1.8s ease-in-out infinite}
+.an-spin .hz-te{animation:hzSpin 5s linear infinite}
+@keyframes hzShine{0%,55%{left:-60%}100%{left:130%}}
+@keyframes hzFloat{50%{transform:translateY(-3px)}}
+@keyframes hzBounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-8px) scale(1.08)}60%{transform:translateY(0) scale(.95)}}
+@keyframes hzPump{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(-10deg)}}
+@keyframes hzGlow{0%,100%{filter:drop-shadow(0 0 0 #fff);transform:scale(1)}50%{filter:drop-shadow(0 0 8px #fff);transform:scale(1.1)}}
+@keyframes hzFly{0%,100%{transform:translate(-4px,2px)}50%{transform:translate(5px,-4px) rotate(6deg)}}
+@keyframes hzWig{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+@keyframes hzBeat{0%,100%{transform:scale(1)}20%{transform:scale(1.22)}40%{transform:scale(1)}60%{transform:scale(1.15)}}
+@keyframes hzPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.85}}
+@keyframes hzSpin{to{transform:rotateY(360deg)}}
+@media (prefers-reduced-motion:reduce){.hz-te,.hz-tb .gi,.hz-sh{animation:none}}`;
+document.head.appendChild(st);
+try{render()}catch(_){}
+})();
