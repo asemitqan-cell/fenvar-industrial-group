@@ -4,6 +4,6 @@ const B=[['📐','رياضيات',['نظرية فيثاغورس: في المثل
 ['⚗️','كيمياء',['الذرة: بروتونات ونيوترونات في النواة وإلكترونات حولها','الجدول الدوري بيرتّب العناصر حسب العدد الذري','الـpH أقل من 7 حمض، 7 متعادل، أكتر من 7 قلوي','قانون حفظ الكتلة: الكتلة لا تفنى ولا تُستحدث في التفاعل']],
 ['🔭','فيزياء',['السرعة = المسافة ÷ الزمن','قانون نيوتن الثاني: القوة = الكتلة × العجلة','قانون أوم: الجهد = التيار × المقاومة','الطاقة لا تفنى ولا تُستحدث، بتتحوّل من شكل لشكل']]];
 const S={o:null};
-HZS.learning=()=>`<div class="hs-w"><h3>📘 الأساسيات</h3><div class="hs-g">${B.map((x,i)=>`<button type="button" class="hs-t" data-ln="${i}"><span>${x[0]}</span>${x[1]}</button>`).join('')}</div>${S.o!==null?`<div class="hs-b" style="margin-top:10px"><b>${B[S.o][0]} ${B[S.o][1]}</b><ul>${B[S.o][2].map(t=>`<li>${t}</li>`).join('')}</ul></div>`:''}</div>`;
+HZS.learning=()=>`<div class="hzx-w"><h3>📘 الأساسيات</h3><div class="hzx-g">${B.map((x,i)=>`<button type="button" class="hzx-t" data-ln="${i}"><span>${x[0]}</span>${x[1]}</button>`).join('')}</div>${S.o!==null?`<div class="hzx-b" style="margin-top:10px"><b>${B[S.o][0]} ${B[S.o][1]}</b><ul>${B[S.o][2].map(t=>`<li>${t}</li>`).join('')}</ul></div>`:''}</div>`;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ln]');if(!b)return;const i=+b.dataset.ln;S.o=S.o===i?null:i;render()});
 })();

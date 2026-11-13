@@ -8,7 +8,7 @@ const LIB=[
 ['منهاج الطالبين','النووي','العمدة في الفقه الشافعي، عليه شروح كتير.',FQ],
 ['زاد المستقنع','الحجاوي','متن مشهور في الفقه الحنبلي، بيتدرّس بشروحه.',FQ]]],
 ['hadith','📜','الحديث','الصحيحان والسنن',[
-['صحيح البخاري','الإمام البخاري','من أصح كتب الحديث عند أهل السنة، مرتب على الأبواب (بدء الوحي، الإيمان، العلم، الطهارة…).',['بدء الوحي','الإيمان','العلم','الصلاة','الزكاة','الصوم','الحج','البيوع']],
+['صحيح البخاري','الإمام البخاري','من أصح كتب الحديث عند أهل السنة، مرتب على الأبواب.',['بدء الوحي','الإيمان','العلم','الصلاة','الزكاة','الصوم','الحج','البيوع']],
 ['صحيح مسلم','الإمام مسلم','يليه في الصحة، ويتميز بحسن ترتيب الروايات في الباب الواحد.',['الإيمان','الطهارة','الصلاة','الزكاة','الصيام','الحج','النكاح']],
 ['سنن أبي داود','أبو داود السجستاني','مركّز على أحاديث الأحكام.',['الطهارة','الصلاة','الزكاة','المناسك','النكاح','الأقضية']],
 ['جامع الترمذي','الترمذي','بيذكر درجة الحديث وأقوال الفقهاء بعده.',['الطهارة','الصلاة','الزهد','الأدب']],
@@ -19,22 +19,32 @@ const LIB=[
 ['تفسير القرآن العظيم','ابن كثير','تفسير بالمأثور، بيفسر الآية بالآية والحديث.',['تفسير القرآن بالقرآن','الأحاديث','أقوال السلف']],
 ['الجامع لأحكام القرآن','القرطبي','مهتم باستنباط الأحكام الفقهية من الآيات.',['الأحكام','اللغة','القراءات']],
 ['تيسير الكريم الرحمن','السعدي','تفسير ميسّر وواضح، مناسب للقراءة العامة.',['المعاني الإجمالية','الفوائد']],
-['تفسير الجلالين','المحلي والسيوطي','تفسير موجز جدًا في هامش المصحف عادة.',['المعنى المختصر']]]],
+['تفسير الجلالين','المحلي والسيوطي','تفسير موجز جدًا.',['المعنى المختصر']]]],
 ['seerah','🌙','السيرة','السيرة النبوية',[
 ['السيرة النبوية','ابن هشام','من أقدم المصادر المرتبة للسيرة.',['المولد','البعثة','الهجرة','الغزوات','وفاة النبي ﷺ']],
-['الرحيق المختوم','صفي الرحمن المباركفوري','عرض حديث مختصر للسيرة، فاز بجائزة في مسابقة للسيرة.',['العهد المكي','العهد المدني','الغزوات','صلح الحديبية']],
+['الرحيق المختوم','صفي الرحمن المباركفوري','عرض حديث مختصر للسيرة.',['العهد المكي','العهد المدني','الغزوات','صلح الحديبية']],
 ['زاد المعاد','ابن القيم','هدي النبي ﷺ في العبادات والمعاملات والطب والأخلاق.',['هدي النبي ﷺ','الفقه','الطب النبوي']]]],
 ['aqeeda','🕋','العقيدة','متون العقيدة',[
 ['العقيدة الطحاوية','أبو جعفر الطحاوي','متن مختصر مشهور في عقيدة أهل السنة.',['التوحيد','الإيمان بالله والملائكة والكتب والرسل','القدر']],
 ['العقيدة الواسطية','ابن تيمية','متن في الأسماء والصفات وعقيدة أهل السنة.',['الأسماء والصفات','الإيمان باليوم الآخر','القدر']],
 ['كتاب التوحيد','محمد بن عبد الوهاب','أبواب في توحيد العبادة وما يضاده.',['توحيد الألوهية','الشرك','الدعاء']],
 ['جوهرة التوحيد','إبراهيم اللقاني','منظومة مشهورة في العقيدة على طريقة الأشاعرة.',['الإلهيات','النبوات','السمعيات']]]]];
-const S={f:null,b:null};
-HZS.library=()=>{const f=LIB.find(x=>x[0]===S.f),hd=`<div class="hs-w">`;
- if(!f)return hd+`<h3>📚 المكتبة الشاملة</h3><div class="hs-g">${LIB.map(x=>`<button type="button" class="hs-t" data-lb="f:${x[0]}"><span>${x[1]}</span>${x[2]}<small>${x[3]}</small></button>`).join('')}</div><p class="hs-n">عرض تعريفي بأشهر الكتب وأبوابها، مش نص الكتاب كامل.</p></div>`;
- return hd+`<button type="button" class="pill" data-lb="home" style="margin-bottom:12px">← رجوع</button><h3>${f[1]} ${f[2]}</h3>`+f[4].map((b,i)=>`<div class="hs-b"><b>${E(b[0])}</b><small>${E(b[1])}</small><p style="margin:6px 0">${E(b[2])}</p><ul>${b[3].map(t=>`<li>${E(t)}</li>`).join('')}</ul><button type="button" class="pill" data-lb="ai:${i}" style="margin-top:8px">اسأل عن الكتاب</button></div>`).join('')+`</div>`};
+const S={f:null,b:null},back=`<button type="button" class="pill" data-lb="back" style="margin-bottom:12px">← رجوع</button>`;
+HZB.library=()=>{if(S.b!==null)S.b=null;else S.f=null};
+function bookView(f,b){const n=b[3].length+1;
+ const pages=[`<h3>${E(b[0])}</h3><small>${E(b[1])}</small><p>${E(b[2])}</p><p class="hzx-n">اسحب يمين أو شمال لتقليب الصفحات</p>`].concat(b[3].map((t,i)=>`<h3>${i+1}. ${E(t)}</h3><p>باب من أبواب كتاب ${E(b[0])}.</p><button type="button" class="pill" data-lb="ai:${i}">اشرح لي هذا الباب</button>`));
+ return `<div class="hzx-w">${back}<div class="hzx-pgs" id="lbPg" dir="rtl">${pages.map(p=>`<div class="hzx-pg">${p}</div>`).join('')}</div><div class="hzx-nav" dir="rtl"><button type="button" class="pill" data-lb="pv">→ السابق</button><span id="lbN">1 / ${n}</span><button type="button" class="pill" data-lb="nx">التالي ←</button></div></div>`}
+HZS.library=()=>{const f=LIB.find(x=>x[0]===S.f);
+ if(!f)return `<div class="hzx-w"><h3>📚 المكتبة الشاملة</h3><div class="hzx-g">${LIB.map(x=>`<button type="button" class="hzx-t" data-lb="f:${x[0]}"><span>${x[1]}</span>${x[2]}<small>${x[3]}</small></button>`).join('')}</div><p class="hzx-n">عرض تعريفي بأشهر الكتب وأبوابها، مش نص الكتاب كامل.</p></div>`;
+ if(S.b!==null)return bookView(f,f[4][S.b]);
+ return `<div class="hzx-w">${back}<h3>${f[1]} ${f[2]}</h3>`+f[4].map((b,i)=>`<div class="hzx-b"><b>${E(b[0])}</b><small>${E(b[1])}</small><p style="margin:6px 0">${E(b[2])}</p><button type="button" class="pill" data-lb="b:${i}">📖 افتح الكتاب</button></div>`).join('')+`</div>`};
+const pg=()=>document.getElementById('lbPg'),dirn=p=>getComputedStyle(p).direction==='rtl'?-1:1;
+document.addEventListener('scroll',e=>{const p=e.target;if(!p||p.id!=='lbPg')return;const n=p.children.length,i=Math.min(n-1,Math.round(Math.abs(p.scrollLeft)/p.clientWidth)),c=document.getElementById('lbN');if(c)c.textContent=(i+1)+' / '+n},true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-lb]');if(!b)return;const v=b.dataset.lb;
- if(v==='home'){S.f=null}else if(v.startsWith('f:'))S.f=v.slice(2);
- else if(v.startsWith('ai:')){const f=LIB.find(x=>x[0]===S.f),k=f[4][+v.slice(3)];const q=document.getElementById('q');if(q){q.value='اشرح لي باختصار أهم مسائل كتاب '+k[0]+' لـ'+k[1];askAI();return}}
+ if(v==='back'){hzUp();return}
+ if(v==='nx'||v==='pv'){const p=pg();if(p)p.scrollBy({left:(v==='nx'?1:-1)*dirn(p)*p.clientWidth,behavior:'smooth'});return}
+ if(v.startsWith('f:')){hzDeeper();S.f=v.slice(2)}
+ else if(v.startsWith('b:')){hzDeeper();S.b=+v.slice(2)}
+ else if(v.startsWith('ai:')){const f=LIB.find(x=>x[0]===S.f),k=f[4][S.b],t=k[3][+v.slice(3)],q=document.getElementById('q');if(q){q.value='اشرح لي باختصار باب "'+t+'" في كتاب '+k[0]+' لـ'+k[1];askAI()}return}
  render();window.scrollTo({top:0,behavior:'smooth'})});
 })();

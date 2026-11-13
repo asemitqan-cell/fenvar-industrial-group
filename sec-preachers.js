@@ -2,13 +2,13 @@
 const E=s=>typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const P={topic:'',kind:'خطبة جمعة',busy:0,out:'',err:''};
 const TOP=['بر الوالدين','الأمانة','الصبر','حسن الخلق','الصدق','التوبة','حق الجار','الإتقان في العمل','صلة الرحم','الشكر'];
-HZS.preachers=()=>`<div class="hs-w"><h3>🎙️ تجهيز خطبة</h3>
-<input class="hs-in" id="pxT" placeholder="عنوان الخطبة، مثال: بر الوالدين" value="${E(P.topic)}">
-<select class="hs-in" id="pxK">${['خطبة جمعة','خطبة عيد','كلمة بعد الصلاة (قصيرة)'].map(k=>`<option ${k===P.kind?'selected':''}>${k}</option>`).join('')}</select>
-<div class="hs-ch">${TOP.map(t=>`<button type="button" class="pill" data-px="t:${t}">${t}</button>`).join('')}</div>
+HZS.preachers=()=>`<div class="hzx-w"><h3>🎙️ تجهيز خطبة</h3>
+<input class="hzx-in" id="pxT" placeholder="عنوان الخطبة، مثال: بر الوالدين" value="${E(P.topic)}">
+<select class="hzx-in" id="pxK">${['خطبة جمعة','خطبة عيد','كلمة بعد الصلاة (قصيرة)'].map(k=>`<option ${k===P.kind?'selected':''}>${k}</option>`).join('')}</select>
+<div class="hzx-ch">${TOP.map(t=>`<button type="button" class="pill" data-px="t:${t}">${t}</button>`).join('')}</div>
 <button type="button" class="btn" data-px="go" ${P.busy?'disabled':''}>${P.busy?'جاري التجهيز…':'جهّز الخطبة'}</button>
-${P.err?`<p class="msg">${E(P.err)}</p>`:''}${P.out?`<div class="hs-out" dir="rtl">${E(P.out)}</div><button type="button" class="pill" data-px="cp" style="margin-top:8px">📋 نسخ</button>`:''}
-<p class="hs-n">الخطبة بتتجهّز بالذكاء الاصطناعي من المراجع المعتمدة ومعاها الدليل. راجع الآيات والأحاديث من المصحف والكتب الأصلية قبل الإلقاء.</p></div>`;
+${P.err?`<p class="msg">${E(P.err)}</p>`:''}${P.out?`<div class="hzx-out" dir="rtl">${E(P.out)}</div><button type="button" class="pill" data-px="cp" style="margin-top:8px">📋 نسخ</button>`:''}
+<p class="hzx-n">الخطبة بتتجهّز بالذكاء الاصطناعي من المراجع المعتمدة ومعاها الدليل. راجع الآيات والأحاديث من المصحف والكتب الأصلية قبل الإلقاء.</p></div>`;
 const prompt=()=>`جهّز ${P.kind} بعنوان "${P.topic}" للإلقاء في مدة لا تزيد عن 10 دقائق (حوالي 1000 إلى 1200 كلمة كحد أقصى${P.kind.includes('قصيرة')?'، وللكلمة القصيرة 300 كلمة':''}).
 الشروط: 1) كل فكرة يتبعها دليلها من القرآن (اسم السورة ورقم الآية) أو من السنة (نص مختصر + الراوي + المصدر مثل البخاري أو مسلم). 2) اعتمد على المراجع الموثوقة فقط، ولا تذكر حديثًا إلا إذا كنت متأكدًا من صحته. 3) لا تخترع آية ولا حديثًا ولا نسبة لقائل. 4) إن كان هناك خلاف فقهي فاذكره بإيجاز. 5) لغة عربية فصيحة مبسطة. 6) ${P.kind.includes('جمعة')?'اجعلها خطبتين بينهما جلسة، وافتتح بالحمد والشهادتين، واختم بالدعاء':'بداية ونهاية مناسبتان'}. 7) اختم بقسم "المراجع" يسرد الكتب المعتمدة.`;
 async function gen(){P.topic=(document.getElementById('pxT')||{}).value||P.topic;P.kind=(document.getElementById('pxK')||{}).value||P.kind;

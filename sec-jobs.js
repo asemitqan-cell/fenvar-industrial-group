@@ -12,11 +12,12 @@ const J=[
 ['hr','👥','موارد بشرية','بيوظّف ويتابع شؤون الموظفين والرواتب.',['التوظيف','الحضور والرواتب','التدريب'],['قانون العمل','Excel','مهارات مقابلات','أنظمة HR']]];
 const S={t:'ads',j:null,ads:null,err:0};
 async function ads(){try{const r=await sb.from('hz_jobs').select('*').order('created_at',{ascending:false}).limit(30);if(r.error)throw r.error;S.ads=r.data||[]}catch(_){S.ads=[];S.err=1}render()}
-HZS.jobs=()=>{const tabs=`<div class="hs-ch"><button type="button" class="pill ${S.t==='ads'?'dark':''}" data-jb="t:ads">إعلانات وظائف</button><button type="button" class="pill ${S.t==='ex'?'dark':''}" data-jb="t:ex">أمثلة الوظائف</button></div>`;
- if(S.t==='ads'){if(S.ads===null){ads();return `<div class="hs-w">${tabs}<p class="empty">جاري التحميل…</p></div>`}
-  return `<div class="hs-w">${tabs}${S.ads.length?S.ads.map(a=>`<div class="hs-b"><b>${E(a.title)}</b><small>${E(a.company||'')} ${E(a.city||'')}</small><p style="margin:6px 0">${E(a.description||'')}</p>${a.contact?`<small>للتقديم: ${E(a.contact)}</small>`:''}</div>`).join(''):'<p class="empty">لسه مفيش إعلانات وظائف.</p>'}</div>`}
+HZS.jobs=()=>{const tabs=`<div class="hzx-ch"><button type="button" class="pill ${S.t==='ads'?'dark':''}" data-jb="t:ads">إعلانات وظائف</button><button type="button" class="pill ${S.t==='ex'?'dark':''}" data-jb="t:ex">أمثلة الوظائف</button></div>`;
+ if(S.t==='ads'){if(S.ads===null){ads();return `<div class="hzx-w">${tabs}<p class="empty">جاري التحميل…</p></div>`}
+  return `<div class="hzx-w">${tabs}${S.ads.length?S.ads.map(a=>`<div class="hzx-b"><b>${E(a.title)}</b><small>${E(a.company||'')} ${E(a.city||'')}</small><p style="margin:6px 0">${E(a.description||'')}</p>${a.contact?`<small>للتقديم: ${E(a.contact)}</small>`:''}</div>`).join(''):'<p class="empty">لسه مفيش إعلانات وظائف.</p>'}</div>`}
  const j=J.find(x=>x[0]===S.j);
- if(!j)return `<div class="hs-w">${tabs}<div class="hs-g">${J.map(x=>`<button type="button" class="hs-t" data-jb="j:${x[0]}"><span>${x[1]}</span>${x[2]}</button>`).join('')}</div></div>`;
- return `<div class="hs-w">${tabs}<button type="button" class="pill" data-jb="j:" style="margin-bottom:10px">← رجوع</button><h3>${j[1]} ${j[2]}</h3><p>${j[3]}</p><b>بيشتغل في:</b><ul>${j[4].map(x=>`<li>${x}</li>`).join('')}</ul><b>المطلوب في سوق العمل 2027:</b><ul>${j[5].map(x=>`<li>${x}</li>`).join('')}</ul><p class="hs-n">دي متطلبات عامة متكررة في الإعلانات. راجع إعلانات الوظيفة نفسها قبل ما تقدّم.</p></div>`};
-document.addEventListener('click',e=>{const b=e.target.closest('[data-jb]');if(!b)return;const [k,v]=b.dataset.jb.split(':');if(k==='t'){S.t=v;S.j=null}else S.j=v||null;render()});
+ if(!j)return `<div class="hzx-w">${tabs}<div class="hzx-g">${J.map(x=>`<button type="button" class="hzx-t" data-jb="j:${x[0]}"><span>${x[1]}</span>${x[2]}</button>`).join('')}</div></div>`;
+ return `<div class="hzx-w">${tabs}<button type="button" class="pill" data-jb="j:" style="margin-bottom:10px">← رجوع</button><h3>${j[1]} ${j[2]}</h3><p>${j[3]}</p><b>بيشتغل في:</b><ul>${j[4].map(x=>`<li>${x}</li>`).join('')}</ul><b>المطلوب في سوق العمل 2027:</b><ul>${j[5].map(x=>`<li>${x}</li>`).join('')}</ul><p class="hzx-n">دي متطلبات عامة متكررة في الإعلانات. راجع إعلانات الوظيفة نفسها قبل ما تقدّم.</p></div>`};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-jb]');if(!b)return;const [k,v]=b.dataset.jb.split(':');if(k==='t'){S.t=v;S.j=null}else{if(v){hzDeeper();S.j=v}else{hzUp();return}}render()});
+HZB.jobs=()=>{S.j=null};
 })();
