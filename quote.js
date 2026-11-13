@@ -98,7 +98,7 @@ function formHTML(){const s=sec(Q.sec);
  ${lines}<button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>
  <label style="display:block;margin-top:10px"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
  <div class="qt-2" style="margin-top:6px"><label><span>${T('Budget (optional)','الميزانية (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
- <p class="msg">${E(Q.msg)}</p><button type="button" class="btn" data-q="calc"${Q.busy?' disabled':''}>${T('Show my quotes','اعرض عروض الأسعار')}</button></div>`}
+ ${simBtns(0)}<p class="msg">${E(Q.msg)}</p><button type="button" class="btn" data-q="calc"${Q.busy?' disabled':''}>${T('Show my quotes','اعرض عروض الأسعار')}</button></div>`}
 
 function calc(){
  const lines=Q.lines.filter(l=>l.name.trim()&&+l.qty>0);
@@ -122,8 +122,43 @@ function resultHTML(){const {res,lines}=Q.res,bud=+Q.budget||0,s=sec(Q.sec);
   <table>${r.rows.map(x=>x.miss?`<tr><td>${E(x.l.name)}</td><td class="qt-s" style="text-align:end">${T('not offered','مش متوفر عنده')}</td></tr>`
    :`<tr><td>${E(x.l.name)} × ${E(x.l.qty)} ${unit(x.it.unit)}${sec(Q.sec).groups[0].inst?instM(x.it,x.sub):''}</td><td style="text-align:end">${fm(x.sub)}</td></tr>`).join('')}</table>
   <button type="button" class="btn" style="margin-top:8px" data-q="send:${r.id}">${T('Send my request to this supplier','ابعت طلبي للمورد ده')}</button></div>`).join('');
- return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${head}${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>
+ return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${head}${simBtns(1)}${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>
   <p class="qt-s">${T('Prices come from suppliers and may change at confirmation.','الأسعار من الموردين وممكن تتغير وقت التأكيد.')}</p></div>`}
+
+/* ---- عينة 3D لطلب العميل (بتشتغل من taxonomy.js: window.hzSim) ---- */
+const SC=[[/أنثراسيت|انثراسيت/,'anth'],[/أسود|اسود/,'black'],[/بلوط|دهبي|ذهبي|خشبي/,'oak'],[/بني/,'brown'],[/رمادي|جراي/,'gray'],[/أبيض|ابيض/,'white']];
+const SW=[[/جوز/,'walnut'],[/بلوط|زان|موسكي/,'oak'],[/ونجي/,'wenge'],[/رمادي/,'gray'],[/أبيض|ابيض/,'white']];
+function simSize(t){const m=String(t||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/(\d+(?:[.,]\d+)?)\s*(?:[x×*✕]|في)\s*(\d+(?:[.,]\d+)?)/i);if(!m)return null;let a=parseFloat(m[1].replace(',','.')),b=parseFloat(m[2].replace(',','.'));if(a<10&&b<10){a*=100;b*=100}return a>=30&&b>=30&&a<=400&&b<=400?[Math.round(a),Math.round(b)]:null}
+function pickC(list,t,d){for(const [re,c] of list)if(re.test(t))return c;return d}
+function simSpecs(){const id=Q.sec,lines=(Q.res?Q.res.lines:Q.lines).filter(l=>l.name&&String(l.name).trim());
+ const all=lines.map(l=>l.name+' '+(l.note||'')).join(' '),tint=/عاكس/.test(all)?'mirror':/ملون|برونز/.test(all)?'bronze':/أخضر|اخضر/.test(all)?'green':/رمادي.*زجاج|زجاج.*رمادي/.test(all)?'gray':'clear',mesh=/سلك/.test(all)?1:0;
+ const out=[],seen={};
+ lines.forEach(l=>{const n=String(l.name).trim(),nt=String(l.note||''),t=n+' '+nt,sz=simSize(nt);let sp=null;
+  if(id==='upvc'){
+   if(/شباك سحاب|سحاب/.test(n))sp={kind:'window',type:'sliding',mesh};
+   else if(/شباك مفصلي/.test(n))sp={kind:'window',type:/ضلفتين|ضلفتان/.test(nt)?'casement2':'casement1'};
+   else if(/فيكس/.test(n))sp={kind:'window',type:'fixed'};
+   else if(/قلاب/.test(n))sp={kind:'window',type:'tilt'};
+   else if(/باب بلكونة/.test(n))sp={kind:'door',type:/سحاب|جرار/.test(nt)?'sliding':'hinged',w:90,h:215};
+   else if(/باب مفصلي/.test(n))sp={kind:'door',type:'hinged'};
+   else if(/زجاج|سيكوريت|دبل|عاكس|ملون/.test(n)){sp={kind:'glass',type:'fixed',tint:/عاكس/.test(n)?'mirror':/ملون/.test(n)?'bronze':tint};const th=(nt.match(/(\d+)\s*(?:مم|mm)?/)||[])[1];if(th&&[6,8,10,12].includes(+th))sp.thick=+th}
+   if(sp){sp.color=pickC(SC,t,'white');if(sp.kind!=='glass'||!sp.tint)sp.tint=sp.tint||tint}
+  }else if(id==='wood'){
+   if(/دولاب/.test(n))sp={kind:'wardrobe',type:/جرار|سحاب/.test(nt)?'sliding':'hinged'};
+   else if(/دريسنج/.test(n))sp={kind:'wardrobe',type:'drawers',w:240};
+   else if(/مطبخ/.test(n))sp={kind:'kitchen',type:'hinged',w:240,h:90,d:60};
+   else if(/باب خشب/.test(n))sp={kind:'door',type:'hinged',glass:0,tint};
+   if(sp)sp.color=sp.kind==='door'?pickC(SC,t,'brown'):pickC(SW,t,'walnut');
+  }else if(id==='iron'){
+   if(/باب حديد/.test(n))sp={kind:'door',type:'hinged',glass:0,color:'black',prof:60};
+   else if(/شباك حديد/.test(n))sp={kind:'window',type:'casement1',color:'black',prof:60,tint};
+   else if(/بوابة/.test(n))sp={kind:'door',type:'french',glass:0,color:'black',prof:60,w:300,h:200};
+   if(sp)sp.color=pickC(SC,t,'black')}
+  if(sp&&!seen[n]){seen[n]=1;if(sz&&sp.kind!=='kitchen'){sp.w=sz[0];sp.h=sz[1]}else if(sz&&sp.kind==='kitchen')sp.w=sz[0];out.push({label:n,spec:sp})}});
+ return out}
+function simBtns(multi){const a=simSpecs();if(!multi)return `<button type="button" class="pill" style="width:100%;margin:8px 0" data-q="sim:0">🧊 ${T('Preview your order in 3D','شاهد عينة لطلبك 3D')}</button>`;
+ if(!a.length)return '';return `<div style="display:grid;gap:6px;margin:10px 0">${a.map((x,i)=>`<button type="button" class="btn" data-q="sim:${i}">🧊 ${T('Preview your order','شاهد عينة لطلبك')}: ${E(x.label)}</button>`).join('')}</div>`}
+function openSim(i){const a=simSpecs(),x=a[+i||0];if(!x){if(typeof toast==='function')toast(T('Pick an item like a window, door or wardrobe first.','اختار بند زي شباك أو باب أو دولاب الأول.'));return}if(window.hzSim)hzSim.open(x.spec);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}
 
 function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTML()}
 
@@ -151,6 +186,7 @@ document.addEventListener('click',e=>{
  else if(k==='del'){Q.lines.splice(+v,1);if(!Q.lines.length)Q.lines.push(newLine());draw()}
  else if(k==='calc'){calc();draw();if(Q.res&&(!Q.res.lines.length||!Q.res.res.length))save(null)}
  else if(k==='edit'){Q.res=null;Q.msg='';draw()}
+ else if(k==='sim')openSim(v)
  else if(k==='send')save(v)});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#qtModal'))return;
  if(t.dataset.qi!=null){const l=Q.lines[+t.dataset.qi];l[t.dataset.f]=t.value;if(t.dataset.f==='g'){l.name='';draw()}}
