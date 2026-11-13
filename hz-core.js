@@ -1,10 +1,10 @@
 /* Horizon: لودر الأقسام الجديدة (بيحمّل ملف القسم لما تدخله بس) + إصلاح عدّاد الأذكار */
 (function(){'use strict';
-const $q=s=>document.querySelector(s),V='2',done={};
+const $q=s=>document.querySelector(s),V='3',done={};
 window.HZS=window.HZS||{};const HZB=window.HZB={};let depth=0,lastCat=null;
 window.hzDeeper=()=>{try{history.pushState({hz:1},'')}catch(_){}depth++};
 window.hzUp=()=>{if(depth>0)history.back();else{if(HZB[cat])HZB[cat]();render()}};
-addEventListener('popstate',()=>{if(depth>0){depth--;if(HZB[cat]){HZB[cat]();render()}}});
+addEventListener('popstate',()=>{if(window.hz3dOpen)return;if(depth>0){depth--;if(HZB[cat]){HZB[cat]();render()}}});
 window.hzLoad=n=>done[n]||(done[n]=new Promise((ok,no)=>{const s=document.createElement('script');s.src=n+'.js?v='+V;s.onload=ok;s.onerror=()=>{delete done[n];no()};document.head.appendChild(s)}));
 const SECS={
  preachers:{file:'sec-preachers',en:'Preachers',ar:'الخطباء',e:'🎙️',c:['#047857','#064E3B'],grp:'g_culture',ic:'<path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>'},
@@ -30,6 +30,15 @@ window.render=function(){
  if(p&&!t&&g){const c=cat;const put=()=>{if(cat===c&&HZS[c]&&!g.querySelector('.hzx-pre'))g.insertAdjacentHTML('afterbegin','<div class="hzx-pre">'+HZS[c]()+'</div>')};
   HZS[c]?put():hzLoad(p).then(()=>{if(cat===c){HZS[c]&&put()}}).catch(()=>{})}
  return r};
+
+/* ===== زرار "معاينة 3D" جوه كارت المنتج بس (مش بره). بيتحمّل ملف sec-3d لما تدوس عليه ===== */
+const K3={'Mobiles':'phone','Laptops':'laptop','Computers':'pc','Refrigerators':'fridge','Washing machines':'washer','Pots & cookware':'pot','Dinnerware & china':'plates','TVs & screens':'tv','Microwaves':'microwave','Earbuds / AirPods':'earbuds','Pharmacy & drug reference':'pharmacy'};
+function k3(card){const b=card.querySelector('[data-item][data-cat]');if(!b)return null;if(b.dataset.cat==='perfumes')return'perfume';return K3[b.dataset.item]||null}
+function add3d(){const g=$q('#grid');if(!g)return;g.querySelectorAll('.card').forEach(c=>{if(c.querySelector('.hz3b'))return;const k=k3(c),cb=c.querySelector('.cb');if(!k||!cb)return;
+ cb.insertAdjacentHTML('beforeend','<button type="button" class="pill hz3b" data-hz3k="'+k+'" style="margin-top:6px;width:100%">🧊 معاينة 3D</button>')})}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.hz3b');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.hz3k;
+ hzLoad('sec-3d').then(()=>window.hz3d.open(k)).catch(()=>{if(typeof toast==='function')toast('محتاج إنترنت عشان المعاينة تتحمّل.')})},true);
+{const g=$q('#grid');if(g){new MutationObserver(()=>{try{add3d()}catch(_){}}).observe(g,{childList:true});try{add3d()}catch(_){}}}
 /* ===== إصلاح عدّاد الأذكار: capture + منع تكرار الـhandlers القديمة ===== */
 document.addEventListener('click',e=>{const z=e.target.closest&&e.target.closest('.zk2,.zk');if(!z)return;
  e.stopImmediatePropagation();

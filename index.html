@@ -326,7 +326,7 @@ let dp;const ios=/iphone|ipad/i.test(navigator.userAgent);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;instUI()});
 addEventListener('appinstalled',()=>{try{localStorage.setItem('fv_inst','1')}catch(_){}instUI()});
 $('#installBtn').onclick=async()=>{if(dp){dp.prompt();const r=await dp.userChoice;if(r.outcome==='accepted'){try{localStorage.setItem('fv_inst','1')}catch(_){}$('#hero').hidden=true}dp=null;instUI()}else if(ios)alert(L('Tap Share, then Add to Home Screen.','دوس على Share وبعدين Add to Home Screen.'))};
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator)addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const up=()=>{try{r.update()}catch(_){}};up();document.addEventListener('visibilitychange',()=>{if(!document.hidden)up()});setInterval(up,600000)}).catch(()=>{})});
 let nOn=(()=>{try{return localStorage.getItem('fv_notif')!=='0'}catch(_){return true}})(),att=null;
 function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('fv_theme',t)}catch(_){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0B1416':'#0F766E';if(window.syncUI)syncUI()}
 function setLang(l){lang=l;try{localStorage.setItem('fv_lang',l)}catch(_){}$('#langMenu').hidden=true;applyLang();if(window.syncUI)syncUI()}
@@ -1103,5 +1103,5 @@ window.loadUL&&loadUL();
 syncUI();
 })();
 </script>
-<script src="prices.js?v=4"></script><script src="quote.js?v=5"></script><script src="taxonomy.js?v=13"></script><script src="hz-core.js?v=4"></script>
+<script src="prices.js?v=4"></script><script src="quote.js?v=5"></script><script src="taxonomy.js?v=14"></script><script src="hz-core.js?v=5"></script>
 </body></html>
