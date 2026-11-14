@@ -1,6 +1,6 @@
 /* Horizon: لودر الأقسام الجديدة (بيحمّل ملف القسم لما تدخله بس) + إصلاح عدّاد الأذكار */
 (function(){'use strict';
-const $q=s=>document.querySelector(s),V='3',done={};
+const $q=s=>document.querySelector(s),V='4',done={};
 window.HZS=window.HZS||{};const HZB=window.HZB={};let depth=0,lastCat=null;
 window.hzDeeper=()=>{try{history.pushState({hz:1},'')}catch(_){}depth++};
 window.hzUp=()=>{if(depth>0)history.back();else{if(HZB[cat])HZB[cat]();render()}};
@@ -18,11 +18,14 @@ try{
   const g=CATALOG.find(c=>c.id===s.grp);if(g&&g.grp&&!g.grp.includes(id))g.grp.push(id);IC[id]=s.ic;if(typeof GEN!=='undefined'&&!GEN.includes(id))GEN.push(id)});
 }catch(e){console.warn('hz-core',e)}
 const R=window.render;
+/* زرار الرجوع: الأقسام المحمّلة (الخطباء/المكتبة/وظائف...) مابتعديش على رسم الصفحة الأساسي، فكنا بنفضل بزرار الرجوع القديم (للرئيسية). هنا بنظبطه للقسم الأب (ثقافة ومجتمع مثلًا) */
+function hzBackBtn(){try{const g=$q('#grid');if(!g)return;let b=$q('#hzCb');if(!b){b=document.createElement('button');b.id='hzCb';b.type='button';b.className='pill';g.before(b)}
+ const par=(CATALOG.find(c=>c.grp&&c.grp.includes(cat))||{}).id;b.hidden=cat==='all';b.dataset.to=par||'all';b.textContent=(lang==='ar'?'› ':'‹ ')+L('Back','رجوع')}catch(_){}}
 window.render=function(){
  if(cat!==lastCat){depth=0;lastCat=cat}
  const q=$q('#q'),t=q&&q.value.trim(),g=$q('#grid');
  const s=SECS[cat];
- if(s&&!t&&g){const c=cat;$q('#crumb').hidden=true;
+ if(s&&!t&&g){const c=cat;$q('#crumb').hidden=true;hzBackBtn();
   if(HZS[c]){g.innerHTML=HZS[c]();$q('#empty').hidden=true;return}
   g.innerHTML='<p class="empty" style="grid-column:1/-1">جاري التحميل…</p>';
   hzLoad(s.file).then(()=>{if(cat===c)render()}).catch(()=>{g.innerHTML='<p class="msg" style="grid-column:1/-1">محتاج إنترنت. جرّب تاني.</p>'});return}

@@ -6,6 +6,18 @@ const $q=s=>document.querySelector(s);
 const T=(en,ar)=>typeof L==='function'?L(en,ar):ar;
 const E=s=>typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sp=s=>s.split(',').map(x=>x.split(':'));
+/* ---- أسعار العملات بالجنيه المصري: بتتحدّث من النت، ولو مفيش نت بنستخدم أرقام تقريبية ---- */
+const FXN={EGP:['جنيه مصري','🇪🇬'],USD:['دولار أمريكي','🇺🇸'],EUR:['يورو','🇪🇺'],GBP:['جنيه إسترليني','🇬🇧'],SAR:['ريال سعودي','🇸🇦'],AED:['درهم إماراتي','🇦🇪'],KWD:['دينار كويتي','🇰🇼'],TRY:['ليرة تركية','🇹🇷'],JPY:['ين ياباني','🇯🇵'],KRW:['وون كوري','🇰🇷'],CNY:['يوان صيني','🇨🇳']};
+const FXS={r:{EGP:1,USD:55.4,EUR:62,GBP:73,SAR:14.8,AED:15.1,KWD:175,CNY:8.2,JPY:.35},live:0,cb:[]};
+try{const c=JSON.parse(localStorage.getItem('hz_fx')||'null');if(c&&c.r&&Date.now()-c.t<2592e5){Object.assign(FXS.r,c.r);FXS.live=c.t}}catch(_){}
+function fxLoad(){if(FXS.live&&Date.now()-FXS.live<36e5)return;
+ fetch('https://open.er-api.com/v6/latest/EGP').then(r=>r.json()).then(d=>{if(!d||!d.rates)throw 0;const o={};Object.keys(FXN).forEach(k=>{if(k!=='EGP'&&d.rates[k]>0)o[k]=1/d.rates[k]});if(!Object.keys(o).length)throw 0;
+  Object.assign(FXS.r,o);FXS.live=Date.now();try{localStorage.setItem('hz_fx',JSON.stringify({t:FXS.live,r:o}))}catch(_){}FXS.cb.forEach(f=>{try{f()}catch(_){}})}).catch(()=>{})}
+window.HZ_FX={names:FXN,get:c=>FXS.r[c]||null,conv:(a,f,t)=>{const x=FXS.r[f],y=FXS.r[t];return x&&y?a*x/y:null},live:()=>FXS.live,on:f=>FXS.cb.push(f),load:fxLoad};
+fxLoad();
+const CT_CC={kr:'KRW',fr:'EUR',it:'EUR',jp:'JPY',tr:'TRY',de:'EUR',es:'EUR',cn:'CNY',eu:'EUR'};
+function fxLine(c){const cc=CT_CC[c.id],H=window.HZ_FX,r=cc&&H?H.get(cc):null;if(!cc)return '';if(!r)return 'سعره بالجنيه بيتحمّل… (محتاج إنترنت)';
+ const k=r<.05?1000:r<.5?100:1,nm=(H.names[cc]||[cc])[0];return `${k} ${nm} = ${(r*k).toLocaleString('ar-EG',{maximumFractionDigits:2})} جنيه مصري`+(H.live()?'':' (تقريبي)')}
 
 /* ---------- 1) أقسام جديدة ---------- */
 const add=o=>{if(!CATALOG.some(c=>c.id===o.id))CATALOG.push(o)};
@@ -101,10 +113,11 @@ function ctList(){return `<div class="ct-root" style="grid-column:1/-1"><div cla
 function ctDet(c){const sec=(t,a)=>`<div class="ct-s"><h4>${t}</h4><ul>${a.map(x=>`<li>${E(x)}</li>`).join('')}</ul></div>`;
  return `<div class="ct-root" style="grid-column:1/-1"><button type="button" class="pill" data-ctback>${lang==='ar'?'› ':'‹ '}${T('Back','رجوع')}</button>
  <h3 style="margin:10px 0 2px">${c.f} ${E(c.ar)}</h3><p class="ct-t">${E(c.tag)}</p>
- <div class="ct-facts"><span><small>العاصمة</small><b>${E(c.cap)}</b></span><span><small>اللغة</small><b>${E(c.lang)}</b></span><span><small>العملة</small><b>${E(c.cur)}</b></span><span><small>أنسب وقت للزيارة</small><b>${E(c.best)}</b></span></div>
+ <div class="ct-facts"><span><small>العاصمة</small><b>${E(c.cap)}</b></span><span><small>اللغة</small><b>${E(c.lang)}</b></span><span><small>العملة</small><b>${E(c.cur)}</b><small style="display:block;margin-top:3px;color:var(--p);font-weight:700">${E(fxLine(c))}</small></span><span><small>أنسب وقت للزيارة</small><b>${E(c.best)}</b></span></div>
  ${sec('🍽️ الأكل والأطباق المشهورة',c.food)}${sec('🏛️ معالم سياحية',c.sights)}${sec('🎎 ثقافة وعادات',c.culture)}${sec('💡 نصايح للزائر',c.tips)}
  <button type="button" class="btn" data-ctask="${c.id}">✦ ${T('Ask the assistant about','اسأل المساعد عن')} ${E(c.ar)}</button><p class="ct-n">المعلومات عامة ومختصرة، وشروط السفر والأسعار بتتغيّر؛ اتأكد منها من مصادر رسمية.</p></div>`}
 function ctDraw(){const g=$q('#grid');if(!g)return;const c=CT_DATA.find(x=>x.id===CT.v);g.innerHTML=c?ctDet(c):ctList();const em=$q('#empty');if(em)em.hidden=true}
+HZ_FX.on(()=>{try{if(typeof cat!=='undefined'&&cat==='countries'&&CT.v)ctDraw()}catch(_){}});
 
 /* ---------- 4) رائج في القسم ---------- */
 function topOf(id){let cur=id,n=0;while(n++<5){const p=CATALOG.find(x=>x.grp&&x.grp.includes(cur));if(!p)break;cur=p.id}return cur}
@@ -436,10 +449,13 @@ const fld=(l,n,t,x)=>`<label style="display:block;margin:8px 0"><span>${l}</span
 const calc=(k,inner)=>`<form class="rt-sc" data-calc="${k}" onsubmit="return false">${inner}<div class="rt-res" style="margin-top:10px;font-weight:700;line-height:1.9"></div></form>`;
 const UN={'طول':{'متر':1,'كيلومتر':1000,'سنتيمتر':.01,'ميل':1609.344,'قدم':.3048,'بوصة':.0254},'وزن':{'كيلو':1,'جرام':.001,'طن':1000,'رطل':.45359237,'أوقية':.028349523},'حجم':{'لتر':1,'مللي':.001,'جالون':3.785411784,'كوب':.2365882}};
 const unitForm=()=>calc('unit',`<label>النوع <select name="t" style="padding:8px;border-radius:10px">${Object.keys(UN).map(k=>`<option>${k}</option>`).join('')}</select></label>${fld('القيمة','v')}<div style="display:flex;gap:8px"><select name="a" style="flex:1;padding:8px;border-radius:10px"></select><select name="b" style="flex:1;padding:8px;border-radius:10px"></select></div><p class="um">للحرارة: °م = (°ف − 32) × 5/9</p>`);
+const fxOpts=sel=>{const N=(window.HZ_FX||{}).names||{};return Object.keys(N).map(k=>`<option value="${k}"${k===sel?' selected':''}>${N[k][1]} ${N[k][0]} (${k})</option>`).join('')};
+const fxForm=()=>calc('fx',`${fld('المبلغ','v','number','value="1"')}<div style="display:flex;gap:8px;align-items:center"><select name="a" style="flex:1;min-width:0;padding:10px;border-radius:12px">${fxOpts('USD')}</select><button type="button" data-fxswap class="pill">⇄</button><select name="b" style="flex:1;min-width:0;padding:10px;border-radius:12px">${fxOpts('EGP')}</select></div><p class="um">الأسعار استرشادية وبتتحدّث من الإنترنت. سعر البنك أو الصرّاف ممكن يختلف.</p>`);
 const CATS=[
 {id:'tools',ar:'أدوات وحاسبات',en:'Tools & Calculators',e:'🧮',c:['#0EA5E9','#1E3A8A'],a:'#0EA5E9',b:'#1E3A8A',items:[
  ['zakat','💰','حاسبة الزكاة',calc('zakat',fld('المبلغ اللي معاك (جنيه)','m')+fld('سعر جرام الدهب عيار 24 النهارده','g')+'<p class="um">النصاب = 85 جرام دهب. لو المبلغ وعدّى عليه سنة هجرية بيزكّى بنسبة 2.5%.</p>')],
  ['age','🎂','حاسبة العمر',calc('age',fld('تاريخ الميلاد','d','date'))],
+ ['fx','💱','حاسبة أسعار العملات',fxForm()],
  ['unit','📏','محوّل وحدات',unitForm()],
  ['hijri','🌙','التاريخ الهجري',calc('hijri',fld('التاريخ الميلادي','d','date'))+`<div class="rt-sc"><h4>النهارده</h4><p>${(()=>{try{return new Date().toLocaleDateString('ar-EG-u-ca-islamic',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}catch(_){return ''}})()}</p></div>`],
  ['disc','🏷️','حاسبة الخصم',calc('disc',fld('السعر','p')+fld('نسبة الخصم %','d'))],
@@ -493,11 +509,14 @@ function run(f){const k=f.dataset.calc,v=n=>parseFloat((f.elements[n]||{}).value
  else if(k=='unit'){const T=UN[f.elements.t.value],a=f.elements.a,b=f.elements.b;if(!a.options.length||a.dataset.t!==f.elements.t.value){const op=Object.keys(T).map(x=>`<option>${x}</option>`).join('');a.innerHTML=op;b.innerHTML=op;b.selectedIndex=1;a.dataset.t=f.elements.t.value}const x=v('v');if(!isNaN(x))t=`${f2(x*T[a.value]/T[b.value])} ${b.value}`}
  else if(k=='hijri'){const d=new Date(f.elements.d.value+'T12:00:00');if(!isNaN(d)){try{t=d.toLocaleDateString('ar-EG-u-ca-islamic',{day:'numeric',month:'long',year:'numeric'})}catch(_){}}}
  else if(k=='disc'){const p=v('p'),d=v('d');if(p>=0&&d>=0)t=`بعد الخصم: ${f2(p*(1-d/100))}، وفرت ${f2(p*d/100)}`}
+ else if(k=='fx'){const x=v('v'),a=f.elements.a.value,b=f.elements.b.value,H=window.HZ_FX;if(!isNaN(x)&&H){const r=H.conv(x,a,b),u=H.conv(1,a,b);if(r==null)t='الأسعار لسه بتتحمّل… جرّب بعد ثانية (محتاج إنترنت)';else t=`${f2(x)} ${H.names[a][0]} = ${f2(r)} ${H.names[b][0]}<br><small style="font-weight:400">1 ${H.names[a][0]} = ${u.toLocaleString('ar-EG',{maximumSignificantDigits:4})} ${H.names[b][0]}${H.live()?'':' · سعر تقريبي'}</small>`}}
  else if(k=='loan'){const p=v('p'),r=v('r')/1200,n=v('n');if(p>0&&n>0&&r>=0){const m=r?p*r/(1-Math.pow(1+r,-n)):p/n;t=`القسط الشهري: ${f2(m)}، وإجمالي المدفوع: ${f2(m*n)}`}}
- o.textContent=t}
+ if(k=='fx')o.innerHTML=t;else o.textContent=t}
 ['input','change'].forEach(ev=>document.addEventListener(ev,e=>{const f=e.target.closest('form[data-calc]');if(f)run(f)}));
 document.addEventListener('click',e=>{const f=e.target.closest('form[data-calc="unit"]');if(f)setTimeout(()=>run(f),0)});
-new MutationObserver(()=>{const f=document.querySelector('form[data-calc="unit"]');if(f&&!f.elements.a.options.length)run(f)}).observe(document.body,{childList:true,subtree:true});
+document.addEventListener('click',e=>{const w=e.target.closest('[data-fxswap]');if(!w)return;const f=w.closest('form');if(!f)return;const a=f.elements.a,b=f.elements.b,t=a.value;a.value=b.value;b.value=t;run(f)});
+if(window.HZ_FX)HZ_FX.on(()=>{const f=document.querySelector('form[data-calc="fx"]');if(f)run(f)});
+new MutationObserver(()=>{const f=document.querySelector('form[data-calc="unit"]');if(f&&!f.elements.a.options.length)run(f);const x=document.querySelector('form[data-calc="fx"]');if(x){const r=x.querySelector('.rt-res');if(r&&!r.innerHTML)run(x)}}).observe(document.body,{childList:true,subtree:true});
 try{renderChips();render()}catch(_){}
 })();
 
@@ -768,4 +787,30 @@ function btn(){const g=$('#grid');if(!g)return;let b=$('#hzSimBtn');const k=type
 function rq(){const f=$('#reqForm');if(!f)return;let b=$('#reqSim');const k=typeof cat!=='undefined'?MAP[cat]:null;if(!k){if(b)b.remove();return}if(b)return;b=document.createElement('button');b.id='reqSim';b.type='button';b.className='btn';b.style.cssText='width:100%;margin:8px 0';b.dataset.sim=k;b.textContent='🧊 شاهد عينة 3D لطلبك';const it=$('#reqItem');it?it.after(b):f.prepend(b)}
 function boot(){const g=$('#grid');if(!g){setTimeout(boot,300);return}if(!window.__simR){window.__simR=1;const r0=window.render;if(typeof r0==='function')window.render=function(){const r=r0.apply(this,arguments);try{btn()}catch(_){}return r}}new MutationObserver(()=>{try{btn()}catch(_){}}).observe(g,{childList:true});const m=$('#reqModal');m&&new MutationObserver(()=>{if(!m.hidden)try{const o=$('#reqSim');if(o)o.remove();rq()}catch(_){}}).observe(m,{attributes:true,attributeFilter:['hidden']});btn()}
 boot();
+})();
+
+/* ---------- 14) ملابس + قسم الاستوكات ---------- */
+(function(){
+'use strict';
+const li=s=>s.split(',').map(x=>x.split(':')),add=o=>{if(!CATALOG.some(c=>c.id===o.id))CATALOG.push(o)};
+const CL=[
+['clothes_men','Men clothes','ملابس رجالي','👔',['#2563EB','#1E3A8A'],'Shirts & t-shirts:قمصان وتيشيرتات,Pants & jeans:بناطيل وجينز,Suits:بدل وكلاسيك,Sportswear:ملابس رياضية,Underwear & socks:ملابس داخلية وشرابات,Jackets & coats:جاكيتات وبالطو'],
+['clothes_women','Women clothes','ملابس حريمي','👗',['#DB2777','#831843'],'Dresses:فساتين,Abayas & hijab:عبايات وحجاب,Tops & blouses:بلوزات وتيشيرتات,Pants & skirts:بناطيل وجيبات,Sportswear:ملابس رياضية,Home & sleepwear:ملابس بيت ونوم'],
+['clothes_kids','Kids clothes','ملابس أطفال','🧒',['#F59E0B','#B45309'],'Babies:ملابس مواليد,Boys:ولادي,Girls:بناتي,School uniform:يونيفورم مدرسي,Kids sportswear:رياضة أطفال'],
+['shoes_bags','Shoes & bags','أحذية وشنط','👟',['#92400E','#451A03'],'Men shoes:أحذية رجالي,Women shoes:أحذية حريمي,Kids shoes:أحذية أطفال,Sneakers:كوتشيات,Bags:شنط,Belts & wallets:أحزمة ومحافظ'],
+['stocks','Stock & wholesale','استوكات','📦',['#0F766E','#134E4A'],'Clothes stock:استوك ملابس,Shoes stock:استوك أحذية,Kids stock:استوك أطفال,Brand overruns:فائض مصانع وماركات,Wholesale by carton:جملة بالكرتونة,Seasonal clearance:تصفية موسم']];
+CL.forEach(x=>add({id:x[0],en:x[1],ar:x[2],e:x[3],c:x[4],sub:1,list:li(x[5])}));
+const ids=CL.map(x=>x[0]);
+let cl=CATALOG.find(c=>c.id==='clothes');
+if(!cl){cl={id:'clothes',en:'Clothes',ar:'ملابس',e:'👕',c:['#DB2777','#9D174D'],sub:1,list:[],grp:ids.slice()};CATALOG.push(cl)}
+else if(cl.grp){ids.forEach(i=>{if(!cl.grp.includes(i))cl.grp.push(i)})}
+else{cl.list=cl.list||[];if(!cl.list.some(x=>x[0]==='Stock'))cl.list.push(['Stock','استوكات'])}
+const gp=CATALOG.find(c=>c.id==='g_products');if(gp&&gp.grp&&!gp.grp.includes('clothes'))gp.grp.push('clothes');
+const SH='<path d="M8 3 3 6l2 4 3-1v12h8V9l3 1 2-4-5-3a4 4 0 0 1-8 0z"/>';
+Object.assign(IC,{clothes:SH,clothes_men:SH,clothes_women:'<path d="M9 3h6l-1 6 4 12H6l4-12z"/>',clothes_kids:SH,shoes_bags:'<path d="M3 16c0-3 3-3 5-6l3 2c2 2 6 1 10 3v3H3z"/>',stocks:'<path d="M3 8l9-5 9 5v9l-9 5-9-5zM3 8l9 5 9-5M12 13v9"/>'});
+try{Object.assign(RT,{clothes:'ملابس هدوم لبس تيشيرت بنطلون فستان عباية جاكيت بدلة',stocks:'استوك استوكات جملة فائض مصانع تصفية ماركات بالكرتونة',shoes_bags:'حذاء أحذية جزمة كوتشي شنطة شنط'})}catch(_){}
+try{CAT_FOR.product.push('clothes',...ids);FORMS.product=FORMS.product||{};
+ const base=[['kind','Type','النوع','t'],['size','Size','المقاس','t'],['cond','Condition','الحالة','s',li('New:جديد,Like new:زي الجديد,Used:مستعمل')]];
+ ids.forEach(i=>{FORMS.product[i]=i==='stocks'?[['kind','Type','نوع الاستوك','t'],['qty','Quantity (pieces)','الكمية (قطعة)','t'],['unit','Price per','السعر بـ','s',li('Piece:القطعة,Kilo:الكيلو,Carton:الكرتونة,Lot:اللوط كله')],['min','Minimum order','أقل كمية للطلب','t']]:base});FORMS.product.clothes=base}catch(_){}
+try{renderChips();render()}catch(_){}
 })();
