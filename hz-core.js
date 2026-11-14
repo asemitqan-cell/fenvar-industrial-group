@@ -33,12 +33,34 @@ window.render=function(){
 
 /* ===== زرار "معاينة 3D" جوه كارت المنتج بس (مش بره). بيتحمّل ملف sec-3d لما تدوس عليه ===== */
 const K3={'Mobiles':'phone','Laptops':'laptop','Computers':'pc','Refrigerators':'fridge','Washing machines':'washer','Pots & cookware':'pot','Dinnerware & china':'plates','TVs & screens':'tv','Microwaves':'microwave','Earbuds / AirPods':'earbuds','Pharmacy & drug reference':'pharmacy'};
-function k3(card){const b=card.querySelector('[data-item][data-cat]');if(!b)return null;if(b.dataset.cat==='perfumes')return'perfume';return K3[b.dataset.item]||null}
-function add3d(){const g=$q('#grid');if(!g)return;g.querySelectorAll('.card').forEach(c=>{if(c.querySelector('.hz3b'))return;const k=k3(c),cb=c.querySelector('.cb');if(!k||!cb)return;
- cb.insertAdjacentHTML('beforeend','<button type="button" class="pill hz3b" data-hz3k="'+k+'" style="margin-top:6px;width:100%">🧊 معاينة 3D</button>')})}
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.hz3b');if(!b)return;e.preventDefault();e.stopPropagation();const k=b.dataset.hz3k;
- hzLoad('sec-3d').then(()=>window.hz3d.open(k)).catch(()=>{if(typeof toast==='function')toast('محتاج إنترنت عشان المعاينة تتحمّل.')})},true);
-{const g=$q('#grid');if(g){new MutationObserver(()=>{try{add3d()}catch(_){}}).observe(g,{childList:true});try{add3d()}catch(_){}}}
+/* v16: ربط كل منتج بمجسم 3D مناسب (بالاسم ثم بالقسم). المجسمات الحقيقية بتيجي من المورد (attrs._3m) */
+const A3=s=>String(s||'').toLowerCase().replace(/[\u064B-\u065F]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي');
+const RX=w=>new RegExp('(?:^|[^a-z\\u0600-\\u06ff])(?:ال)?(?:'+w+')','i');
+const KW3=[[RX('دولاب|خزانه|wardrobe|closet|armoire'),'wardrobe'],[RX('سرير|غرفه نوم|اوضه نوم|مرتبه|bed(?:room)?s?(?![a-z])|mattress'),'bed'],[RX('شتر|شتارات|shutters?(?![a-z])|roller'),'shutter'],[RX('قطاع|قطاعات|profiles?(?![a-z])'),'profile'],[RX('شباك|شبابيك|نافذ|windows?(?![a-z])'),'window'],[RX('باب|ابواب|doors?(?![a-z])'),'door'],[RX('مطبخ|مطابخ|kitchens?(?![a-z])'),'kitchen'],[RX('ركنه|كنب|انتريه|صالون|sofa|couch|living'),'sofa'],[RX('سفره|ترابيزه|طاوله|dining|tables?(?![a-z])'),'table'],[RX('عربيه|سياره|عربيات|سيارات|cars?(?![a-z])|vehicle'),'car'],[RX('علف|اعلاف|feed'),null],[RX('بقر|جاموس|cattle|buffalo|cow'),'cow'],[RX('خروف|خرفان|غنم|اغنام|ضان|sheep|lamb'),'sheep'],[RX('ماعز|goat'),'goat'],[RX('جمل|جمال|ابل|camel'),'camel'],[RX('حصان|خيل|horse'),'horse'],[RX('دجاج|فراخ|دواجن|poultry|chicken|hen(?![a-z])'),'hen'],[RX('خشب|اوك|زان|جوز|صنوبر|ماهوجني|wood|oak|walnut|pine|mahogany|beech|plywood'),'planks'],[RX('زجاج|سيكوريت|مرايه|glass|mirror|tempered|laminated|frosted'),'glass'],[RX('شقه|فيلا|عقار|شاليه|apartment|villa|property|real estate'),'house']];
+const CATK={livestock:'cow',furniture:'bed',wood:'planks',glass:'glass',upvc:'window',cars:'car',realestate:'house'};
+function h3p(k,n){const a=A3(n),p={};
+ if(k==='window'||k==='door'||k==='shutter'||k==='profile'){if(/رمادي|anthracite|grey|gray/.test(a))p.color='#3f4651';else if(/جوز|walnut/.test(a))p.color='#5a3b22';else if(/اوك|oak|wood|خشب/.test(a))p.color='#b98a52';else if(k!=='door')p.color='#f8fafc'}
+ if(k==='bed'){if(/اطفال|kid/.test(a)){p.w=120;p.l=170;p.hb=90;p.color='#f59e0b'}else if(/كلاسيك|classic/.test(a)){p.color='#6b3f1d';p.hb=135}else if(/مودرن|modern/.test(a)){p.color='#9ca3af';p.hb=100}}
+ if(k==='planks'){p.color=/جوز|walnut/.test(a)?'#5a3b22':/صنوبر|pine/.test(a)?'#d9b77e':/ماهوجني|mahogany/.test(a)?'#7a2f1c':/زان|beech/.test(a)?'#c28b5a':'#b98a52'}
+ if(k==='glass')p.type=/مصنفر|frosted/.test(a)?'frosted':/برونز|bronze/.test(a)?'bronze':/لامينيت|laminated/.test(a)?'laminated':/مرايه|mirror/.test(a)?'mirror':'clear';
+ if(k==='sofa'&&/ركنه|corner/.test(a))p.corner='1';
+ if(k==='table'&&/دايره|round/.test(a))p.shape='round';
+ return p}
+function h3k(name,cat){if(cat==='perfumes')return{k:'perfume',p:{}};const n=String(name||'');if(K3[n])return{k:K3[n],p:{}};const a=A3(n);for(const r of KW3)if(r[0].test(a))return r[1]?{k:r[1],p:h3p(r[1],n)}:null;const ck=CATK[cat];return ck?{k:ck,p:h3p(ck,n)}:null}
+function h3for(c){
+ const m=c.querySelector('[data-msg]');
+ if(m){if(typeof UL==='undefined')return null;const l=UL.find(x=>x.id===m.dataset.msg);if(!l)return null;const a=l.attrs||{};
+  if(a._3m==='spin'&&Array.isArray(a._3s)&&a._3s.length>=6)return{k:'spin',spin:a._3s,n:l.title,own:1};
+  if(a._3m==='param'&&a._3k)return{k:a._3k,p:Object.assign({title:l.title},a._3p||{}),own:1};
+  if(l.kind==='product'){const r=h3k(l.title,l.cat);if(r)return{k:r.k,p:Object.assign({},r.p,{title:l.title+' · نموذج توضيحي'})}}
+  return null}
+ const b=c.querySelector('[data-item][data-cat]');if(!b)return null;
+ const r=h3k(b.dataset.item,b.dataset.cat);return r?{k:r.k,p:Object.assign({},r.p)}:null}
+function add3d(){[$q('#grid'),$q('#feed')].forEach(root=>{if(!root)return;root.querySelectorAll('.card,.post').forEach(c=>{if(c.querySelector('.hz3b'))return;const r=h3for(c);if(!r)return;const cb=c.querySelector('.cb')||c.querySelector('.pb>div')||c.querySelector('.pb');if(!cb)return;
+ cb.insertAdjacentHTML('beforeend','<button type="button" class="pill hz3b" data-hz3k="'+r.k+'" style="margin-top:6px;width:100%'+(r.own?';border-color:#0F766E;color:#0F766E;font-weight:700':'')+'">🧊 '+(r.own?'مجسم 3D من المورد':'معاينة 3D')+'</button>')})})}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.hz3b');if(!b)return;e.preventDefault();e.stopPropagation();const c=b.closest('.card,.post'),r=(c&&h3for(c))||{k:b.dataset.hz3k,p:{}};
+ hzLoad('sec-3d').then(()=>r.spin?window.hz3d.openSpin(r.spin,r.n):window.hz3d.open(r.k,r.p)).catch(()=>{if(typeof toast==='function')toast('محتاج إنترنت عشان المعاينة تتحمّل.')})},true);
+[$q('#grid'),$q('#feed')].forEach(g=>{if(g){new MutationObserver(()=>{try{add3d()}catch(_){}}).observe(g,{childList:true});try{add3d()}catch(_){}}});
 /* ===== إصلاح عدّاد الأذكار: capture + منع تكرار الـhandlers القديمة ===== */
 document.addEventListener('click',e=>{const z=e.target.closest&&e.target.closest('.zk2,.zk');if(!z)return;
  e.stopImmediatePropagation();
@@ -60,6 +82,12 @@ window.hzApplyLayout=function(){const Lo=window.HZ_LAYOUT;if(!Lo)return;if(!ALL)
  keep.sort((a,b)=>ix(a.id)-ix(b.id));CATALOG.length=0;keep.forEach(c=>CATALOG.push(c));try{renderChips();render()}catch(_){}};
 function ovr(){const Lo=window.HZ_LAYOUT;if(!Lo||!Lo.img)return;document.querySelectorAll('#grid .card').forEach(cd=>{const bt=cd.querySelector('[data-item]'),k=cd.dataset.c?'c:'+cd.dataset.c:bt?'i:'+bt.dataset.cat+':'+bt.dataset.item:null,u=k&&Lo.img[k],th=cd.querySelector('.thumb');if(u&&th&&!th.querySelector('img[data-hz]'))th.innerHTML='<img data-hz src="'+u+'" style="width:100%;height:100%;object-fit:cover" loading="lazy">'})}
 const R3=window.render;window.render=function(){const r=R3.apply(this,arguments);try{ovr()}catch(_){}return r};
+function iconImgs(){const Lo=window.HZ_LAYOUT;if(!Lo||!Lo.img)return;document.querySelectorAll('#chips .tile[data-c] .ti,#slides .sl[data-c]').forEach(n=>{const t=n.closest('[data-c]'),u=Lo.img['ic:'+t.dataset.c];if(!u||n.querySelector('img[data-hzi]'))return;const svg=n.querySelector('svg.gi');if(!svg)return;const im=document.createElement('img');im.dataset.hzi=1;im.src=u;im.alt='';im.style.cssText=n.classList.contains('sl')?'width:34px;height:34px;object-fit:cover;border-radius:10px':'width:100%;height:100%;object-fit:cover;border-radius:inherit';svg.replaceWith(im)})}
+window.renderTrend=function(){const Lo=window.HZ_LAYOUT||{},el=$q('#slides');if(!el)return;const ids=Lo.slides&&Lo.slides.length?Lo.slides:['furniture','livestock','glass','upvc','wood','translation','offers'];
+ const mv=id=>{try{const l=UL.find(x=>x.cat===id&&(x.photos||[])[0]);return l?l.photos[0]:''}catch(_){return''}};
+ el.innerHTML=ids.map(i=>CATALOG.find(c=>c.id===i)).filter(Boolean).map(c=>{const m=(Lo.img&&Lo.img['sl:'+c.id])||mv(c.id);return `<div class="sl${m?' hasm':''}" data-c="${c.id}" style="background:${grad(c.c)}">${m?`<div class="bgm">${mediaEl(m)}</div>`:''}${ico(c.id)}<small>${L('Trending','رائج','Im Trend')}</small><b>${N(c)}</b></div>`}).join('')+`<div class="sl more" data-c="offers">${L('More','المزيد','Mehr')} <span>›</span></div>`;iconImgs()};
+{const rc=window.renderChips;if(typeof rc==='function')window.renderChips=function(){const r=rc.apply(this,arguments);try{iconImgs()}catch(_){}return r}}
+if(/[?&]edit=1/.test(location.search)){let n=0;const iv=setInterval(()=>{n++;let own=false;try{own=!!(user&&OWNER_EMAILS.includes((user.email||'').toLowerCase()))}catch(_){}if(own){clearInterval(iv);hzLoad('sec-admin').then(()=>hzOpenAdmin())}else if(n>50)clearInterval(iv)},400)}
 (async function boot(){try{const c=localStorage.getItem('hz_layout');if(c){window.HZ_LAYOUT=JSON.parse(c);window.hzApplyLayout()}}catch(_){}
  try{const r=await sb.from('hz_settings').select('value').eq('key','layout').maybeSingle();if(r.data&&r.data.value){window.HZ_LAYOUT=r.data.value;try{localStorage.setItem('hz_layout',JSON.stringify(r.data.value))}catch(_){}window.hzApplyLayout()}}catch(_){}})();
 /* دعم العملاء / بلاغ */
