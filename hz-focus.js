@@ -1,8 +1,8 @@
-/* Horizon: وضع التركيز. الأقسام المفتوحة دلوقتي: UPVC والموبيليا (وخشب وزجاج تحت "تشطيبات وأثاث").
+/* Horizon: وضع التركيز. الأقسام المفتوحة دلوقتي: UPVC والموبيليا (تحت منتجات > تشطيبات وأثاث) + ثقافة ومجتمع (ديني، أطفال، ثقافات بلاد، الخطباء، المكتبة).
    أي قسم تاني بيظهر باهت وعليه "قريبًا"، ولما حد يدوس عليه بيطلع تنبيه ومابيفتحش.
    لفتح قسم جديد بعدين: ضيف رقمه (id) في مصفوفة OPEN تحت. */
 (function(){'use strict';
-const OPEN=['all','fav','finishing','furniture','wood','glass','upvc'];
+const OPEN=['all','fav','g_products','finishing','furniture','wood','glass','upvc','g_culture','religion','countries','kids','preachers','library'];
 const ok=c=>OPEN.indexOf(c)>-1;
 const say=()=>{try{toast('قريبًا. دلوقتي بنركّز على UPVC والموبيليا.')}catch(_){}};
 const st=document.createElement('style');
