@@ -53,7 +53,7 @@ if(a.data)IS_OWNER=true;else{const g=await sb.from('hz_staff').select('*').eq('u
 $('#lf').hidden=true;$('#app').hidden=false;$('#out').hidden=false;$('#me').textContent=u.email;await load();draw()}
 async function load(){const qa=sb.from('hz_listings').select('*').order('created_at',{ascending:false}).limit(1000),[a,b]=await Promise.all([IS_OWNER?qa:qa.in('cat',ST.sections||[]),sb.from('hz_profiles').select('*').order('created_at',{ascending:false}).limit(2000)]);
 if(a.error||(IS_OWNER&&b.error)){$('#v').innerHTML='<div class="note">جداول قاعدة البيانات مش جاهزة. شغّل ملف horizon_setup.sql وبعده hz_setup.sql في Supabase الأول. ('+esc((a.error||b.error).message)+')</div>';LS=[];PR={};return}
-LS=a.data;PR={};(b.data||[]).forEach(p=>PR[p.id]=p);
+LS=a.data;PR={};(b.data||[]).forEach(p=>PR[p.id]=p);try{const pc=await sb.from('hz_private_contacts').select('user_id,phone').limit(5000);(pc.data||[]).forEach(c=>{if(PR[c.user_id]&&c.phone)PR[c.user_id].phone=c.phone})}catch(_){}
 if(IS_OWNER){const [t,g]=await Promise.all([sb.from('hz_staff').select('*').order('created_at'),sb.from('hz_staff_log').select('*').order('created_at',{ascending:false}).limit(500)]);STAFF=t.data||[];LOG=g.data||[];window.STERR=t.error?t.error.message:''}
 else{const g=await sb.from('hz_staff_log').select('*').eq('user_id',me.id).order('created_at',{ascending:false}).limit(100);LOG=g.data||[]}}
 function nav(){const pend=LS.filter(l=>l.status==='pending').length,pp=LOG.filter(x=>x.status==='pending').length,pb=['pend','بانتظار الموافقة'+(pend?`<i>${pend}</i>`:'')];const T=IS_OWNER?[['over','نظرة عامة'],['tree','الهيكل'],['props','مقترحات المديرين'+(pp?`<i>${pp}</i>`:'')],pb,['prov','طلبات مقدمي الخدمة'],['fb','المقترحات والشكاوي'],['all','كل الإعلانات'],['users','المستخدمين'],['post','+ منشور من الإدارة'],['leads','طلبات الموقع']]:[pb,['all','إعلانات قسمي'],['mine','نشاطي']];$('#nav').innerHTML=T.map(t=>`<button data-v="${t[0]}" class="${view===t[0]?'on':''}">${t[1]}</button>`).join('')}
@@ -126,6 +126,7 @@ let PF='pending';
 async function drawProv(){const v=$('#v'),T=[['pending','قيد المراجعة'],['approved','موثّقين'],['rejected','مرفوضين']],head=`<div class="tools">${T.map(t=>`<button class="btn sm ${PF===t[0]?'':'gh'}" data-pf="${t[0]}">${t[1]}</button>`).join('')}</div>`;
 v.innerHTML=head+'<p class="empty">جاري التحميل…</p>';
 const r=await sb.from('hz_providers').select('*').eq('status',PF).order('created_at',{ascending:false});
+if(!r.error){try{const pc=await sb.from('hz_private_contacts').select('user_id,phone').limit(5000),m={};(pc.data||[]).forEach(c=>m[c.user_id]=c.phone);(r.data||[]).forEach(p=>{if(m[p.user_id])p.whatsapp=m[p.user_id]})}catch(_){}}
 if(r.error){v.innerHTML=head+`<div class="note">الجدول مش جاهز. شغّل ملف hz_setup.sql في Supabase. (${esc(r.error.message)})</div>`;return}
 const rows=r.data||[],urls=await Promise.all(rows.map(async p=>{if(!p.license_doc)return'';try{const s=await sb.storage.from('provider-docs').createSignedUrl(p.license_doc,600);return s.data?s.data.signedUrl:''}catch(_){return''}}));
 if(view!=='prov')return;

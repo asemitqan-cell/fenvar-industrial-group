@@ -35,6 +35,7 @@ const S=[
  {k:'extra',ar:'إضافات',u:['piece','visit','day'],pre:['زيادة ليلي','زيادة إجازة','مواصلات'],f:[]}]}
 ];
 window.HZ_SECTIONS=S;window.HZ_UNITS=U;
+const OPENS=['upvc','wood'];
 const PR={sec:null,gi:0,rows:null,del:[],msg:'',err:0,busy:0};
 const g$=()=>PR.sec.groups[PR.gi];
 const mk=(g,n,it,pre)=>({id:it?it.id:null,g:g.k,name:n,pre,unit:it?it.unit:g.u[0],price:it&&it.price!=null?it.price:'',specs:(it&&it.specs)||{},note:(it&&it.note)||'',open:0});
@@ -73,7 +74,7 @@ function draw(){const b=document.getElementById('hsBody');if(!b)return;
   const gate=!user?T('Sign in first.','سجّل دخول الأول.'):!PROV?T('Register your provider details first (My store > Provider), then add your prices.','سجّل بياناتك كمورد الأول (متجري > مقدّم الخدمة) وبعدها ضيف أسعارك.')
    :(PROV.verified?'':T('Your prices appear in quotes after your account is verified.','أسعارك بتظهر في عروض الأسعار بعد توثيق حسابك.'));
   b.innerHTML=root(`<div class="hs-h"><button type="button" class="hs-b" data-pr="back">${bkA()}</button><h3>${T('My products & prices','منتجاتي وأسعاري')}</h3><span style="width:38px"></span></div>`+(gate?`<p class="hs-box">${gate}</p>`:'')
-   +`<div class="hs-g">`+(user&&PROV?S.map(s=>`<button type="button" class="hs-r" data-pr="o:${s.id}"><span class="hs-i" style="--c:#0F766E">${s.ico}</span><span class="hs-t">${s.ar}</span><i class="hs-c">${fwA()}</i></button>`).join(''):'')+`</div>`);return}
+   +`<div class="hs-g">`+(user&&PROV?S.map(s=>OPENS.includes(s.id)?`<button type="button" class="hs-r" data-pr="o:${s.id}"><span class="hs-i" style="--c:#0F766E">${s.ico}</span><span class="hs-t">${s.ar}</span><i class="hs-c">${fwA()}</i></button>`:`<div class="hs-r" style="opacity:.45;filter:grayscale(1);pointer-events:none"><span class="hs-i" style="--c:#0F766E">${s.ico}</span><span class="hs-t">${s.ar} · ${T('Coming soon','قريبًا')}</span></div>`).join(''):'')+`</div>`);return}
  const s=PR.sec,g=g$();
  b.innerHTML=root(`<div class="hs-h"><button type="button" class="hs-b" data-pr="list">${bkA()}</button><h3>${s.ico} ${s.ar}</h3><span style="width:38px"></span></div>`
   +`<p class="hs-box" style="margin-bottom:6px">${T('Fill the price only for what you offer. Leave the rest empty.','اكتب السعر للي بتقدّمه بس، والباقي سيبه فاضي.')}${s.id==='nursing'&&PROV&&PROV.field!=='medical'?'<br><b>'+T('Medical services need a medical provider account with a license.','الخدمات الطبية محتاجة حساب مقدّم خدمة طبي بكارنيه.')+'</b>':''}</p>`

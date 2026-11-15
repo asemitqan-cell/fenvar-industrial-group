@@ -199,7 +199,7 @@ function bootS(){const b=document.getElementById('hsBody');if(!b){setTimeout(boo
 /* شريط التركيز على الأقسام التلاتة في الرئيسية */
 function focusBar(){const ch=$q('#chips');if(!ch)return;let w=$q('#qxFocus');
  if(!w){w=document.createElement('div');w.id='qxFocus';
-  w.innerHTML=`<h4>اطلب عرض سعر دلوقتي</h4><div class="qx-g"><button type="button" data-qxq="upvc"><i>🪟</i>UPVC</button><button type="button" data-qxq="wood"><i>🛋️</i>موبيليا</button><button type="button" data-qxq="nursing"><i>🩺</i>تمريض</button></div><div class="qx-m"><button type="button" class="pill" data-qxrow="mine">🧾 طلباتي</button><button type="button" class="pill" data-qxrow="prov">📥 طلبات العملاء</button></div>`;
+  w.innerHTML=`<h4>اطلب عرض سعر دلوقتي</h4><div class="qx-g"><button type="button" data-qxq="upvc"><i>🪟</i>UPVC</button><button type="button" data-qxq="wood"><i>🛋️</i>موبيليا</button><button type="button" class="qx-soon" data-qxsoon="1" style="opacity:.45;filter:grayscale(1)"><i>🩺</i>تمريض<small style="display:block;font-size:10px">قريبًا</small></button></div><div class="qx-m"><button type="button" class="pill" data-qxrow="mine">🧾 طلباتي</button><button type="button" class="pill" data-qxrow="prov">📥 طلبات العملاء</button></div>`;
   const hw=$q('#hzHomeW');(hw||ch).before(w)}
  w.hidden=(typeof cat!=='undefined'&&cat!=='all')}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qxq]');if(!b)return;if(typeof window.hzQuote==='function')window.hzQuote(b.dataset.qxq)});

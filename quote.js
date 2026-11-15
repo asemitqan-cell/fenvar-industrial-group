@@ -173,6 +173,7 @@ function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTM
 
 async function openQuote(secId,seed){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
+ if(id!=='upvc'&&id!=='wood'){if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
  if(!user){Q.pend=[secId,seed];if(typeof toast==='function')toast(T('Sign in first to request a quote.','سجّل دخول الأول عشان تطلب عرض سعر.'));if(typeof needLogin==='function')needLogin();return true}
  Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=seed||'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
  show();$q('#qtBody').innerHTML='<p class="hs-box">…</p>';

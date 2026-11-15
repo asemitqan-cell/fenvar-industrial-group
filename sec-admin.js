@@ -12,7 +12,7 @@ function draw(){if(!panel){panel=document.createElement('div');panel.id='hzAdm';
  else if(tab==='slides')h+=slidesHTML();else if(tab==='icons')h+=iconsHTML();else if(tab==='stats')h+=`<div id="adStats"><p class="empty">جاري التحميل…</p></div>`;else h+=`<div id="adRep"><p class="empty">جاري التحميل…</p></div>`;
  panel.innerHTML=h;if(tab==='rep')reps();if(tab==='stats')stats()}
 /* ---- لوحة الأرقام (اللي المستثمر هيسأل عنها) ---- */
-const FOC=[['upvc','🪟 UPVC'],['wood','🛋️ موبيليا / خشب'],['nursing','🩺 تمريض']],NMS={upvc:'UPVC',wood:'موبيليا / خشب',nursing:'تمريض',iron:'حدايد',paints:'بويات',accessories:'إكسسوارات',installment:'بيع بالقسط'};
+const FOC=[['upvc','🪟 UPVC'],['wood','🛋️ موبيليا / خشب']],NMS={upvc:'UPVC',wood:'موبيليا / خشب',nursing:'تمريض',iron:'حدايد',paints:'بويات',accessories:'إكسسوارات',installment:'بيع بالقسط'};
 const TG={sup:10,req:50,deal:10},fmn=n=>Math.round(+n||0).toLocaleString('ar-EG'),pc=(a,b)=>+a?Math.round(100*(+b||0)/+a)+'%':'—';
 const bar=(v,t)=>`<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:3px 0 8px"><div style="height:100%;width:${Math.min(100,Math.round(100*(+v||0)/t))}%;background:var(--p)"></div></div>`;
 function summary(d){const S=d.sections||[],g=k=>S.find(x=>x.section===k)||{},tot=f=>S.reduce((a,x)=>a+(+x[f]||0),0);

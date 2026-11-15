@@ -485,7 +485,7 @@ function ulFor(t,c,ty){if(t)return UL.filter(l=>(l.title+' '+(l.description||'')
 async function loadUL(){if(!sb)return;try{const r=await sb.from('hz_listings').select('*').eq('status','approved').order('created_at',{ascending:false}).limit(300);UL=r.data||[]}catch(_){UL=[]}FEED=null;feedMore(true);render()}
 
 /* profile + unread */
-async function loadProf(){if(!user||!sb)return;try{const r=await sb.from('hz_profiles').select('*').eq('id',user.id).maybeSingle();PROF=r.data||null}catch(_){}}
+async function loadProf(){if(!user||!sb)return;try{const r=await sb.from('hz_profiles').select('*').eq('id',user.id).maybeSingle();PROF=r.data||null;if(PROF){try{const c=await sb.from('hz_private_contacts').select('phone').eq('user_id',user.id).maybeSingle();if(c.data&&c.data.phone)PROF.phone=c.data.phone}catch(_){}}}catch(_){}}
 const unread=c=>{try{return c.last_sender&&c.last_sender!==user.id&&new Date(c.last_message_at)>new Date(localStorage.getItem(SEEN(c.id))||0)}catch(_){return false}};
 async function pollUnread(){if(!user||!sb)return;try{const r=await sb.from('hz_conversations').select('id,last_sender,last_message_at').or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);$('#barStore').classList.toggle('un',(r.data||[]).some(unread))}catch(_){}}
 setInterval(pollUnread,30000);
@@ -706,7 +706,7 @@ let provFlash='';
 
 window.loadMyProv=async function(){
  if(!user){MYPROV=null;return}
- try{const r=await sb.from('hz_providers').select('*').eq('user_id',user.id).maybeSingle();MYPROV=r.data||null}catch(_){MYPROV=null}
+ try{const r=await sb.from('hz_providers').select('*').eq('user_id',user.id).maybeSingle();MYPROV=r.data||null;if(MYPROV){try{const c=await sb.from('hz_private_contacts').select('phone').eq('user_id',user.id).maybeSingle();if(c.data&&c.data.phone)MYPROV.whatsapp=c.data.phone}catch(_){}}}catch(_){MYPROV=null}
 };
 
 /* ---------- provider registration (My store > Provider tab) ---------- */
@@ -808,7 +808,7 @@ async function drawAdm(){
  if(r.error){b.innerHTML=head+`<p class="msg">${L('Database setup is missing.','إعداد قاعدة البيانات ناقص.')}</p>`;return}
  const rows=r.data||[];
  const urls=await Promise.all(rows.map(async p=>{if(!p.license_doc)return'';try{const s=await sb.storage.from('provider-docs').createSignedUrl(p.license_doc,600);return s.data?s.data.signedUrl:''}catch(_){return''}}));
- b.innerHTML=head+(rows.map((p,i)=>`<div class="pvc"><b>${esc(p.full_name||'')}</b>${p.business_name?' · '+esc(p.business_name):''}<br>${p.field==='medical'?L('Medical','طبي')+' · ':''}${esc(p.profession||'')} · ${p.provider_type==='company'?L('Company','شركة'):L('Individual','فرد')}${p.experience_years!=null?' · '+esc(p.experience_years)+' '+L('yrs','سنة'):''}<br>${L('License','الكارنيه')}: <b>${esc(p.license_no||'')}</b>${p.license_issuer?' · '+esc(p.license_issuer):''}${p.license_expiry?' · '+L('expires','ينتهي')+' '+esc(p.license_expiry):''}${p.commercial_reg?`<br>${L('Register / tax','سجل / ضريبة')}: ${esc(p.commercial_reg)}`:''}${p.areas?`<br>${L('Areas','المناطق')}: ${esc(p.areas)}`:''}${p.work_hours?`<br>${L('Hours','المواعيد')}: ${esc(p.work_hours)}`:''}${p.whatsapp?`<br>📞 <a href="tel:${esc(p.whatsapp)}">${esc(p.whatsapp)}</a>`:''}${p.website?`<br><a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website)}</a>`:''}${p.about?`<br>${esc(p.about)}`:''}${urls[i]?`<img src="${esc(urls[i])}" data-pimg="${esc(urls[i])}" alt="">`:`<br><small class="msg">${L('No license photo','مفيش صورة كارنيه')}</small>`}${p.reject_reason?`<br><small class="msg">${esc(p.reject_reason)}</small>`:''}<div class="row2">${p.status!=='approved'?`<button class="btn" data-pv="approve" data-u="${esc(p.user_id)}">✓ ${L('Approve','وافق')}</button>`:`<button class="pill" data-pv="revoke" data-u="${esc(p.user_id)}">${L('Revoke','اسحب التوثيق')}</button>`}${p.status!=='rejected'?`<button class="pill" data-pv="reject" data-u="${esc(p.user_id)}">${L('Reject','ارفض')}</button>`:''}</div></div>`).join('')||`<p class="empty">${L('Nothing here.','مفيش حاجة هنا.')}</p>`);
+ b.innerHTML=head+(rows.map((p,i)=>`<div class="pvc"><b>${esc(p.full_name||'')}</b>${p.business_name?' · '+esc(p.business_name):''}<br>${p.field==='medical'?L('Medical','طبي')+' · ':''}${esc(p.profession||'')} · ${p.provider_type==='company'?L('Company','شركة'):L('Individual','فرد')}${p.experience_years!=null?' · '+esc(p.experience_years)+' '+L('yrs','سنة'):''}<br>${L('License','الكارنيه')}: <b>${esc(p.license_no||'')}</b>${p.license_issuer?' · '+esc(p.license_issuer):''}${p.license_expiry?' · '+L('expires','ينتهي')+' '+esc(p.license_expiry):''}${p.commercial_reg?`<br>${L('Register / tax','سجل / ضريبة')}: ${esc(p.commercial_reg)}`:''}${p.areas?`<br>${L('Areas','المناطق')}: ${esc(p.areas)}`:''}${p.work_hours?`<br>${L('Hours','المواعيد')}: ${esc(p.work_hours)}`:''}${p.website?`<br><a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website)}</a>`:''}${p.about?`<br>${esc(p.about)}`:''}${urls[i]?`<img src="${esc(urls[i])}" data-pimg="${esc(urls[i])}" alt="">`:`<br><small class="msg">${L('No license photo','مفيش صورة كارنيه')}</small>`}${p.reject_reason?`<br><small class="msg">${esc(p.reject_reason)}</small>`:''}<div class="row2">${p.status!=='approved'?`<button class="btn" data-pv="approve" data-u="${esc(p.user_id)}">✓ ${L('Approve','وافق')}</button>`:`<button class="pill" data-pv="revoke" data-u="${esc(p.user_id)}">${L('Revoke','اسحب التوثيق')}</button>`}${p.status!=='rejected'?`<button class="pill" data-pv="reject" data-u="${esc(p.user_id)}">${L('Reject','ارفض')}</button>`:''}</div></div>`).join('')||`<p class="empty">${L('Nothing here.','مفيش حاجة هنا.')}</p>`);
 }
 const _sy2=window.syncUI;
 window.syncUI=function(){_sy2&&_sy2();ob.hidden=!isOwner();ob.textContent=L('Review provider requests','مراجعة طلبات مقدمي الخدمة')};
@@ -1387,7 +1387,7 @@ syncUI();
 })();
 </script>
 <script src="prices.js?v=5"></script>
-<script src="sec-quotes.js?v=1"></script><script src="quote.js?v=7"></script><script src="taxonomy.js?v=15"></script><script src="hz-core.js?v=6"></script>
+<script src="sec-quotes.js?v=1"></script><script src="quote.js?v=7"></script><script src="taxonomy.js?v=15"></script><script src="hz-core.js?v=6"></script><script src="hz-focus.js?v=1"></script>
 <script>
 /* ===== v15: phone back button = one step back inside the app (sections, kids/sports screens, popups, chat).
    Works alongside hz-core.js (hzDeeper) and sec-*.js: any pushState made by them is tracked too. ===== */
