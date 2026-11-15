@@ -12,7 +12,7 @@ const INTENT=/(عرض\s*(ال)?سعر|عروض\s*(ال)?[اأ]سعار|كوتي�
 const PRICEW=/(بكام|بكم|كام\s*سعر|سعر|اسعار|أسعار|تكلفة|تكلف|price|cost|how much|preis)/i;
 const SEC_WORDS=[['installment',/(قسط|تقسيط|بالقسط|installment)/i],['nursing',/(تمريض|ممرض|حقن|كانيولا|رعاية مسنين|nursing)/i],['accessories',/(مفصلة|كالون|ترباس|مقبض|عين سحرية|اكسسوار|إكسسوار)/i],['upvc',/(upvc|يو\s*بي\s*في\s*سي|قطاع|قطاعات|شباك|شبابيك|شتر|بلكونة|دبل جلاس|سيكوريت|زجاج)/i],['wood',/(خشب|أبلكاش|ابلكاش|mdf|مطبخ|دولاب|موبيليا)/i],['paints',/(بويات|بويه|بوية|دهان|دهانات|نقاش)/i],['iron',/(حديد|حدادة|درابزين|بوابة|سلم)/i]];
 const OR={belgian:['بلجيكي','الخامات عالية الجودة'],turkish:['تركي','عالي - متوسط'],egyptian:['مصري','متوسط - أقل']};
-const Q={sec:null,origin:'',lines:[],custom:'',budget:'',city:'',prices:null,res:null,busy:0,msg:''};
+const Q={sec:null,origin:'',stats:{},sent:0,lines:[],custom:'',budget:'',city:'',prices:null,res:null,busy:0,msg:''};
 let AVAIL={};
 
 function ensureModal(){if($q('#qtModal'))return;
@@ -107,6 +107,8 @@ function formHTML(){const s=sec(Q.sec);
  <div class="qt-2" style="margin-top:10px"><label><span>${T('Budget (optional)','ميزانيتك كام (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
  ${simBtns(0)}<p class="msg">${E(Q.msg)}</p><button type="button" class="btn" data-q="calc"${Q.busy?' disabled':''}>${T('Show my quotes','اعرض عروض الأسعار')}</button></div>`}
 
+async function qStats(){try{const ids=(Q.res?Q.res.res:[]).map(x=>x.id);if(!ids.length)return;const r=await sb.rpc('hzq_provider_stats',{p_ids:ids});if(!r.error&&r.data){Q.stats=r.data;if(Q.res)draw()}}catch(_){}}
+const statLine=id=>{const s=(Q.stats||{})[id];return !s||!(+s.closed||+s.n)?'<span class="qt-s"> · مورد جديد على Horizon</span>':`<span class="qt-s"> · ${+s.n?'★ '+Number(s.avg).toFixed(1)+' ('+s.n+' تقييم) · ':''}${+s.closed} صفقة اتقفلت</span>`};
 function calc(){
  const lines=Q.lines.filter(l=>l.name.trim()&&+l.qty>0);
  const by={};(Q.prices||[]).forEach(x=>{(by[x.provider_id]=by[x.provider_id]||{name:x.pname,items:[]}).items.push(x)});
@@ -124,12 +126,12 @@ function resultHTML(){const {res,lines}=Q.res,bud=+Q.budget||0,s=sec(Q.sec);
   :!res.length?`<p class="hs-box">${T('No supplier has these exact items priced yet. Your request was saved as a custom request and we will source it for you.','مفيش مورد مسعّر البنود دي بالظبط لسه. طلبك اتسجّل كطلب خاص وهنجيبهولك.')}</p>`
   :best?`<p class="hs-box"><b>${T('Recommended','ترشيحنا')}: ${E(best.name)}</b><br>${T('Lowest total for everything you asked','أقل إجمالي لكل اللي طلبته')}: <b>${fm(best.total)}</b>${bud?(best.total<=bud?' · '+T('within your budget','داخل ميزانيتك'):' · '+T('above your budget','أعلى من ميزانيتك')):''}${res.filter(r=>r.full).length>1?`<br><span class="qt-s">${T('Next best is','التاني بعده')} ${fm(res.filter(r=>r.full)[1].total)}</span>`:''}</p>`
   :`<p class="hs-box">${T('No single supplier covers everything. Closest options are below.','مفيش مورد واحد بيغطي كل حاجة. دي أقرب العروض.')}</p>`;
- const cards=res.map(r=>`<div class="qt-r${best&&r.id===best.id?' best':''}"><b>${E(r.name)}</b>${best&&r.id===best.id?`<span class="qt-tag">${T('Best','الأنسب')}</span>`:''}${r.full?'':`<span class="qt-s"> · ${r.hit}/${lines.length}</span>`}
+ const cards=res.map(r=>`<div class="qt-r${best&&r.id===best.id?' best':''}"><b>${E(r.name)}</b>${best&&r.id===best.id?`<span class="qt-tag">${T('Best','الأنسب')}</span>`:''}${r.full?'':`<span class="qt-s"> · ${r.hit}/${lines.length}</span>`}${statLine(r.id)}
   <div class="qt-t">${fm(r.total)}</div>
   <table>${r.rows.map(x=>x.miss?`<tr><td>${E(x.l.name)}</td><td class="qt-s" style="text-align:end">${T('not offered','مش متوفر عنده')}</td></tr>`
    :`<tr><td>${E(x.l.name)} × ${E(x.l.qty)} ${unit(x.it.unit)}${sec(Q.sec).groups[0].inst?instM(x.it,x.sub):''}</td><td style="text-align:end">${fm(x.sub)}</td></tr>`).join('')}</table>
   <button type="button" class="btn" style="margin-top:8px" data-q="send:${r.id}">${T('Send my request to this supplier','ابعت طلبي للمورد ده')}</button></div>`).join('');
- return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${orgNote()?`<p class="qt-s">${E(orgNote())}</p>`:''}${head}${simBtns(1)}${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>
+ return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${orgNote()?`<p class="qt-s">${E(orgNote())}</p>`:''}${head}${simBtns(1)}${res.length?`<p class="qt-s">🔒 بيانات تواصلك بتفضل مخفية عن المورد لحد ما تقبل عرضه. بعدها بتتابعوا التنفيذ والتقييم من Horizon.</p><button type="button" class="btn" data-q="sendall" style="margin:8px 0">📢 ابعت طلبي لكل الموردين المناسبين وخلّيهم يقدّموا عروضهم</button>`:''}${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>${Q.ok&&Q.sent?'<button type="button" class="btn" data-q="mine">🧾 تابع طلباتي وعروضك</button>':''}
   <p class="qt-s">${T('Prices come from suppliers and may change at confirmation.','الأسعار من الموردين وممكن تتغير وقت التأكيد.')}</p></div>`}
 
 /* ---- عينة 3D لطلب العميل (بتشتغل من taxonomy.js: window.hzSim) ---- */
@@ -172,7 +174,7 @@ function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTM
 async function openQuote(secId,seed){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
  if(!user){Q.pend=[secId,seed];if(typeof toast==='function')toast(T('Sign in first to request a quote.','سجّل دخول الأول عشان تطلب عرض سعر.'));if(typeof needLogin==='function')needLogin();return true}
- Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=seed||'';Q.budget='';Q.origin='';
+ Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=seed||'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
  show();$q('#qtBody').innerHTML='<p class="hs-box">…</p>';
  await loadPrices(id);Q.lines=[newLine()];draw();return true}
 
@@ -180,7 +182,7 @@ async function save(chosen){
  const r=Q.res;if(!r)return;Q.msg='…';Q.ok=0;draw();
  const body={user_id:user.id,section:Q.sec,lines:r.lines,custom:[Q.custom,orgNote()].filter(Boolean).join('\n')||null,budget:Q.budget?+Q.budget:null,city:Q.city||null,
   chosen_provider:chosen||null,quote:r.res.map(x=>({provider_id:x.id,total:x.total,covered:x.hit,full:x.full})),status:'new'};
- try{const x=await sb.from('hz_quote_requests').insert(body);if(x.error)throw x.error;Q.ok=1;Q.msg='✓ '+T('Request sent. The supplier will contact you.','الطلب اتبعت. المورد هيتواصل معاك.')}
+ try{const x=await sb.from('hz_quote_requests').insert(body);if(x.error)throw x.error;Q.ok=1;Q.sent=1;Q.msg='✓ '+(chosen?T('Request sent. The supplier will reply with an offer.','الطلب اتبعت. المورد هيرد بعرضه، وهتوصلك إشعار.'):T('Request sent to all matching suppliers. You will get a notification with each offer.','الطلب اتبعت لكل الموردين المناسبين. هيوصلك إشعار مع كل عرض.'))}
  catch(e){Q.msg=(typeof hzErr==='function'?hzErr(e):(e.message||String(e)))}
  draw()}
 
@@ -191,10 +193,12 @@ document.addEventListener('click',e=>{
  const [k,v]=a.dataset.q.split(':');
  if(k==='add'){Q.lines.push(newLine());draw()}
  else if(k==='del'){Q.lines.splice(+v,1);if(!Q.lines.length)Q.lines.push(newLine());draw()}
- else if(k==='calc'){calc();draw();if(Q.res&&(!Q.res.lines.length||!Q.res.res.length))save(null)}
+ else if(k==='calc'){calc();draw();qStats();if(Q.res&&(!Q.res.lines.length||!Q.res.res.length))save(null)}
  else if(k==='edit'){Q.res=null;Q.msg='';draw()}
  else if(k==='sim')openSim(v)
- else if(k==='send')save(v)});
+ else if(k==='send')save(v)
+ else if(k==='sendall')save(null)
+ else if(k==='mine'){hide();if(window.hzQuotes)hzQuotes('mine')}});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#qtModal'))return;
  if(t.dataset.qi!=null){const l=Q.lines[+t.dataset.qi];l[t.dataset.f]=t.value;if(t.dataset.f==='g'){l.name='';draw()}}
  else if(t.dataset.qf)Q[t.dataset.qf]=t.value});

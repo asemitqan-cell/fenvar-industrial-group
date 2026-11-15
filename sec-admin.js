@@ -7,10 +7,38 @@ async function save(){try{const r=await sb.from('hz_settings').upsert({key:'layo
 function order(){const o=S().order.slice();CATALOG.forEach(c=>{if(!o.includes(c.id))o.push(c.id)});return o.filter(id=>CATALOG.some(c=>c.id===id||(window.HZ_ALL||[]).includes(id)))}
 function draw(){if(!panel){panel=document.createElement('div');panel.id='hzAdm';panel.style.cssText='position:fixed;inset:0;z-index:99;background:var(--bg);overflow:auto;padding:calc(12px + env(safe-area-inset-top)) 14px 90px';document.body.appendChild(panel)}
  const o=order(),nm=id=>{const c=CATALOG.find(x=>x.id===id)||{};return (S().names[id]&&S().names[id].ar)||c.ar||id};
- let h=`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="pill ${tab==='order'?'dark':''}" data-ad="tab:order">الأقسام</button><button class="pill ${tab==='slides'?'dark':''}" data-ad="tab:slides">الشرائح</button><button class="pill ${tab==='icons'?'dark':''}" data-ad="tab:icons">الأيقونات</button><button class="pill ${tab==='rep'?'dark':''}" data-ad="tab:rep">البلاغات</button><button class="pill" data-ad="close" style="margin-inline-start:auto">إغلاق ✕</button></div>`;
+ let h=`<div style="display:flex;gap:8px;margin-bottom:12px"><button class="pill ${tab==='order'?'dark':''}" data-ad="tab:order">الأقسام</button><button class="pill ${tab==='slides'?'dark':''}" data-ad="tab:slides">الشرائح</button><button class="pill ${tab==='icons'?'dark':''}" data-ad="tab:icons">الأيقونات</button><button class="pill ${tab==='stats'?'dark':''}" data-ad="tab:stats">الأرقام</button><button class="pill ${tab==='rep'?'dark':''}" data-ad="tab:rep">البلاغات</button><button class="pill" data-ad="close" style="margin-inline-start:auto">إغلاق ✕</button></div>`;
  if(tab==='order'){h+=`<p class="hzx-n">اسحب ⠿ لترتيب الأقسام (أو استخدم ▲▼)، 👁 للإخفاء، ✏️ للاسم، 🖼️ لصورة القسم. تقدر كمان تضغط على أي صورة جوه الأقسام وهي في وضع التعديل لتغييرها.</p><div id="adList">`+o.map((id,i)=>{const c=CATALOG.find(x=>x.id===id);if(!c)return'';const hid=S().hidden.includes(id);return `<div class="hzx-b" data-id="${id}" style="display:flex;align-items:center;gap:6px;${hid?'opacity:.45':''}"><span class="adH" style="cursor:grab;touch-action:none;font-size:20px;padding:4px 8px">⠿</span><span style="flex:1"><b>${c.e||''} ${E(nm(id))}</b>${c.sub?'<small>قسم فرعي</small>':''}</span><button class="pill" data-ad="up:${id}">▲</button><button class="pill" data-ad="dn:${id}">▼</button><button class="pill" data-ad="hd:${id}">👁</button><button class="pill" data-ad="rn:${id}">✏️</button><button class="pill" data-ad="im:c:${id}">🖼️</button><button class="pill" data-ad="im:ic:${id}">🎨</button></div>`}).join('')+`</div><button class="btn" data-ad="save" style="margin-top:12px">حفظ التغييرات</button><button class="pill" data-ad="reset" style="margin-top:8px">رجوع للترتيب الأصلي</button>`}
- else if(tab==='slides')h+=slidesHTML();else if(tab==='icons')h+=iconsHTML();else h+=`<div id="adRep"><p class="empty">جاري التحميل…</p></div>`;
- panel.innerHTML=h;if(tab==='rep')reps()}
+ else if(tab==='slides')h+=slidesHTML();else if(tab==='icons')h+=iconsHTML();else if(tab==='stats')h+=`<div id="adStats"><p class="empty">جاري التحميل…</p></div>`;else h+=`<div id="adRep"><p class="empty">جاري التحميل…</p></div>`;
+ panel.innerHTML=h;if(tab==='rep')reps();if(tab==='stats')stats()}
+/* ---- لوحة الأرقام (اللي المستثمر هيسأل عنها) ---- */
+const FOC=[['upvc','🪟 UPVC'],['wood','🛋️ موبيليا / خشب'],['nursing','🩺 تمريض']],NMS={upvc:'UPVC',wood:'موبيليا / خشب',nursing:'تمريض',iron:'حدايد',paints:'بويات',accessories:'إكسسوارات',installment:'بيع بالقسط'};
+const TG={sup:10,req:50,deal:10},fmn=n=>Math.round(+n||0).toLocaleString('ar-EG'),pc=(a,b)=>+a?Math.round(100*(+b||0)/+a)+'%':'—';
+const bar=(v,t)=>`<div style="height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:3px 0 8px"><div style="height:100%;width:${Math.min(100,Math.round(100*(+v||0)/t))}%;background:var(--p)"></div></div>`;
+function summary(d){const S=d.sections||[],g=k=>S.find(x=>x.section===k)||{},tot=f=>S.reduce((a,x)=>a+(+x[f]||0),0);
+ const L=['ملخص أرقام Horizon ('+new Date().toLocaleDateString('ar-EG')+')',
+  'الموردين: '+((d.providers||{}).verified||0)+' موثّق من '+((d.providers||{}).registered||0)+' مسجّل | عملاء طلبوا عروض: '+(d.customers_requesting||0)+' (رجع منهم '+(d.repeat_customers||0)+')',
+  'إجمالي: '+tot('requests')+' طلب، '+tot('answered')+' اتردّ عليه، '+tot('deals')+' صفقة، '+tot('closed')+' اتقفلت، قيمة الصفقات المقفولة '+fmn(tot('gmv'))+' جنيه، العمولة '+fmn(tot('commission'))+' جنيه (نسبة '+Math.round(100*(+d.commission_rate||0))+'%)'];
+ FOC.forEach(f=>{const x=g(f[0]);L.push(f[1]+': '+(x.providers_verified||0)+' مورد موثّق بأسعار، '+(x.requests||0)+' طلب، رد على '+pc(x.requests,x.answered)+'، '+(x.closed||0)+' صفقة مقفولة'+(x.avg_first_offer_min!=null?'، أول عرض في '+x.avg_first_offer_min+' دقيقة':'')+(x.avg_rating?'، تقييم '+x.avg_rating:''))});
+ return L.join('\n')}
+async function stats(){const b=$q('#adStats');if(!b)return;const r=await sb.rpc('hzq_stats');
+ if(r.error){b.innerHTML='<p class="msg">'+E(/function|schema|does not exist|Could not find/i.test(r.error.message||'')?'شغّل ملف hz-invest.sql في Supabase الأول.':r.error.message)+'</p>';return}
+ const d=r.data||{},S=d.sections||[],g=k=>S.find(x=>x.section===k)||{},tot=f=>S.reduce((a,x)=>a+(+x[f]||0),0),pv=d.providers||{};window.HZ_STATS=d;
+ const kp=(t,v)=>`<div class="hzx-b" style="flex:1;min-width:46%;text-align:center"><div style="font-size:22px;font-weight:800">${v}</div><small>${t}</small></div>`;
+ let h=`<div style="display:flex;flex-wrap:wrap;gap:8px">${kp('موردين موثّقين',(pv.verified||0)+' / '+(pv.registered||0))}${kp('عملاء طلبوا عروض',(d.customers_requesting||0)+' (رجع '+(d.repeat_customers||0)+')')}${kp('إجمالي الطلبات',fmn(tot('requests')))}${kp('صفقات اتقفلت',fmn(tot('closed')))}${kp('قيمة الصفقات المقفولة',fmn(tot('gmv')))}${kp('العمولة المتوقعة',fmn(tot('commission')))}</div>`;
+ h+=FOC.map(f=>{const x=g(f[0]);return `<div class="hzx-b"><b>${f[1]}</b>
+  <small>موردين موثّقين بأسعار: ${x.providers_verified||0} (هدف ${TG.sup}) · بنود مسعّرة: ${x.price_items||0}</small>${bar(x.providers_verified,TG.sup)}
+  <small>طلبات: ${x.requests||0} (آخر 7 أيام: ${x.requests_7d||0}) · هدف ${TG.req}</small>${bar(x.requests,TG.req)}
+  <small>صفقات مقفولة: ${x.closed||0} · هدف ${TG.deal}</small>${bar(x.closed,TG.deal)}
+  <small>المسار: طلبات ${x.requests||0} ← اتردّ عليها ${x.answered||0} (${pc(x.requests,x.answered)}) ← صفقات ${x.deals||0} (${pc(x.requests,x.deals)}) ← اتقفلت ${x.closed||0} (${pc(x.requests,x.closed)})</small>
+  <small style="display:block;margin-top:4px">أول عرض بعد: ${x.avg_first_offer_min==null?'—':fmn(x.avg_first_offer_min)+' دقيقة'} · قيمة مقفولة: ${fmn(x.gmv)} · عمولة: ${fmn(x.commission)} · تقييم: ${x.avg_rating==null?'—':x.avg_rating}</small></div>`}).join('');
+ const oth=S.filter(x=>!FOC.some(f=>f[0]===x.section)&&(+x.requests||+x.price_items));
+ if(oth.length)h+=`<div class="hzx-b"><b>أقسام تانية</b>${oth.map(x=>`<small style="display:block">${E(NMS[x.section]||x.section)}: ${x.requests||0} طلب · ${x.providers_verified||0} مورد · ${x.closed||0} صفقة مقفولة</small>`).join('')}</div>`;
+ if((d.cities||[]).length)h+=`<div class="hzx-b"><b>المدن</b>${d.cities.map(c=>`<small style="display:block">${E(c.city)}: ${c.n}</small>`).join('')}</div>`;
+ if((d.daily||[]).length){const mx=Math.max(...d.daily.map(x=>+x.n));h+=`<div class="hzx-b"><b>الطلبات آخر 14 يوم</b><div style="display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:6px">${d.daily.map(x=>`<div title="${E(x.d)}: ${x.n}" style="flex:1;background:var(--p);border-radius:3px 3px 0 0;height:${Math.max(6,Math.round(100*x.n/mx))}%"></div>`).join('')}</div></div>`}
+ h+=`<div class="hzx-b"><b>نسبة العمولة (فرضية)</b><div style="display:flex;gap:8px;margin-top:6px"><input id="adCm" class="hzx-in" type="number" step="0.1" min="0" max="30" value="${Math.round(1000*(+d.commission_rate||0))/10}" style="flex:1"><button class="pill" data-ad="comm">حفظ %</button></div><small>بتتحسب على قيمة كل صفقة بتتقفل من الاستلام. التغيير بيسري على الصفقات الجديدة بس.</small></div>
+ <button class="btn" data-ad="cp" style="margin-top:8px">📋 انسخ ملخص للمستثمر</button><button class="pill" data-ad="rf" style="margin-top:8px">تحديث</button>`;
+ b.innerHTML=h}
 async function reps(){const r=await sb.from('hz_reports').select('*').order('created_at',{ascending:false}).limit(40);const b=$q('#adRep');if(!b)return;b.innerHTML=r.error?'<p class="msg">مش قادر أقرأ البلاغات (شغّل ملف SQL)</p>':(r.data.length?r.data.map(x=>`<div class="hzx-b"><b>${E(x.kind)}</b><small>${E(x.contact||'')} · ${new Date(x.created_at).toLocaleString('ar-EG')}</small><p>${E(x.message)}</p></div>`).join(''):'<p class="empty">مفيش بلاغات.</p>')}
 const DEFSL=['furniture','livestock','glass','upvc','wood','translation','offers'];
 const slides=()=>(S().slides&&S().slides.length?S().slides:DEFSL).slice();
@@ -31,6 +59,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-ad]');if(b
  else if(k==='sl_add'){const sel=document.getElementById('adSlSel');if(sel&&sel.value){S().slides=slides().concat(sel.value);apply();draw()}}
  else if(k==='icx'){delete S().img['ic:'+v];apply();draw();render()}else if(k==='slx'){delete S().img['sl:'+v];apply();draw()}
  else if(k==='im')pick(v);else if(k==='save')save();
+ else if(k==='rf')stats();
+ else if(k==='cp'){if(window.HZ_STATS){const t=summary(window.HZ_STATS);try{navigator.clipboard.writeText(t);toast&&toast('اتنسخ')}catch(_){prompt('انسخ الملخص',t)}}}
+ else if(k==='comm'){const v=parseFloat(($q('#adCm')||{}).value);if(!(v>=0&&v<=30)){alert('اكتب نسبة من 0 لـ 30');return}sb.from('hz_settings').upsert({key:'commission',value:{rate:Math.round(v*10)/1000},updated_at:new Date().toISOString()}).then(r=>{if(r.error)alert('مش قادر أحفظ: '+r.error.message);else{toast&&toast('اتحفظ');stats()}})}
  else if(k==='reset'&&confirm('ترجع للترتيب والأسماء الأصلية؟')){window.HZ_LAYOUT={order:[],hidden:[],img:S().img,names:{}};save().then(()=>location.reload())}
  return}
  if(window.HZ_EDIT&&!panel){const t=e.target.closest('#grid .thumb');if(t){const cd=t.closest('.card'),bt=cd&&cd.querySelector('[data-item]'),k=cd&&cd.dataset.c?'c:'+cd.dataset.c:bt?'i:'+bt.dataset.cat+':'+bt.dataset.item:null;if(k){e.preventDefault();e.stopPropagation();pick(k)}}}},true);

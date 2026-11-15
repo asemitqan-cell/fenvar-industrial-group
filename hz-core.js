@@ -1,6 +1,6 @@
 /* Horizon: لودر الأقسام الجديدة (بيحمّل ملف القسم لما تدخله بس) + إصلاح عدّاد الأذكار */
 (function(){'use strict';
-const $q=s=>document.querySelector(s),V='4',done={};
+const $q=s=>document.querySelector(s),V='5',done={};
 window.HZS=window.HZS||{};const HZB=window.HZB={};let depth=0,lastCat=null;
 window.hzDeeper=()=>{try{history.pushState({hz:1},'')}catch(_){}depth++};
 window.hzUp=()=>{if(depth>0)history.back();else{if(HZB[cat])HZB[cat]();render()}};
