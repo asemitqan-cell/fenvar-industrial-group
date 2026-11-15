@@ -11,7 +11,7 @@ const RS={new:['جديد','#64748B'],offered:['وصلت عروض','#0F766E'],acc
 const DS={accepted:'اتقبل العرض',in_progress:'قيد التنفيذ',delivered:'تم التسليم',closed:'اتقفلت ✓',cancelled:'اتلغت'};
 const STEPS=['accepted','in_progress','delivered','closed'];
 const SQLMSG='الميزة دي محتاجة تشغّل ملف hz-invest.sql في Supabase مرة واحدة.';
-const X={tab:'mine',loading:0,err:'',msg:'',ok:0,open:null,inv:null,star:{},contacts:{},names:{},stats:{},mine:null,prov:null,pdata:null};
+const X={tab:'mine',loading:0,err:'',msg:'',ok:0,open:null,inv:null,star:{},contacts:{},names:{},stats:{},mine:null,prov:null,pdata:null,disp:{},rate:null};
 const errTxt=e=>{const m=(e&&e.message)||String(e||'');return /relation|does not exist|schema cache|function .* not|Could not find/i.test(m)?SQLMSG:m};
 
 function css(){const s=document.createElement('style');s.textContent=`
@@ -61,6 +61,22 @@ const first=id=>String(X.names[id]||'عميل').split(' ')[0];
 async function loadStats(ids){ids=[...new Set(ids)].filter(Boolean);if(!ids.length)return;try{const r=await sb.rpc('hzq_provider_stats',{p_ids:ids});if(!r.error&&r.data)Object.assign(X.stats,r.data)}catch(_){}}
 async function contact(did){if(X.contacts[did]!==undefined)return;X.contacts[did]=null;try{const r=await sb.rpc('hzq_contact',{p_deal:did});X.contacts[did]=r.data||null}catch(_){}draw()}
 
+
+/* ---- ضمان Horizon: صلاحية العرض + الشكاوى + العمولة ---- */
+const expired=o=>!!(o&&o.valid_until&&new Date(o.valid_until)<new Date());
+const valTxt=o=>{if(!o||!o.valid_until||o.status!=='sent')return '';const ms=new Date(o.valid_until)-Date.now();
+ if(ms<=0)return ' · <b style="color:#B42318">انتهت صلاحيته</b>';const d=Math.ceil(ms/86400000);return ' · ساري '+(d>1?'لمدة '+d+' أيام':'لحد النهارده')};
+const rateTxt=()=>X.rate!=null?(Math.round(X.rate*1000)/10)+'%':'المعلنة';
+const GUAR='<p class="qx-s" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:8px 0">🛡️ <b>ضمان Horizon</b>: تليفونك مخفي لحد ما تقبل عرض · كل عرض ساري 7 أيام عشان الأسعار ما تبقاش قديمة · لو حصلت مشكلة في التنفيذ تقدر تفتح شكوى وفريقنا بيراجعها.</p>';
+async function loadDisp(ids){ids=[...new Set(ids)].filter(Boolean);if(!ids.length)return;
+ try{const r=await sb.from('hzq_disputes').select('*').in('deal_id',ids).order('created_at',{ascending:true});(r.data||[]).forEach(x=>{X.disp[x.deal_id]=x})}catch(_){}}
+async function loadRate(){if(X.rate!=null)return;try{const r=await sb.from('hz_settings').select('value').eq('key','commission').maybeSingle();const v=r.data&&r.data.value;X.rate=+(v&&typeof v==='object'?v.rate:v)||0}catch(_){}}
+function dispHTML(d){const x=X.disp[d.id];
+ if(x){return x.status==='open'?'<p class="qx-s" style="color:#B42318">⚠️ فيه شكوى مفتوحة على الصفقة. فريق Horizon بيراجعها.</p>'
+   :`<p class="qx-s">الشكوى ${x.status==='resolved'?'اتحلّت ✓':'اتقفلت'}${x.admin_note?' · '+E(x.admin_note):''}</p>`}
+ const ok=d.stage==='in_progress'||d.stage==='delivered'||(d.stage==='closed'&&d.closed_at&&(Date.now()-new Date(d.closed_at))<14*86400000);
+ return ok?`<button type="button" class="pill" data-qx="dispute:${d.id}" style="margin-top:6px">🚩 فيه مشكلة؟ افتح شكوى</button>`:''}
+
 /* ---------------- العميل: طلباتي ---------------- */
 async function loadMine(){X.loading=1;X.err='';draw();
  try{
@@ -70,7 +86,7 @@ async function loadMine(){X.loading=1;X.err='';draw();
    const d=await sb.from('hzq_deals').select('*').in('request_id',ids);if(d.error)throw d.error;deals=d.data||[]}
   const pids=[...new Set(offers.map(o=>o.provider_id).concat(deals.map(d=>d.provider_id)))];
   await loadNames(pids);await loadStats(pids);
-  X.mine={reqs,offers,deals};
+  await loadDisp(deals.map(d=>d.id));X.mine={reqs,offers,deals};
  }catch(e){X.err=errTxt(e);X.mine=null}
  X.loading=0;draw()}
 function mineHTML(){if(X.loading&&!X.mine)return '<p class="empty">جاري التحميل…</p>';
@@ -84,8 +100,8 @@ function mineHTML(){if(X.loading&&!X.mine)return '<p class="empty">جاري ال
    if(deal)h+=dealCust(deal,r);
    else{
     h+=offs.length?offs.map(o=>`<div class="qx-o${o.status==='accepted'?' win':''}"><div class="qx-h"><b>${E(nm(o.provider_id))}</b><span class="qx-k">${fm(o.total)}</span></div>${statTxt(o.provider_id)}
-      <div class="qx-s">${o.days!=null?'التنفيذ خلال '+o.days+' يوم · ':''}${ago(o.created_at)}</div>${o.note?`<p>${E(o.note)}</p>`:''}
-      ${o.status==='sent'&&r.status!=='cancelled'?`<button type="button" class="btn" data-qx="accept:${o.id}">اقبل العرض ده</button>`:chip(o.status==='rejected'?'اتقفل':o.status==='withdrawn'?'اتسحب':'اتقبل','#64748B')}</div>`).join('')
+      <div class="qx-s">${o.days!=null?'التنفيذ خلال '+o.days+' يوم · ':''}${ago(o.created_at)}${valTxt(o)}</div>${o.note?`<p>${E(o.note)}</p>`:''}
+      ${o.status==='sent'&&r.status!=='cancelled'&&!expired(o)?`<button type="button" class="btn" data-qx="accept:${o.id}">اقبل العرض ده</button>`:chip(o.status==='sent'?'انتهت صلاحيته':o.status==='rejected'?'اتقفل':o.status==='withdrawn'?'اتسحب':'اتقبل',o.status==='sent'?'#B42318':'#64748B')}</div>`).join('')
      :'<p class="qx-s">لسه مفيش عروض. الموردين المناسبين اتبلّغوا، وهتوصلك إشعار أول ما حد يرد.</p>';
     if(r.status==='new'||r.status==='offered')h+=`<button type="button" class="pill" data-qx="cancelreq:${r.id}">إلغاء الطلب</button>`}}
   return h+'</div>'}).join('')}
@@ -94,6 +110,7 @@ function dealCust(d,r){const c=X.contacts[d.id];if(c===undefined)contact(d.id);
  if(d.stage!=='cancelled'){h+=c&&(c.phone||c.name)?`<p>📞 ${E(c.name||'')} ${c.phone?`<a href="tel:${E(c.phone)}">${E(c.phone)}</a> · <a href="${waLink(c.phone)}" target="_blank" rel="noopener">واتساب</a>`:''}</p>`:'<p class="qx-s">بيانات التواصل بتظهر هنا بعد قبول العرض.</p>'}
  if(d.stage==='delivered')h+=`<button type="button" class="btn" data-qx="stage:${d.id}:closed">أكّد إني استلمت الطلب</button>`;
  if(d.stage==='accepted'||d.stage==='in_progress')h+=`<button type="button" class="pill" data-qx="stage:${d.id}:cancelled">إلغاء الصفقة</button>`;
+ h+=dispHTML(d);
  if(d.stage==='closed'){if(d.rating)h+=`<p>تقييمك: <span style="color:#F59E0B">${starsTxt(d.rating)}</span>${d.review?' · '+E(d.review):''}</p>`;
   else{const n=X.star[d.id]||0;h+=`<div><b>قيّم المورد</b><div>${[1,2,3,4,5].map(i=>`<button type="button" class="qx-st" data-qx="star:${d.id}:${i}">${i<=n?'★':'☆'}</button>`).join('')}</div><textarea id="qxRv_${d.id}" rows="2" placeholder="رأيك في الشغل (اختياري)"></textarea><button type="button" class="btn" data-qx="rate:${d.id}" style="margin-top:6px">ابعت التقييم</button></div>`}}
  if(d.stage!=='cancelled')h+=`<button type="button" class="pill" data-qx="inv:${d.id}" style="margin-top:6px">🧾 مستند الصفقة</button>`;
@@ -111,10 +128,10 @@ async function loadProv(){X.loading=1;X.err='';draw();
   if(dids.length){const x=await sb.from('hz_quote_requests').select('*').in('id',dids);dreqs=x.data||[]}
   const allr=(rq.data||[]).concat(dreqs);
   await loadNames([...new Set(allr.map(r=>r.user_id))]);
-  X.pdata={reqs:rq.data||[],offers:of.data||[],deals:dl.data||[],dreqs};
+  await loadDisp((dl.data||[]).map(d=>d.id));await loadRate();X.pdata={reqs:rq.data||[],offers:of.data||[],deals:dl.data||[],dreqs};
  }catch(e){X.err=errTxt(e);X.pdata=null}
  X.loading=0;draw()}
-function offerForm(r,mine){return `<div class="qx-o"><b>${mine?'عدّل عرضك':'قدّم عرضك'}</b><div class="qx-2"><input type="number" min="1" inputmode="decimal" id="qxT_${r.id}" placeholder="الإجمالي بالجنيه" value="${mine?E(mine.total):''}"><input type="number" min="0" inputmode="numeric" id="qxD_${r.id}" placeholder="مدة التنفيذ بالأيام" value="${mine&&mine.days!=null?E(mine.days):''}"></div><textarea id="qxN_${r.id}" rows="2" placeholder="ملاحظات: الخامة، الضمان، التركيب… (اختياري)">${mine?E(mine.note||''):''}</textarea><button type="button" class="btn" data-qx="send:${r.id}" style="margin-top:6px">${mine?'حدّث العرض':'ابعت العرض'}</button></div>`}
+function offerForm(r,mine){return `<div class="qx-o"><b>${mine?'عدّل عرضك':'قدّم عرضك'}</b><div class="qx-2"><input type="number" min="1" inputmode="decimal" id="qxT_${r.id}" placeholder="الإجمالي بالجنيه" value="${mine?E(mine.total):''}"><input type="number" min="0" inputmode="numeric" id="qxD_${r.id}" placeholder="مدة التنفيذ بالأيام" value="${mine&&mine.days!=null?E(mine.days):''}"></div><textarea id="qxN_${r.id}" rows="2" placeholder="ملاحظات: الخامة، الضمان، التركيب… (اختياري)">${mine?E(mine.note||''):''}</textarea><p class="qx-s">العرض ساري 7 أيام من إرساله (تجدّده بالتعديل). بإرسالك العرض بتوافق إن عمولة Horizon ${rateTxt()} تُستحق على أي صفقة بتتم من خلال المنصة.</p><button type="button" class="btn" data-qx="send:${r.id}" style="margin-top:6px">${mine?'حدّث العرض':'ابعت العرض'}</button></div>`}
 function provHTML(){if(X.loading&&!X.pdata)return '<p class="empty">جاري التحميل…</p>';
  if(X.err)return `<p class="msg">${E(X.err)}</p>`;
  if(!X.prov)return '<p class="hs-box">سجّل بياناتك كمورد الأول (متجري > مقدّم الخدمة)، وبعدها ضيف أسعارك من الإعدادات > منتجاتي وأسعاري.</p>';
@@ -128,10 +145,11 @@ function provHTML(){if(X.loading&&!X.pdata)return '<p class="empty">جاري ا�
    return `<div class="qx-r"><div class="qx-h"><b>${r?secName(r.section):'طلب'}</b>${chip({sent:'مستني رد العميل',accepted:'اتقبل ✓',rejected:'اتقفل',withdrawn:'اتسحب'}[o.status]||o.status,o.status==='accepted'?'#067647':'#64748B')}</div><div class="qx-s">${ago(o.created_at)}</div><div class="qx-k">${fm(o.total)}</div>${r?linesHTML(r.lines):''}
    ${o.status==='sent'&&r?`<button type="button" class="pill" data-qx="open:${o.request_id}">تعديل</button> <button type="button" class="pill" data-qx="withdraw:${o.id}">سحب العرض</button>`:''}${X.open===o.request_id&&o.status==='sent'&&r?offerForm(r,o):''}</div>`}).join(''):'<p class="empty">لسه ما بعتّش عروض.</p>')}
  return tabs+(d.deals.length?d.deals.map(dl=>{const r=d.dreqs.find(x=>x.id===dl.request_id)||{lines:[]},c=X.contacts[dl.id];if(c===undefined)contact(dl.id);
-   return `<div class="qx-r"><div class="qx-h"><b>${secName(dl.section)}</b><span class="qx-k">${fm(dl.total)}</span></div><div class="qx-s">العميل: ${E(first(dl.customer_id))} · ${ago(dl.created_at)} · العمولة المتوقعة ${fm(dl.stage==='closed'?dl.commission:dl.total*dl.commission_rate)}</div>${linesHTML(r.lines)}${tl(dl.stage)}
+   return `<div class="qx-r"><div class="qx-h"><b>${secName(dl.section)}</b><span class="qx-k">${fm(dl.total)}</span></div><div class="qx-s">العميل: ${E(first(dl.customer_id))} · ${ago(dl.created_at)} · العمولة المتوقعة ${fm(dl.stage==='closed'?dl.commission:dl.total*dl.commission_rate)}${dl.stage==='closed'?(dl.commission_paid?' (اتسدّدت ✓)':' (مستحقة السداد)'):''}</div>${linesHTML(r.lines)}${tl(dl.stage)}
    ${dl.stage!=='cancelled'?(c&&(c.phone||c.name)?`<p>📞 ${E(c.name||'')} ${c.phone?`<a href="tel:${E(c.phone)}">${E(c.phone)}</a> · <a href="${waLink(c.phone)}" target="_blank" rel="noopener">واتساب</a>`:''}</p>`:''):''}
    ${dl.stage==='accepted'?`<button type="button" class="btn" data-qx="stage:${dl.id}:in_progress">بدأت التنفيذ</button>`:''}${dl.stage==='accepted'||dl.stage==='in_progress'?`<button type="button" class="btn" data-qx="stage:${dl.id}:delivered" style="margin-top:6px">تم التسليم</button> <button type="button" class="pill" data-qx="stage:${dl.id}:cancelled">إلغاء</button>`:''}
    ${dl.stage==='delivered'?'<p class="qx-s">مستنيين العميل يأكّد الاستلام.</p>':''}${dl.rating?`<p>تقييم العميل: <span style="color:#F59E0B">${starsTxt(dl.rating)}</span>${dl.review?' · '+E(dl.review):''}</p>`:''}
+   ${dispHTML(dl)}
    ${dl.stage!=='cancelled'?`<button type="button" class="pill" data-qx="inv:${dl.id}" style="margin-top:6px">🧾 مستند الصفقة</button>`:''}</div>`}).join(''):'<p class="empty">لسه مفيش صفقات.</p>')}
 function reqCard(r){const open=X.open===r.id;return `<div class="qx-r"><div class="qx-h"><b>${secName(r.section)}</b>${r.chosen_provider?chip('موجّه ليك','#2563EB'):chip('مفتوح','#0F766E')}</div>
  <div class="qx-s">${E(first(r.user_id))} · ${ago(r.created_at)}${r.city?' · '+E(r.city):''}${r.budget?' · ميزانية '+fm(r.budget):''}</div>${linesHTML(r.lines)}${r.custom?`<p class="qx-s">${E(r.custom)}</p>`:''}
@@ -148,13 +166,13 @@ async function invHTML(){const id=X.inv;let d=null,r=null;
  <p><b>القسم:</b> ${secName(d.section)}<br><b>المورد:</b> ${E(nm(d.provider_id))}<br><b>العميل:</b> ${E(mineSide?(X.myname||'أنا'):first(d.customer_id))}${c.phone&&!mineSide?'<br><b>تليفون المورد:</b> '+E(c.phone):''}</p>
  <table>${(r&&Array.isArray(r.lines)?r.lines:[]).map(l=>`<tr><td>${lineTxt(l)}</td></tr>`).join('')}</table>
  <p class="qx-k">الإجمالي المتفق عليه: ${fm(d.total)} جنيه</p><p>الحالة: ${E(DS[d.stage]||d.stage)}</p>
- <p style="font-size:12px;color:#555">ده مستند تأكيد داخلي بين الطرفين على Horizon، وليس فاتورة ضريبية. الدفع والتسليم بين العميل والمورد، وبيتسجّلوا هنا عشان المتابعة والتقييم.</p></div>`}
+ <p style="font-size:12px;color:#555">ده مستند تأكيد داخلي بين الطرفين على Horizon، وليس فاتورة ضريبية. الدفع والتسليم بين العميل والمورد، وبيتسجّلوا هنا عشان المتابعة والتقييم. لو حصلت مشكلة افتح شكوى من شاشة الصفقة خلال 14 يوم من الاستلام.</p></div>`}
 
 /* ---------------- الرسم ---------------- */
 async function draw(){ensure();const b=$q('#qxBody');if(!b)return;
  if(X.inv){b.innerHTML=await invHTML();return}
  const tabs=`<div class="qx-t"><button type="button" class="qx-c${X.tab==='mine'?' on':''}" data-qx="tab:mine">🧾 طلباتي</button><button type="button" class="qx-c${X.tab==='prov'?' on':''}" data-qx="tab:prov">📥 طلبات العملاء (للموردين)</button></div>`;
- b.innerHTML=`<h3 style="margin:0">متابعة عروض الأسعار</h3>${tabs}${X.msg?`<p class="msg${X.ok?' ok':''}">${E(X.msg)}</p>`:''}${X.tab==='mine'?mineHTML():provHTML()}`}
+ b.innerHTML=`<h3 style="margin:0">متابعة عروض الأسعار</h3>${tabs}${X.msg?`<p class="msg${X.ok?' ok':''}">${E(X.msg)}</p>`:''}${X.tab==='mine'?GUAR+mineHTML():provHTML()}`}
 function open(tab){if(typeof user==='undefined'||!user){try{typeof toast==='function'&&toast('سجّل دخول الأول');typeof needLogin==='function'&&needLogin()}catch(_){}return}
  X.tab=tab||'mine';X.ptab=X.ptab||'open';X.msg='';X.ok=0;X.inv=null;X.myname=(typeof PROF!=='undefined'&&PROF&&PROF.full_name)||'';show();draw();X.tab==='mine'?loadMine():loadProv()}
 window.hzQuotes=open;
@@ -179,6 +197,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-qx]'
  if(k==='rate'){const n=X.star[v]||0;if(!n){X.msg='اختار عدد النجوم الأول';X.ok=0;draw();return}const t=($q('#qxRv_'+v)||{}).value||'';await call('hzq_rate',{p_deal:v,p_rating:n,p_review:t},'شكراً على تقييمك ⭐',re);return}
  if(k==='send'){const t=+($q('#qxT_'+v)||{}).value,dd=($q('#qxD_'+v)||{}).value,nt=($q('#qxN_'+v)||{}).value||'';if(!(t>0)){X.msg='اكتب إجمالي السعر';X.ok=0;draw();return}
   await call('hzq_send_offer',{p_request:v,p_total:t,p_days:dd===''?null:Math.round(+dd),p_note:nt},'العرض اتبعت للعميل ✓',async()=>{X.open=null;X.ptab='offers';await re()});return}
+ if(k==='dispute'){const t=prompt('اشرح المشكلة في جملة أو اتنين (فريق Horizon هيراجعها):');if(t===null)return;await call('hzq_open_dispute',{p_deal:v,p_reason:t},'الشكوى اتبعتت لفريق Horizon وهنتواصل معاك.',re);return}
  if(k==='withdraw'){if(!confirm('تسحب العرض ده؟'))return;await call('hzq_withdraw_offer',{p_offer:v},'العرض اتسحب.',re);return}
 });
 

@@ -1,5 +1,5 @@
 // Horizon service worker: network-first بدون كاش المتصفح، علشان أي رفع جديد على GitHub يظهر من أول فتحة.
-const V='hz-v19';
+const V='hz-v20';
 self.addEventListener('install',e=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil(
   caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim())
