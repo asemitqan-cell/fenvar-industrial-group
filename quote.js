@@ -79,7 +79,7 @@ async function loadPrices(secId){
    const b=await sb.from('hz_profiles').select('*').in('id',ids);profs=b.data||[]}
   const ok=new Set(provs.filter(p=>p.verified).map(p=>p.user_id));
   const nm={};ids.forEach(id=>{const p=profs.find(x=>x.id===id)||{},v=provs.find(x=>x.user_id===id)||{};nm[id]=p.business_name||p.brand||v.business_name||v.name||p.full_name||T('Supplier','مورد')});
-  Q.prices=items.filter(x=>ok.has(x.provider_id)&&x.price!=null).map(x=>Object.assign({},x,{pname:nm[x.provider_id]}));
+  Q.prices=items.filter(x=>ok.has(x.provider_id)&&x.price!=null&&!(x.valid_until&&new Date(x.valid_until)<Date.now())).map(x=>Object.assign({},x,{pname:nm[x.provider_id]}));
  }catch(e){Q.prices=[];Q.msg=(e&&e.message)||''}
  AVAIL={};(Q.prices||[]).forEach(x=>{(AVAIL[x.group_key]=AVAIL[x.group_key]||new Set()).add(x.name)});
  return Q.prices}
@@ -108,6 +108,7 @@ function formHTML(){const s=sec(Q.sec);
  ${simBtns(0)}<p class="msg">${E(Q.msg)}</p><button type="button" class="btn" data-q="calc"${Q.busy?' disabled':''}>${T('Show my quotes','اعرض عروض الأسعار')}</button></div>`}
 
 async function qStats(){try{const ids=(Q.res?Q.res.res:[]).map(x=>x.id);if(!ids.length)return;const r=await sb.rpc('hzq_provider_stats',{p_ids:ids});if(!r.error&&r.data){Q.stats=r.data;if(Q.res)draw()}}catch(_){}}
+const ageTag=u=>{if(!u)return '';const d=Math.floor((Date.now()-new Date(u))/864e5);return `<span class="qt-s"> · ${d<1?T('prices updated today','أسعاره محدّثة النهاردة'):T('prices updated '+d+'d ago','أسعاره محدّثة من '+d+' يوم')}</span>`};
 const statLine=id=>{const s=(Q.stats||{})[id];return !s||!(+s.closed||+s.n)?'<span class="qt-s"> · مورد جديد على Horizon</span>':`<span class="qt-s"> · ${+s.n?'★ '+Number(s.avg).toFixed(1)+' ('+s.n+' تقييم) · ':''}${+s.closed} صفقة اتقفلت</span>`};
 function calc(){
  const lines=Q.lines.filter(l=>l.name.trim()&&+l.qty>0);
@@ -115,7 +116,8 @@ function calc(){
  const res=Object.keys(by).map(id=>{const sp=by[id];let total=0,hit=0;
   const rows=lines.map(l=>{const it=sp.items.find(x=>x.group_key===l.g&&x.name===l.name.trim());
    if(!it)return{l,miss:1};const sub=Number(it.price)*Number(l.qty);total+=sub;hit++;return{l,it,sub}});
-  return{id,name:sp.name,rows,total,hit,full:hit===lines.length&&lines.length>0}}).filter(r=>r.hit>0);
+  const ds=rows.filter(r=>r.it&&r.it.updated_at).map(r=>+new Date(r.it.updated_at));
+  return{id,name:sp.name,rows,total,hit,full:hit===lines.length&&lines.length>0,upd:ds.length?new Date(Math.min.apply(null,ds)).toISOString():null}}).filter(r=>r.hit>0);
  res.sort((a,b)=>(b.full-a.full)||(a.full&&b.full?a.total-b.total:b.hit-a.hit||a.total-b.total));
  Q.res={res,lines};return Q.res}
 
@@ -126,7 +128,7 @@ function resultHTML(){const {res,lines}=Q.res,bud=+Q.budget||0,s=sec(Q.sec);
   :!res.length?`<p class="hs-box">${T('No supplier has these exact items priced yet. Your request was saved as a custom request and we will source it for you.','مفيش مورد مسعّر البنود دي بالظبط لسه. طلبك اتسجّل كطلب خاص وهنجيبهولك.')}</p>`
   :best?`<p class="hs-box"><b>${T('Recommended','ترشيحنا')}: ${E(best.name)}</b><br>${T('Lowest total for everything you asked','أقل إجمالي لكل اللي طلبته')}: <b>${fm(best.total)}</b>${bud?(best.total<=bud?' · '+T('within your budget','داخل ميزانيتك'):' · '+T('above your budget','أعلى من ميزانيتك')):''}${res.filter(r=>r.full).length>1?`<br><span class="qt-s">${T('Next best is','التاني بعده')} ${fm(res.filter(r=>r.full)[1].total)}</span>`:''}</p>`
   :`<p class="hs-box">${T('No single supplier covers everything. Closest options are below.','مفيش مورد واحد بيغطي كل حاجة. دي أقرب العروض.')}</p>`;
- const cards=res.map(r=>`<div class="qt-r${best&&r.id===best.id?' best':''}"><b>${E(r.name)}</b>${best&&r.id===best.id?`<span class="qt-tag">${T('Best','الأنسب')}</span>`:''}${r.full?'':`<span class="qt-s"> · ${r.hit}/${lines.length}</span>`}${statLine(r.id)}
+ const cards=res.map(r=>`<div class="qt-r${best&&r.id===best.id?' best':''}"><b>${E(r.name)}</b>${best&&r.id===best.id?`<span class="qt-tag">${T('Best','الأنسب')}</span>`:''}${r.full?'':`<span class="qt-s"> · ${r.hit}/${lines.length}</span>`}${statLine(r.id)}${ageTag(r.upd)}
   <div class="qt-t">${fm(r.total)}</div>
   <table>${r.rows.map(x=>x.miss?`<tr><td>${E(x.l.name)}</td><td class="qt-s" style="text-align:end">${T('not offered','مش متوفر عنده')}</td></tr>`
    :`<tr><td>${E(x.l.name)} × ${E(x.l.qty)} ${unit(x.it.unit)}${sec(Q.sec).groups[0].inst?instM(x.it,x.sub):''}</td><td style="text-align:end">${fm(x.sub)}</td></tr>`).join('')}</table>
@@ -182,7 +184,7 @@ async function openQuote(secId,seed){
 async function save(chosen){
  const r=Q.res;if(!r)return;Q.msg='…';Q.ok=0;draw();
  const body={user_id:user.id,section:Q.sec,lines:r.lines,custom:[Q.custom,orgNote()].filter(Boolean).join('\n')||null,budget:Q.budget?+Q.budget:null,city:Q.city||null,
-  chosen_provider:chosen||null,quote:r.res.map(x=>({provider_id:x.id,total:x.total,covered:x.hit,full:x.full})),status:'new'};
+  chosen_provider:chosen||null,quote:r.res.map(x=>({provider_id:x.id,total:x.total,covered:x.hit,full:x.full,price_date:x.upd||null})),status:'new'};
  try{const x=await sb.from('hz_quote_requests').insert(body);if(x.error)throw x.error;Q.ok=1;Q.sent=1;Q.msg='✓ '+(chosen?T('Request sent. The supplier will reply with an offer.','الطلب اتبعت. المورد هيرد بعرضه، وهتوصلك إشعار.'):T('Request sent to all matching suppliers. You will get a notification with each offer.','الطلب اتبعت لكل الموردين المناسبين. هيوصلك إشعار مع كل عرض.'))}
  catch(e){Q.msg=(typeof hzErr==='function'?hzErr(e):(e.message||String(e)))}
  draw()}

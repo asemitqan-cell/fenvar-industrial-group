@@ -2,14 +2,35 @@
 (function(){'use strict';
 const E=s=>esc(String(s==null?'':s)),$q=s=>document.querySelector(s);
 const CATS=[['realestate','🏢','عقارات'],['cars','🚗','سيارات'],['furniture','🛋️','أثاث'],['upvc','🪟','UPVC'],['glass','🔲','زجاج'],['wood','🪵','خشب'],['used','📦','مستعمل']];
-const P={cat:'realestate',rows:null,busy:0},Q={city:'',list:null,open:null,ans:{},msg:''};
+const P={cat:'realestate',rows:null,busy:0,sup:{},sbusy:0},Q={city:'',list:null,open:null,ans:{},msg:''};
 const n=x=>Math.round(+x).toLocaleString('ar-EG');
+/* أسعار الموردين الموثّقين (hz_price_items): بتتحسب كمان من غير الإعلانات، ومعاها تاريخ التحديث */
+const SM={upvc:{sec:'upvc',not:'glass'},glass:{sec:'upvc',only:'glass'},wood:{sec:'wood'},furniture:{sec:'wood',only:'work'}};
+const UN=u=>(window.HZ_UNITS||{})[u]||u||'';
+const ageS=t=>{const d=Math.floor((Date.now()-t)/864e5);return d<1?'محدّث النهاردة':d>14?'<span style="color:#B42318">محدّث من '+d+' يوم (قديم)</span>':'محدّث من '+d+' يوم'};
+async function loadS(){const cat=P.cat,m=SM[cat];if(!m)return;P.sbusy=1;
+ try{
+  const r=await sb.from('hz_price_items').select('group_key,name,unit,price,updated_at,valid_until,provider_id').eq('section',m.sec).eq('active',true).limit(2000);
+  if(r.error)throw r.error;
+  let it=(r.data||[]).filter(x=>x.price!=null&&+x.price>0&&!(x.valid_until&&new Date(x.valid_until)<Date.now())&&(!m.only||x.group_key===m.only)&&(!m.not||x.group_key!==m.not));
+  const ids=[...new Set(it.map(x=>x.provider_id))],ok=new Set();
+  if(ids.length){const a=await sb.from('hz_providers').select('user_id,verified').in('user_id',ids);(a.data||[]).forEach(p=>{if(p.verified)ok.add(p.user_id)})}
+  it=it.filter(x=>ok.has(x.provider_id));
+  const by={};it.forEach(x=>{const k=x.group_key+'|'+x.name+'|'+x.unit,g=by[k]=by[k]||{name:x.name,unit:x.unit,p:[],s:new Set(),u:0};g.p.push(+x.price);g.s.add(x.provider_id);g.u=Math.max(g.u,+new Date(x.updated_at||0))});
+  P.sup[cat]=Object.values(by).map(g=>{g.p.sort((a,b)=>a-b);const h=Math.floor(g.p.length/2);return{name:g.name,unit:g.unit,n:g.s.size,min:g.p[0],max:g.p[g.p.length-1],med:g.p.length%2?g.p[h]:(g.p[h-1]+g.p[h])/2,u:g.u}}).sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name,'ar'))
+ }catch(_){P.sup[cat]=[]}
+ P.sbusy=0;render()}
+function supHTML(){const m=SM[P.cat];if(!m)return '';const rows=P.sup[P.cat];
+ if(rows===undefined)return '<div class="hzx-b"><small>جاري تحميل أسعار الموردين…</small></div>';
+ if(!rows.length)return '';
+ return `<div class="hzx-b"><b>💲 من أسعار الموردين الموثّقين</b><small>أسعار سارية، وكل بند عليه تاريخ آخر تحديث</small><ul>${rows.slice(0,15).map(r=>`<li>${E(r.name)}${r.unit?' ('+E(UN(r.unit))+')':''}: <b>${n(r.med)}</b>${r.n>1?' · من '+n(r.min)+' إلى '+n(r.max):''} <small>· ${r.n} مورد · ${ageS(r.u)}</small></li>`).join('')}</ul></div>`}
 async function loadP(){P.busy=1;try{const r=await sb.from('hz_price_stats').select('*').eq('cat',P.cat).order('n',{ascending:false}).limit(40);P.rows=r.error?null:r.data;P.err=!!r.error}catch(_){P.rows=null;P.err=true}P.busy=0;render()}
 HZS.priceguide=()=>{if(P.rows===null&&!P.busy&&!P.err){loadP()}
- return `<div class="hzx-w"><h3>📊 دليل الأسعار</h3><div class="hzx-ch">${CATS.map(c=>`<button type="button" class="pill ${P.cat===c[0]?'dark':''}" data-mk="c:${c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>`+
+ if(SM[P.cat]&&P.sup[P.cat]===undefined&&!P.sbusy)loadS();
+ return `<div class="hzx-w"><h3>📊 دليل الأسعار</h3><div class="hzx-ch">${CATS.map(c=>`<button type="button" class="pill ${P.cat===c[0]?'dark':''}" data-mk="c:${c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>`+supHTML()+
  (P.busy||(P.rows===null&&!P.err)?'<p class="empty">جاري التحميل…</p>':P.err?'<p class="msg">محتاج تشغّل ملف hz-market.sql في Supabase.</p>':!P.rows.length?'<p class="empty">لسه مفيش إعلانات كفاية لحساب متوسط (محتاج إعلانين مقبولين على الأقل في نفس المدينة).</p>':
  P.rows.map(r=>`<div class="hzx-b"><b>${E(r.city)} ${r.purpose?'· '+E(r.purpose==='For sale'?'للبيع':r.purpose==='For rent'?'للإيجار':r.purpose):''}</b><small>${r.n} إعلان · ${E(r.currency||'')}</small><ul><li>المتوسط (الوسيط): ${n(r.pmed)}</li><li>من ${n(r.pmin)} إلى ${n(r.pmax)}</li>${r.sqm?`<li>سعر المتر تقريبًا: ${n(r.sqm)}</li>`:''}</ul></div>`).join(''))+
- `<p class="hzx-n">الأرقام محسوبة من إعلانات التطبيق المقبولة فقط، ومش سعر سوق رسمي.</p></div>`};
+ `<p class="hzx-n">الأرقام محسوبة من إعلانات التطبيق المقبولة ومن أسعار الموردين الموثّقين السارية، ومش سعر سوق رسمي.</p></div>`};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-mk]');if(!b)return;const [k,v]=b.dataset.mk.split(':');if(k==='c'){P.cat=v;P.rows=null;P.err=false;render()}});
 async function loadQ(){try{const r=await sb.from('hz_area_q').select('*').order('created_at',{ascending:false}).limit(40);Q.list=r.error?[]:r.data;Q.err=!!r.error}catch(_){Q.list=[];Q.err=true}render()}
 async function loadA(id){const r=await sb.from('hz_area_a').select('*').eq('q_id',id).order('created_at').limit(30);Q.ans[id]=r.data||[];render()}

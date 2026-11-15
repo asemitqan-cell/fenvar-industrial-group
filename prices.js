@@ -38,7 +38,7 @@ window.HZ_SECTIONS=S;window.HZ_UNITS=U;
 const OPENS=['upvc','wood'];
 const PR={sec:null,gi:0,rows:null,del:[],msg:'',err:0,busy:0};
 const g$=()=>PR.sec.groups[PR.gi];
-const mk=(g,n,it,pre)=>({id:it?it.id:null,g:g.k,name:n,pre,unit:it?it.unit:g.u[0],price:it&&it.price!=null?it.price:'',specs:(it&&it.specs)||{},note:(it&&it.note)||'',open:0});
+const mk=(g,n,it,pre)=>({id:it?it.id:null,g:g.k,name:n,pre,unit:it?it.unit:g.u[0],price:it&&it.price!=null?it.price:'',specs:(it&&it.specs)||{},note:(it&&it.note)||'',open:0,vd:(it&&it.validity_days)||7,vu:it?it.valid_until:null,ua:it?it.updated_at:null});
 
 function css(){const s=document.createElement('style');s.textContent=`
 .pr-t{display:flex;gap:6px;overflow-x:auto;padding:4px 18px 10px}.pr-c{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-weight:600;cursor:pointer}.pr-c.on{background:var(--p);color:#fff;border-color:var(--p)}
@@ -47,11 +47,16 @@ function css(){const s=document.createElement('style');s.textContent=`
 .pr-r input,.pr-r select{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--bg);width:100%}
 .pr-d,.pr-x{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:0 12px;cursor:pointer}
 .pr-s{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.pr-s[hidden]{display:none}.pr-s label{font-size:12px;color:var(--mut);display:block}
-.pr-m{font-size:12px;color:var(--p);margin-top:6px}.pr-f{padding:6px 18px 18px;display:grid;gap:8px}`;document.head.appendChild(s)}
+.pr-m{font-size:12px;color:var(--p);margin-top:6px}.pr-v{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:12px}.pr-v select{flex:none;width:auto;padding:6px 8px}.pr-a{color:var(--mut)}.pr-a.ex{color:#DC2626;font-weight:700}.pr-f{padding:6px 18px 18px;display:grid;gap:8px}`;document.head.appendChild(s)}
 
 function inst(r){const p=+r.price,sp=r.specs||{},m=+sp.months;if(!p||!m)return '';
  const fin=p*(1-(+sp.down||0)/100),tot=fin*(1+(+sp.rate||0)/100*m/12)+(+sp.fee||0);
  return `القسط الشهري ≈ ${Math.round(tot/m).toLocaleString()} (إجمالي ${Math.round(tot+p-fin).toLocaleString()})`}
+
+const VD=[[3,'ساري 3 أيام','3 days'],[7,'ساري أسبوع','1 week'],[30,'ساري شهر','1 month']];
+function age(r){if(!r.id||!r.ua)return '';const d=Math.floor((Date.now()-new Date(r.ua))/864e5),ex=r.vu&&new Date(r.vu)<Date.now();
+ const t=d<1?T('Updated today','محدّث النهاردة'):T('Updated '+d+'d ago','محدّث من '+d+' يوم');
+ return `<span class="pr-a${ex?' ex':''}">${ex?T('Expired, update it','منتهي، حدّث السعر')+' · ':''}${t}</span>`}
 
 function fld(f,i,r){const v=r.specs[f[0]]==null?'':r.specs[f[0]],a=`data-pi="${i}" data-sk="${f[0]}"`;
  const inp=Array.isArray(f[2])?`<select ${a}><option value=""></option>${f[2].map(o=>`<option${o===v?' selected':''}>${esc(o)}</option>`).join('')}</select>`
@@ -61,6 +66,7 @@ function fld(f,i,r){const v=r.specs[f[0]]==null?'':r.specs[f[0]],a=`data-pi="${i
 function card(r,i,g){return `<div class="pr-r"><div class="pr-n">${r.pre?`<b>${esc(r.name)}</b>`
  :`<input data-pi="${i}" data-k="name" value="${esc(r.name)}" placeholder="${T('Item name','اسم البند')}"><button type="button" class="pr-x" data-pr="x:${i}">×</button>`}</div>
  <div class="pr-p"><input type="number" inputmode="decimal" min="0" data-pi="${i}" data-k="price" value="${esc(r.price)}" placeholder="${T('Price','السعر')}"><select data-pi="${i}" data-k="unit">${g.u.map(u=>`<option value="${u}"${u===r.unit?' selected':''}>${U[u]}</option>`).join('')}</select><button type="button" class="pr-d" data-pr="t:${i}">⋯</button></div>
+ <div class="pr-v"><select data-pi="${i}" data-k="vd">${VD.map(o=>`<option value="${o[0]}"${o[0]===+r.vd?' selected':''}>${T(o[2],o[1])}</option>`).join('')}</select>${age(r)}</div>
  <div class="pr-s"${r.open?'':' hidden'}>${g.f.map(f=>fld(f,i,r)).join('')}<label style="grid-column:1/-1">${T('Note','ملاحظة')}<input data-pi="${i}" data-k="note" value="${esc(r.note)}"></label></div>
  ${g.inst?`<div class="pr-m" id="pri${i}">${inst(r)}</div>`:''}</div>`}
 
@@ -79,7 +85,7 @@ function draw(){const b=document.getElementById('hsBody');if(!b)return;
  b.innerHTML=root(`<div class="hs-h"><button type="button" class="hs-b" data-pr="list">${bkA()}</button><h3>${s.ico} ${s.ar}</h3><span style="width:38px"></span></div>`
   +`<p class="hs-box" style="margin-bottom:6px">${T('Fill the price only for what you offer. Leave the rest empty.','اكتب السعر للي بتقدّمه بس، والباقي سيبه فاضي.')}${s.id==='nursing'&&PROV&&PROV.field!=='medical'?'<br><b>'+T('Medical services need a medical provider account with a license.','الخدمات الطبية محتاجة حساب مقدّم خدمة طبي بكارنيه.')+'</b>':''}</p>`
   +`<div class="pr-t">${s.groups.map((x,i)=>`<button type="button" class="pr-c${i===PR.gi?' on':''}" data-pr="g:${i}">${x.ar}</button>`).join('')}</div>`
-  +(PR.rows?PR.rows.map((r,i)=>r.g===g.k?card(r,i,g):'').join('')+`<div class="pr-f"><button type="button" class="pr-c" data-pr="add">+ ${T('Add an item','إضافة بند')}</button><p class="msg${PR.err?'':' ok'}">${esc(PR.msg)}</p><button type="button" class="btn" data-pr="save"${PR.busy?' disabled':''}>${T('Save','حفظ')}</button></div>`:'<p class="hs-box">…</p>'))}
+  +(PR.rows?PR.rows.map((r,i)=>r.g===g.k?card(r,i,g):'').join('')+`<div class="pr-f"><button type="button" class="pr-c" data-pr="add">+ ${T('Add an item','إضافة بند')}</button><button type="button" class="pr-c" data-pr="bulk">↑ ${T('Adjust all my prices %','زوّد كل أسعاري %')}</button><p class="msg${PR.err?'':' ok'}">${esc(PR.msg)}</p><button type="button" class="btn" data-pr="save"${PR.busy?' disabled':''}>${T('Save','حفظ')}</button></div>`:'<p class="hs-box">…</p>'))}
 
 async function load(id,keep){PR.sec=S.find(x=>x.id===id);PR.gi=keep?PR.gi:0;PR.rows=null;PR.del=[];if(!keep){PR.msg='';PR.err=0}draw();
  let d=[];try{const r=await sb.from('hz_price_items').select('*').eq('provider_id',user.id).eq('section',id).order('created_at');if(r.error)throw r.error;d=r.data||[]}catch(e){PR.err=1;PR.msg=e.message||String(e)}
@@ -87,11 +93,20 @@ async function load(id,keep){PR.sec=S.find(x=>x.id===id);PR.gi=keep?PR.gi:0;PR.r
   d.filter(x=>x.group_key===g.k&&!g.pre.includes(x.name)).forEach(x=>rows.push(mk(g,x.name,x,0)))});
  PR.rows=rows;draw()}
 
+async function bulk(){const v=prompt(T('Adjust ALL your prices (all sections) by % (e.g. 5 or -3):','زوّد (أو نزّل) كل أسعارك في كل الأقسام بنسبة % (مثال: 5 أو -3):'),'5');
+ if(v===null)return;const pct=parseFloat(String(v).replace(',','.'));
+ if(isNaN(pct)||pct<-50||pct>100){PR.err=1;PR.msg=T('Invalid percentage','نسبة غير صحيحة');draw();return}
+ if(!confirm(T('Apply '+pct+'% to all your prices?','تطبيق '+pct+'% على كل أسعارك؟')))return;
+ PR.busy=1;PR.err=0;PR.msg='…';draw();
+ try{const r=await sb.rpc('hz_bulk_adjust_prices',{p_pct:pct});if(r.error)throw r.error;
+  PR.busy=0;await load(PR.sec.id,1);PR.msg='✓ '+T('Updated '+r.data+' prices','تم تحديث '+r.data+' سعر');draw()
+ }catch(e){PR.busy=0;PR.err=1;PR.msg=typeof hzErr==='function'?hzErr(e):(e.message||String(e));draw()}}
+
 async function save(){const s=PR.sec,ins=[],upd=[],del=PR.del.slice();PR.busy=1;PR.err=0;PR.msg='…';draw();
  PR.rows.forEach(r=>{const p=r.price===''?null:Number(r.price),ok=p!=null&&!isNaN(p)&&r.name.trim();
   if(!ok){if(r.id)del.push(r.id);return}
   const sp={};Object.keys(r.specs).forEach(k=>{if(r.specs[k]!=='')sp[k]=r.specs[k]});
-  const o={name:r.name.trim(),unit:r.unit,price:p,specs:sp,note:r.note||null};
+  const o={name:r.name.trim(),unit:r.unit,price:p,specs:sp,note:r.note||null,validity_days:+r.vd||7};
   r.id?upd.push([r.id,o]):ins.push(Object.assign({provider_id:user.id,section:s.id,group_key:r.g,active:true},o))});
  try{
   if(del.length){const x=await sb.from('hz_price_items').delete().in('id',del).eq('provider_id',user.id);if(x.error)throw x.error}
@@ -110,6 +125,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-pr]'
  else if(k==='t'){const r=PR.rows[+v];r.open=!r.open;a.closest('.pr-r').querySelector('.pr-s').hidden=!r.open}
  else if(k==='x'){const r=PR.rows[+v];if(r.id)PR.del.push(r.id);PR.rows.splice(+v,1);draw()}
  else if(k==='add'){PR.rows.push(mk(g$(),'',null,0));draw()}
+ else if(k==='bulk')bulk()
  else if(k==='save')save()});
 
 const on=e=>{const t=e.target;if(!t.dataset||t.dataset.pi==null||!PR.rows)return;const r=PR.rows[+t.dataset.pi];if(!r)return;

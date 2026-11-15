@@ -64,10 +64,11 @@ async function contact(did){if(X.contacts[did]!==undefined)return;X.contacts[did
 
 /* ---- ضمان Horizon: صلاحية العرض + الشكاوى + العمولة ---- */
 const expired=o=>!!(o&&o.valid_until&&new Date(o.valid_until)<new Date());
-const valTxt=o=>{if(!o||!o.valid_until||o.status!=='sent')return '';const ms=new Date(o.valid_until)-Date.now();
+const adjTxt=o=>o&&o.price_adjust_pct?' · السعر قابل للتعديل لو المادة زادت أكتر من '+o.price_adjust_pct+'%':'';
+const valTxt=o=>{if(o&&o.status==='expired')return ' · <b style="color:#B42318">انتهت صلاحيته</b>';if(!o||!o.valid_until||o.status!=='sent')return '';const ms=new Date(o.valid_until)-Date.now();
  if(ms<=0)return ' · <b style="color:#B42318">انتهت صلاحيته</b>';const d=Math.ceil(ms/86400000);return ' · ساري '+(d>1?'لمدة '+d+' أيام':'لحد النهارده')};
 const rateTxt=()=>X.rate!=null?(Math.round(X.rate*1000)/10)+'%':'المعلنة';
-const GUAR='<p class="qx-s" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:8px 0">🛡️ <b>ضمان Horizon</b>: تليفونك مخفي لحد ما تقبل عرض · كل عرض ساري 7 أيام عشان الأسعار ما تبقاش قديمة · لو حصلت مشكلة في التنفيذ تقدر تفتح شكوى وفريقنا بيراجعها.</p>';
+const GUAR='<p class="qx-s" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:8px 0">🛡️ <b>ضمان Horizon</b>: تليفونك مخفي لحد ما تقبل عرض · كل عرض عليه مدة صلاحية واضحة عشان الأسعار ما تبقاش قديمة · لو حصلت مشكلة في التنفيذ تقدر تفتح شكوى وفريقنا بيراجعها.</p>';
 async function loadDisp(ids){ids=[...new Set(ids)].filter(Boolean);if(!ids.length)return;
  try{const r=await sb.from('hzq_disputes').select('*').in('deal_id',ids).order('created_at',{ascending:true});(r.data||[]).forEach(x=>{X.disp[x.deal_id]=x})}catch(_){}}
 async function loadRate(){if(X.rate!=null)return;try{const r=await sb.from('hz_settings').select('value').eq('key','commission').maybeSingle();const v=r.data&&r.data.value;X.rate=+(v&&typeof v==='object'?v.rate:v)||0}catch(_){}}
@@ -100,8 +101,8 @@ function mineHTML(){if(X.loading&&!X.mine)return '<p class="empty">جاري ال
    if(deal)h+=dealCust(deal,r);
    else{
     h+=offs.length?offs.map(o=>`<div class="qx-o${o.status==='accepted'?' win':''}"><div class="qx-h"><b>${E(nm(o.provider_id))}</b><span class="qx-k">${fm(o.total)}</span></div>${statTxt(o.provider_id)}
-      <div class="qx-s">${o.days!=null?'التنفيذ خلال '+o.days+' يوم · ':''}${ago(o.created_at)}${valTxt(o)}</div>${o.note?`<p>${E(o.note)}</p>`:''}
-      ${o.status==='sent'&&r.status!=='cancelled'&&!expired(o)?`<button type="button" class="btn" data-qx="accept:${o.id}">اقبل العرض ده</button>`:chip(o.status==='sent'?'انتهت صلاحيته':o.status==='rejected'?'اتقفل':o.status==='withdrawn'?'اتسحب':'اتقبل',o.status==='sent'?'#B42318':'#64748B')}</div>`).join('')
+      <div class="qx-s">${o.days!=null?'التنفيذ خلال '+o.days+' يوم · ':''}${ago(o.created_at)}${valTxt(o)}${adjTxt(o)}</div>${o.note?`<p>${E(o.note)}</p>`:''}
+      ${o.status==='sent'&&r.status!=='cancelled'&&!expired(o)?`<button type="button" class="btn" data-qx="accept:${o.id}">اقبل العرض ده</button>`:chip(o.status==='sent'||o.status==='expired'?'انتهت صلاحيته':o.status==='rejected'?'اتقفل':o.status==='withdrawn'?'اتسحب':'اتقبل',o.status==='sent'||o.status==='expired'?'#B42318':'#64748B')}</div>`).join('')
      :'<p class="qx-s">لسه مفيش عروض. الموردين المناسبين اتبلّغوا، وهتوصلك إشعار أول ما حد يرد.</p>';
     if(r.status==='new'||r.status==='offered')h+=`<button type="button" class="pill" data-qx="cancelreq:${r.id}">إلغاء الطلب</button>`}}
   return h+'</div>'}).join('')}
@@ -131,7 +132,7 @@ async function loadProv(){X.loading=1;X.err='';draw();
   await loadDisp((dl.data||[]).map(d=>d.id));await loadRate();X.pdata={reqs:rq.data||[],offers:of.data||[],deals:dl.data||[],dreqs};
  }catch(e){X.err=errTxt(e);X.pdata=null}
  X.loading=0;draw()}
-function offerForm(r,mine){return `<div class="qx-o"><b>${mine?'عدّل عرضك':'قدّم عرضك'}</b><div class="qx-2"><input type="number" min="1" inputmode="decimal" id="qxT_${r.id}" placeholder="الإجمالي بالجنيه" value="${mine?E(mine.total):''}"><input type="number" min="0" inputmode="numeric" id="qxD_${r.id}" placeholder="مدة التنفيذ بالأيام" value="${mine&&mine.days!=null?E(mine.days):''}"></div><textarea id="qxN_${r.id}" rows="2" placeholder="ملاحظات: الخامة، الضمان، التركيب… (اختياري)">${mine?E(mine.note||''):''}</textarea><p class="qx-s">العرض ساري 7 أيام من إرساله (تجدّده بالتعديل). بإرسالك العرض بتوافق إن عمولة Horizon ${rateTxt()} تُستحق على أي صفقة بتتم من خلال المنصة.</p><button type="button" class="btn" data-qx="send:${r.id}" style="margin-top:6px">${mine?'حدّث العرض':'ابعت العرض'}</button></div>`}
+function offerForm(r,mine){return `<div class="qx-o"><b>${mine?'عدّل عرضك':'قدّم عرضك'}</b><div class="qx-2"><input type="number" min="1" inputmode="decimal" id="qxT_${r.id}" placeholder="الإجمالي بالجنيه" value="${mine?E(mine.total):''}"><input type="number" min="0" inputmode="numeric" id="qxD_${r.id}" placeholder="مدة التنفيذ بالأيام" value="${mine&&mine.days!=null?E(mine.days):''}"></div><textarea id="qxN_${r.id}" rows="2" placeholder="ملاحظات: الخامة، الضمان، التركيب… (اختياري)">${mine?E(mine.note||''):''}</textarea><div class="qx-2"><label class="qx-s">مدة سريان العرض<select id="qxV_${r.id}" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:inherit">${[[3,'3 أيام'],[7,'أسبوع'],[30,'شهر']].map(x=>`<option value="${x[0]}"${x[0]===((mine&&mine.valid_days)||7)?' selected':''}>${x[1]}</option>`).join('')}</select></label><label class="qx-s">قابل للتعديل لو المادة زادت أكتر من % (اختياري)<input type="number" min="1" max="50" inputmode="decimal" id="qxP_${r.id}" placeholder="مثال: 5" value="${mine&&mine.price_adjust_pct!=null?E(mine.price_adjust_pct):''}"></label></div><p class="qx-s">العرض بيتقفل لوحده بعد المدة دي (تجدّده بالتعديل). بإرسالك العرض بتوافق إن عمولة Horizon ${rateTxt()} تُستحق على أي صفقة بتتم من خلال المنصة.</p><button type="button" class="btn" data-qx="send:${r.id}" style="margin-top:6px">${mine?'حدّث العرض':'ابعت العرض'}</button></div>`}
 function provHTML(){if(X.loading&&!X.pdata)return '<p class="empty">جاري التحميل…</p>';
  if(X.err)return `<p class="msg">${E(X.err)}</p>`;
  if(!X.prov)return '<p class="hs-box">سجّل بياناتك كمورد الأول (متجري > مقدّم الخدمة)، وبعدها ضيف أسعارك من الإعدادات > منتجاتي وأسعاري.</p>';
@@ -142,8 +143,8 @@ function provHTML(){if(X.loading&&!X.pdata)return '<p class="empty">جاري ا�
  if(X.ptab==='open'){const rows=d.reqs.filter(r=>{const o=myOf(r.id);return !o||o.status==='withdrawn'});
   return tabs+(rows.length?rows.map(r=>reqCard(r,null)).join(''):'<p class="empty">مفيش طلبات مفتوحة دلوقتي في أقسامك. تأكد إن أسعارك مكتوبة في الإعدادات > منتجاتي وأسعاري.</p>')}
  if(X.ptab==='offers'){return tabs+(d.offers.length?d.offers.map(o=>{const r=d.reqs.find(x=>x.id===o.request_id)||d.dreqs.find(x=>x.id===o.request_id);
-   return `<div class="qx-r"><div class="qx-h"><b>${r?secName(r.section):'طلب'}</b>${chip({sent:'مستني رد العميل',accepted:'اتقبل ✓',rejected:'اتقفل',withdrawn:'اتسحب'}[o.status]||o.status,o.status==='accepted'?'#067647':'#64748B')}</div><div class="qx-s">${ago(o.created_at)}</div><div class="qx-k">${fm(o.total)}</div>${r?linesHTML(r.lines):''}
-   ${o.status==='sent'&&r?`<button type="button" class="pill" data-qx="open:${o.request_id}">تعديل</button> <button type="button" class="pill" data-qx="withdraw:${o.id}">سحب العرض</button>`:''}${X.open===o.request_id&&o.status==='sent'&&r?offerForm(r,o):''}</div>`}).join(''):'<p class="empty">لسه ما بعتّش عروض.</p>')}
+   return `<div class="qx-r"><div class="qx-h"><b>${r?secName(r.section):'طلب'}</b>${chip({sent:'مستني رد العميل',accepted:'اتقبل ✓',rejected:'اتقفل',withdrawn:'اتسحب',expired:'انتهى، جدّده'}[o.status]||o.status,o.status==='accepted'?'#067647':'#64748B')}</div><div class="qx-s">${ago(o.created_at)}${valTxt(o)}</div><div class="qx-k">${fm(o.total)}</div>${r?linesHTML(r.lines):''}
+   ${(o.status==='sent'||o.status==='expired')&&r?`<button type="button" class="pill" data-qx="open:${o.request_id}">${o.status==='expired'?'جدّد العرض':'تعديل'}</button> <button type="button" class="pill" data-qx="withdraw:${o.id}">سحب العرض</button>`:''}${X.open===o.request_id&&(o.status==='sent'||o.status==='expired')&&r?offerForm(r,o):''}</div>`}).join(''):'<p class="empty">لسه ما بعتّش عروض.</p>')}
  return tabs+(d.deals.length?d.deals.map(dl=>{const r=d.dreqs.find(x=>x.id===dl.request_id)||{lines:[]},c=X.contacts[dl.id];if(c===undefined)contact(dl.id);
    return `<div class="qx-r"><div class="qx-h"><b>${secName(dl.section)}</b><span class="qx-k">${fm(dl.total)}</span></div><div class="qx-s">العميل: ${E(first(dl.customer_id))} · ${ago(dl.created_at)} · العمولة المتوقعة ${fm(dl.stage==='closed'?dl.commission:dl.total*dl.commission_rate)}${dl.stage==='closed'?(dl.commission_paid?' (اتسدّدت ✓)':' (مستحقة السداد)'):''}</div>${linesHTML(r.lines)}${tl(dl.stage)}
    ${dl.stage!=='cancelled'?(c&&(c.phone||c.name)?`<p>📞 ${E(c.name||'')} ${c.phone?`<a href="tel:${E(c.phone)}">${E(c.phone)}</a> · <a href="${waLink(c.phone)}" target="_blank" rel="noopener">واتساب</a>`:''}</p>`:''):''}
@@ -165,7 +166,7 @@ async function invHTML(){const id=X.inv;let d=null,r=null;
  <div class="qx-in" dir="rtl"><h3 style="margin:0">Horizon · مستند تأكيد صفقة</h3><div class="qx-s" style="color:#555">رقم: HZ-${String(d.invoice_no).padStart(6,'0')} · ${new Date(d.created_at).toLocaleDateString('ar-EG')}</div>
  <p><b>القسم:</b> ${secName(d.section)}<br><b>المورد:</b> ${E(nm(d.provider_id))}<br><b>العميل:</b> ${E(mineSide?(X.myname||'أنا'):first(d.customer_id))}${c.phone&&!mineSide?'<br><b>تليفون المورد:</b> '+E(c.phone):''}</p>
  <table>${(r&&Array.isArray(r.lines)?r.lines:[]).map(l=>`<tr><td>${lineTxt(l)}</td></tr>`).join('')}</table>
- <p class="qx-k">الإجمالي المتفق عليه: ${fm(d.total)} جنيه</p><p>الحالة: ${E(DS[d.stage]||d.stage)}</p>
+ <p class="qx-k">الإجمالي المتفق عليه: ${fm(d.total)} جنيه</p>${d.price_date?`<p>سعر المورد اتحدّد بتاريخ <b>${new Date(d.price_date).toLocaleDateString('ar-EG')}</b> واتقبل بتاريخ <b>${new Date(d.created_at).toLocaleDateString('ar-EG')}</b>.</p>`:''}${d.price_adjust_pct?`<p>شرط المورد: السعر قابل للتعديل لو سعر المادة زاد أكتر من <b>${E(d.price_adjust_pct)}%</b>.</p>`:''}<p>الحالة: ${E(DS[d.stage]||d.stage)}</p>
  <p style="font-size:12px;color:#555">ده مستند تأكيد داخلي بين الطرفين على Horizon، وليس فاتورة ضريبية. الدفع والتسليم بين العميل والمورد، وبيتسجّلوا هنا عشان المتابعة والتقييم. لو حصلت مشكلة افتح شكوى من شاشة الصفقة خلال 14 يوم من الاستلام.</p></div>`}
 
 /* ---------------- الرسم ---------------- */
@@ -196,7 +197,8 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-qx]'
  if(k==='stage'){if(w==='cancelled'&&!confirm('تلغي الصفقة؟'))return;await call('hzq_stage',{p_deal:v,p_stage:w},'اتحدّثت الحالة.',re);return}
  if(k==='rate'){const n=X.star[v]||0;if(!n){X.msg='اختار عدد النجوم الأول';X.ok=0;draw();return}const t=($q('#qxRv_'+v)||{}).value||'';await call('hzq_rate',{p_deal:v,p_rating:n,p_review:t},'شكراً على تقييمك ⭐',re);return}
  if(k==='send'){const t=+($q('#qxT_'+v)||{}).value,dd=($q('#qxD_'+v)||{}).value,nt=($q('#qxN_'+v)||{}).value||'';if(!(t>0)){X.msg='اكتب إجمالي السعر';X.ok=0;draw();return}
-  await call('hzq_send_offer',{p_request:v,p_total:t,p_days:dd===''?null:Math.round(+dd),p_note:nt},'العرض اتبعت للعميل ✓',async()=>{X.open=null;X.ptab='offers';await re()});return}
+  const vd=+(($q('#qxV_'+v)||{}).value)||7,pc=($q('#qxP_'+v)||{}).value;
+  await call('hzq_send_offer',{p_request:v,p_total:t,p_days:dd===''?null:Math.round(+dd),p_note:nt,p_valid_days:vd,p_adjust_pct:(pc===''||pc==null)?null:+pc},'العرض اتبعت للعميل ✓',async()=>{X.open=null;X.ptab='offers';await re()});return}
  if(k==='dispute'){const t=prompt('اشرح المشكلة في جملة أو اتنين (فريق Horizon هيراجعها):');if(t===null)return;await call('hzq_open_dispute',{p_deal:v,p_reason:t},'الشكوى اتبعتت لفريق Horizon وهنتواصل معاك.',re);return}
  if(k==='withdraw'){if(!confirm('تسحب العرض ده؟'))return;await call('hzq_withdraw_offer',{p_offer:v},'العرض اتسحب.',re);return}
 });
@@ -204,9 +206,9 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-qx]'
 /* إشعارات الجرس بتفتح الشاشة المناسبة */
 document.addEventListener('click',e=>{const row=e.target.closest&&e.target.closest('.ntr');if(!row)return;const t=row.textContent||'';
  let tab=null;
- if(/طلب (عرض سعر )?جديد/.test(t)||/العميل (قبل|اختار|أكّد)|قيّمك/.test(t))tab='prov';
+ if(/طلب (عرض سعر )?جديد/.test(t)||/العميل (قبل|اختار|أكّد)|قيّمك|عرضك انتهت/.test(t))tab='prov';
  else if(/وصلك عرض سعر|المورد (بدأ|بلّغ)|الصفقة اتلغت/.test(t))tab='mine';
- if(!tab)return;e.stopImmediatePropagation();e.preventDefault();const nt=$q('#ntModal');if(nt)nt.hidden=true;X.ptab=/العميل (قبل|أكّد)|قيّمك/.test(t)?'deals':/اختار/.test(t)?'offers':'open';open(tab)},true);
+ if(!tab)return;e.stopImmediatePropagation();e.preventDefault();const nt=$q('#ntModal');if(nt)nt.hidden=true;X.ptab=/العميل (قبل|أكّد)|قيّمك/.test(t)?'deals':/اختار|عرضك انتهت/.test(t)?'offers':'open';open(tab)},true);
 
 /* صفوف الإعدادات */
 function inject(){const b=document.getElementById('hsBody');if(!b||typeof user==='undefined'||!user||b.querySelector('[data-qxrow]'))return;
