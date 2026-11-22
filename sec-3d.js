@@ -3,7 +3,7 @@
 (function(){'use strict';
 const $=s=>document.querySelector(s);
 let T,R,sc,cam,root,acts=[],cvs,ov,raf=0,kind='phone',mode='try',tgt,pushed=0,skip=0,P={},spinOn=0,ticks=[];
-const view={y:.5,p:.15,d:5,fit:5,vy:0};let drag=0,lastT=0,VT=null,KL=null;const PRO=['window','door','shutter','profile'];
+const view={y:.5,p:.15,d:5,fit:5,vy:0};let drag=0,lastT=0,VT=null,KL=null;const UP=['window','door','shutter','profile'],FU=['wardrobe','bed','kitchen','sofa','table'],PRO=UP.concat(FU);
 function goV(y,p,d){const k=Math.PI*2;VT={y:y+k*Math.round((view.y-y)/k),p:p,d:d};view.vy=0}
 const NAMES={phone:'موبايل',laptop:'لابتوب',pc:'كمبيوتر',fridge:'ثلاجة',washer:'غسالة',pot:'حلة',plates:'أطباق وصيني',pharmacy:'علبة وشريط وزجاجة دواء',perfume:'عطر',tv:'شاشة تلفزيون',microwave:'ميكروويف',earbuds:'سماعات أذن (علبة وسماعتين)'};
 const BG={phone:'desk',laptop:'desk',pc:'desk',fridge:'kitchen',washer:'kitchen',pot:'kitchen',plates:'kitchen',pharmacy:'pharm',perfume:'room',tv:'living',microwave:'kitchen',earbuds:'desk'};
@@ -75,20 +75,24 @@ perfume(){const gl=glass(0xfbcfe8,.55),gd=mat(0xb8860b,{metalness:.9,roughness:.
  bx(.6,.7,.3,gl,0,.35,0);bx(.52,.5,.22,mat(0xf9a8d4,{transparent:true,opacity:.9}),0,.3,0);cy(.1,.1,.08,gd,0,.74,0);
  const cp=gp(0,.78,0);cy(.16,.16,.35,gd,0,.175,0,cp);act(cp,t=>{cp.position.y=.78+t*.6;cp.rotation.z=t*.4})}};
 function css(){if($('#h3css'))return;const s=document.createElement('style');s.id='h3css';s.textContent=`#hz3d[hidden]{display:none!important}#hz3d{position:fixed;inset:0;z-index:99999;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;direction:rtl}#hz3d .h3h{display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));border-bottom:1px solid var(--line)}#hz3d .h3h b{flex:1;text-align:center}#hz3d .h3h button{border:1px solid var(--line);background:var(--card);border-radius:12px;width:40px;height:36px;font-size:16px;cursor:pointer}#h3v{flex:1;min-height:200px;touch-action:none;position:relative;background:#fff}#h3v canvas{display:block;width:100%;height:100%}#h3v[data-bg=white]{background:#fff}#h3v[data-bg=desk]{background:linear-gradient(180deg,rgba(255,255,255,.55),transparent 30%),linear-gradient(#e4ebf1 0 62%,#c9d3dc 62% 64%,#a47448 64% 100%)}#h3v[data-bg=kitchen]{background:repeating-linear-gradient(90deg,transparent 0 69px,rgba(0,0,0,.07) 69px 70px),repeating-linear-gradient(0deg,transparent 0 69px,rgba(0,0,0,.07) 69px 70px),linear-gradient(#f1f5f6 0 58%,#8f959b 58% 61%,#d9c9ae 61% 100%)}#h3v[data-bg=pharm]{background:linear-gradient(#e6f4f1 0 60%,#b9ddd6 60% 63%,#f8fafa 63% 100%)}#h3v[data-bg=room]{background:linear-gradient(#efe4d3 0 64%,#d8c7ad 64% 66%,#a9805a 66% 100%)}#h3v[data-bg=living]{background:linear-gradient(#e9e4dc 0 66%,#cfc6b8 66% 68%,#8a6a4a 68% 100%)}#h3p{padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#h3p .pill.on{background:var(--p,#0F766E);color:#fff;border-color:var(--p,#0F766E)}#h3p .pill{cursor:pointer}#h3p p{flex-basis:100%;margin:0;text-align:center;font-size:13px;color:var(--mut)}`;document.head.appendChild(s)}
-const SW={up:[['#F8FAFC','أبيض'],['#E8DCC0','بيج'],['#3F454B','رمادي غامق'],['#8B5A2B','شكل خشب']],fu:[['#8B5A2B','جوزي'],['#C9A06A','بلوط فاتح'],['#F3F4F6','أبيض'],['#475569','رمادي']]};
-const SK={window:'up',door:'up',shutter:'up',profile:'up',wardrobe:'fu',bed:'fu',table:'fu',kitchen:'fu'};
+const SW={up:[['#F8FAFC','أبيض'],['#E8DCC0','بيج'],['#3F454B','رمادي غامق'],['#8B5A2B','شكل خشب']],fu:[['#8B5A2B','جوزي'],['#C9A06A','بلوط فاتح'],['#F3F4F6','أبيض'],['#475569','رمادي']],sf:[['#64748B','رمادي'],['#1E3A5F','كحلي'],['#C8B89A','بيج'],['#3F6B4E','أخضر زيتي']],ki:[['#E5E7EB','أبيض رمادي'],['#8B5A2B','جوزي'],['#1F2937','أسود'],['#B8A88A','بيج']]};
+const SK={window:'up',door:'up',shutter:'up',profile:'up',wardrobe:'fu',bed:'fu',table:'fu',sofa:'sf',kitchen:'ki'};
+const DEF={window:'#f8fafc',door:'#a16207',shutter:'#f1f5f9',profile:'#f8fafc',wardrobe:'#8B5A2B',bed:'#8B5A2B',table:'#8B5A2B',sofa:'#64748b',kitchen:'#e5e7eb'};
 const QK=['window','door','shutter','profile','glass','wardrobe','bed','kitchen','sofa','table','planks'];
 const WA='201040930136';
 const nv=(k,d)=>(P[k]!=null&&P[k]!==''&&!isNaN(+P[k]))?+P[k]:d;
-function colName(){const l=SW[SK[kind]]||[],c=String(P.color||'').toLowerCase(),m=l.find(x=>x[0].toLowerCase()===c);return m?m[1]:(P.color?'مخصص':'')}
+function colName(){const l=SW[SK[kind]]||[],c=String(P.color||DEF[kind]||'').toLowerCase(),m=l.find(x=>x[0].toLowerCase()===c);return m?m[1]:(P.color?'مخصص':'')}
+const cv=(k,d,a,b)=>Math.max(a,Math.min(b,nv(k,d)));
 function specs(){const a=[];
- if(kind==='window')a.push(['المقاس',nv('w',120)+' × '+nv('h',120)+' سم'],['عدد الضلف',Math.round(nv('sashes',2))],['الفتح',P.open==='slide'?'جرّار':'مفصلي']);
- else if(kind==='door')a.push(['المقاس',nv('w',90)+' × '+nv('h',210)+' سم'],['الزجاج',P.glass==='1'?'بزجاج':'بدون زجاج']);
- else if(kind==='shutter')a.push(['المقاس',nv('w',150)+' × '+nv('h',150)+' سم']);
- else if(kind==='wardrobe')a.push(['المقاس',nv('w',180)+' × '+nv('h',210)+' × '+nv('d',60)+' سم'],['عدد الضلف',Math.round(nv('doors',3))]);
- else if(kind==='bed')a.push(['المقاس',nv('w',160)+' × '+nv('l',200)+' سم']);
- else if(kind==='kitchen')a.push(['الطول',nv('len',240)+' سم']);
- const cn=colName();if(cn)a.push(['اللون',cn]);return a}
+ if(kind==='window'){const ns=Math.round(cv('sashes',2,1,3));a.push(['المقاس',cv('w',120,50,300)+' × '+cv('h',120,50,250)+' سم'],['عدد الضلف',ns],['الفتح',P.open==='slide'&&ns>1?'جرّار':'مفصلي'])}
+ else if(kind==='door')a.push(['المقاس',cv('w',90,60,140)+' × '+cv('h',210,180,260)+' سم'],['الزجاج',P.glass==='1'?'بزجاج':'بدون زجاج']);
+ else if(kind==='shutter')a.push(['المقاس',cv('w',150,60,300)+' × '+cv('h',150,60,300)+' سم']);
+ else if(kind==='wardrobe')a.push(['المقاس',cv('w',180,60,400)+' × '+cv('h',210,100,300)+' × '+cv('d',60,30,100)+' سم'],['عدد الضلف',Math.round(cv('doors',3,1,6))],['الأدراج',Math.round(cv('drawers',2,0,5))],['الأرفف',Math.round(cv('shelves',4,0,10))],['شماعة',P.rod!=='0'?'موجودة':'بدون']);
+ else if(kind==='bed')a.push(['المقاس',cv('w',160,90,220)+' × '+cv('l',200,160,230)+' سم'],['ارتفاع الراس',cv('hb',110,60,160)+' سم'],['التخزين',P.storage!=='0'?'بصندوق تخزين':'بدون']);
+ else if(kind==='kitchen'){const L0=cv('len',240,120,480);a.push(['الطول',L0+' سم'],['عدد الوحدات',Math.max(2,Math.round(L0/60))])}
+ else if(kind==='sofa')a.push(['عدد المقاعد',Math.round(cv('seats',3,2,5))],['النوع',P.corner==='1'?'ركنة':'عادي']);
+ else if(kind==='table')a.push(['عدد الكراسي',Math.round(cv('seats',6,4,10)/2)*2],['الشكل',P.shape==='round'?'دائرية':'مستطيلة']);
+ const cn=colName();if(cn)a.push([FU.includes(kind)?(kind==='sofa'?'القماش':'الخامة / اللون'):'اللون',cn]);return a}
 function quote(){const sp=specs().map(x=>x[0]+': '+x[1]).join('، ');const t=String(P.title||NAMES[kind]).replace(/\s*·\s*نموذج توضيحي/,'');
  const msg='مرحباً Horizon، أريد عرض سعر لـ: '+t+(sp?' — '+sp:'')+' (من معاينة 3D)';window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')}
 function hdr(){const h=ov.querySelector('.h3h');h.innerHTML='<button id="h3x" type="button" aria-label="إغلاق">✕</button><b id="h3t"></b><button id="h3r" type="button" aria-label="إعادة العرض" title="إعادة العرض">↺</button><button id="h3f" type="button" aria-label="ملء الشاشة" title="ملء الشاشة">⛶</button>'}
@@ -96,9 +100,10 @@ function addHint(){const v=$('#h3v');if(!v||$('#h3hint'))return;const h=document
 function studio(b,s){const m=Math.max(s.x,s.y,s.z);root.traverse(o=>{if(o.isMesh&&o.material&&!o.material.map&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true}});
  const g=new T.Mesh(new T.PlaneGeometry(m*4,m*4),new T.ShadowMaterial({opacity:.16}));g.rotation.x=-Math.PI/2;g.position.set(tgt.x,b.min.y+.001,tgt.z);g.receiveShadow=true;root.add(g);
  if(KL){const e=m*1.4,c=KL.shadow.camera;c.left=-e;c.right=e;c.top=e;c.bottom=-e;c.near=.1;c.far=m*9;c.updateProjectionMatrix();KL.position.set(tgt.x+m*.9,tgt.y+m*2.2,tgt.z+m*1.3);KL.target.position.copy(tgt);KL.target.updateMatrixWorld()}}
-function panel(){const el=$('#h3p'),A=ANIMALS.includes(kind),sp=A?[]:specs(),sk=SW[SK[kind]],cur=String(P.color||'').toLowerCase(),demo=/نموذج توضيحي/.test(P.title||'');
+function panel(){const el=$('#h3p'),A=ANIMALS.includes(kind),sp=A?[]:specs(),sk=SW[SK[kind]],cur=String(P.color||DEF[kind]||'').toLowerCase(),demo=/نموذج توضيحي/.test(P.title||'');
  let h='<div class="h3seg"><button type="button" class="'+(mode==='360'?'on':'')+'" data-h3m="360">🔄 عرض 360°</button><button type="button" class="'+(mode==='try'?'on':'')+'" data-h3m="try">🖐️ تفاعلي</button></div>';
  if(A)h+='<div class="h3row">'+ANIMALS.map(k=>'<button type="button" class="pill '+(k===kind?'on':'')+'" data-h3k="'+k+'">'+NAMES[k]+'</button>').join('')+'</div>';
+ if(sp.length)h+='<div class="h3st">'+(UP.includes(kind)?'بيانات UPVC':'بيانات الأثاث')+'</div>';
  if(sp.length)h+='<div class="h3sp">'+sp.map(x=>'<div><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div>';
  if(demo&&sp.length)h+='<p class="h3n">نموذج توضيحي بأبعاد افتراضية</p>';
  if(sk)h+='<div class="h3sw"><span>اللون</span>'+sk.map(c=>'<button type="button" class="h3c'+(cur===c[0].toLowerCase()?' on':'')+'" data-h3c="'+c[0]+'" style="--c:'+c[0]+'" aria-label="'+c[1]+'" title="'+c[1]+'"></button>').join('')+'</div>';
@@ -113,6 +118,7 @@ function css3(){if($('#h3css3'))return;const s=document.createElement('style');s
 .h3sp{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-bottom:10px}
 .h3sp div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 9px}
 .h3sp small{display:block;color:var(--mut);font-size:11px}.h3sp b{font-size:13px}
+.h3st{font-weight:700;font-size:13px;margin:0 0 6px}
 .h3sw{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;color:var(--mut)}
 .h3c{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--c);padding:0;cursor:pointer}
 .h3c.on{border-color:var(--p,#0F766E);box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--p,#0F766E)}
@@ -381,5 +387,5 @@ M.hen=function(){
 
 const ANIMALS=['cow','sheep','goat','camel','horse','hen'];
 
-window.hz3d={open,openSpin,kinds:Object.keys(M),names:NAMES,_t:M,_dbg:()=>({acts,ticks})};
+window.hz3d={open,openSpin,specsOf:(k,p)=>{const k0=kind,p0=P;kind=k;P=p||{};try{return specs()}finally{kind=k0;P=p0}},kinds:Object.keys(M),names:NAMES,_t:M,_dbg:()=>({acts,ticks})};
 })();
