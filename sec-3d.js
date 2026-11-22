@@ -3,7 +3,8 @@
 (function(){'use strict';
 const $=s=>document.querySelector(s);
 let T,R,sc,cam,root,acts=[],cvs,ov,raf=0,kind='phone',mode='try',tgt,pushed=0,skip=0,P={},spinOn=0,ticks=[];
-const view={y:.5,p:.15,d:5,fit:5};
+const view={y:.5,p:.15,d:5,fit:5,vy:0};let drag=0,lastT=0,VT=null,KL=null;const PRO=['window','door','shutter','profile'];
+function goV(y,p,d){const k=Math.PI*2;VT={y:y+k*Math.round((view.y-y)/k),p:p,d:d};view.vy=0}
 const NAMES={phone:'موبايل',laptop:'لابتوب',pc:'كمبيوتر',fridge:'ثلاجة',washer:'غسالة',pot:'حلة',plates:'أطباق وصيني',pharmacy:'علبة وشريط وزجاجة دواء',perfume:'عطر',tv:'شاشة تلفزيون',microwave:'ميكروويف',earbuds:'سماعات أذن (علبة وسماعتين)'};
 const BG={phone:'desk',laptop:'desk',pc:'desk',fridge:'kitchen',washer:'kitchen',pot:'kitchen',plates:'kitchen',pharmacy:'pharm',perfume:'room',tv:'living',microwave:'kitchen',earbuds:'desk'};
 const loadT=()=>window.THREE?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)});
@@ -74,37 +75,90 @@ perfume(){const gl=glass(0xfbcfe8,.55),gd=mat(0xb8860b,{metalness:.9,roughness:.
  bx(.6,.7,.3,gl,0,.35,0);bx(.52,.5,.22,mat(0xf9a8d4,{transparent:true,opacity:.9}),0,.3,0);cy(.1,.1,.08,gd,0,.74,0);
  const cp=gp(0,.78,0);cy(.16,.16,.35,gd,0,.175,0,cp);act(cp,t=>{cp.position.y=.78+t*.6;cp.rotation.z=t*.4})}};
 function css(){if($('#h3css'))return;const s=document.createElement('style');s.id='h3css';s.textContent=`#hz3d[hidden]{display:none!important}#hz3d{position:fixed;inset:0;z-index:99999;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;direction:rtl}#hz3d .h3h{display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));border-bottom:1px solid var(--line)}#hz3d .h3h b{flex:1;text-align:center}#hz3d .h3h button{border:1px solid var(--line);background:var(--card);border-radius:12px;width:40px;height:36px;font-size:16px;cursor:pointer}#h3v{flex:1;min-height:200px;touch-action:none;position:relative;background:#fff}#h3v canvas{display:block;width:100%;height:100%}#h3v[data-bg=white]{background:#fff}#h3v[data-bg=desk]{background:linear-gradient(180deg,rgba(255,255,255,.55),transparent 30%),linear-gradient(#e4ebf1 0 62%,#c9d3dc 62% 64%,#a47448 64% 100%)}#h3v[data-bg=kitchen]{background:repeating-linear-gradient(90deg,transparent 0 69px,rgba(0,0,0,.07) 69px 70px),repeating-linear-gradient(0deg,transparent 0 69px,rgba(0,0,0,.07) 69px 70px),linear-gradient(#f1f5f6 0 58%,#8f959b 58% 61%,#d9c9ae 61% 100%)}#h3v[data-bg=pharm]{background:linear-gradient(#e6f4f1 0 60%,#b9ddd6 60% 63%,#f8fafa 63% 100%)}#h3v[data-bg=room]{background:linear-gradient(#efe4d3 0 64%,#d8c7ad 64% 66%,#a9805a 66% 100%)}#h3v[data-bg=living]{background:linear-gradient(#e9e4dc 0 66%,#cfc6b8 66% 68%,#8a6a4a 68% 100%)}#h3p{padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:8px;justify-content:center}#h3p .pill.on{background:var(--p,#0F766E);color:#fff;border-color:var(--p,#0F766E)}#h3p .pill{cursor:pointer}#h3p p{flex-basis:100%;margin:0;text-align:center;font-size:13px;color:var(--mut)}`;document.head.appendChild(s)}
-function panel(){const P=$('#h3p');P.innerHTML=`<button type="button" class="pill ${mode==='360'?'on':''}" data-h3m="360">🔄 3D (360°)</button><button type="button" class="pill ${mode==='try'?'on':''}" data-h3m="try">🖐️ تجربة (افتح وحرّك)</button>${ANIMALS.includes(kind)?`<div style="flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">${ANIMALS.map(k=>`<button type="button" class="pill ${k===kind?'on':''}" data-h3k="${k}">${NAMES[k]}</button>`).join('')}</div>`:''}<p>${ANIMALS.includes(kind)?'دوس على الحيوان يطلّع صوته ويتحرك. جرّب تدوس على الضرع في البقرة 🥛':mode==='try'?'اضغط على أي جزء (باب، غطاء، علبة) عشان يتفتح أو يتحرك. اسحب بصباعك للف.':'اسحب للف حواليه وقرّب ببصباعين.'}</p><button type="button" class="pill" data-h3a="1">افتح الكل</button><button type="button" class="pill" data-h3a="0">اقفل الكل</button>${[['f','أمام'],['s','جنب'],['b','خلف'],['t','فوق'],['u','تحت']].map(v=>`<button type="button" class="pill" data-h3v="${v[0]}">${v[1]}</button>`).join('')}`;$('#h3v').dataset.bg=mode==='360'?'white':BG[kind]}
-function build(){if(root)sc.remove(root);acts=[];ticks=[];root=new T.Group();sc.add(root);M[kind]();const b=new T.Box3().setFromObject(root),s=b.getSize(new T.Vector3());tgt=b.getCenter(new T.Vector3());view.fit=view.d=Math.max(s.x,s.y,s.z)*1.9+.4;shadow(b,s)}
+const SW={up:[['#F8FAFC','أبيض'],['#E8DCC0','بيج'],['#3F454B','رمادي غامق'],['#8B5A2B','شكل خشب']],fu:[['#8B5A2B','جوزي'],['#C9A06A','بلوط فاتح'],['#F3F4F6','أبيض'],['#475569','رمادي']]};
+const SK={window:'up',door:'up',shutter:'up',profile:'up',wardrobe:'fu',bed:'fu',table:'fu',kitchen:'fu'};
+const QK=['window','door','shutter','profile','glass','wardrobe','bed','kitchen','sofa','table','planks'];
+const WA='201040930136';
+const nv=(k,d)=>(P[k]!=null&&P[k]!==''&&!isNaN(+P[k]))?+P[k]:d;
+function colName(){const l=SW[SK[kind]]||[],c=String(P.color||'').toLowerCase(),m=l.find(x=>x[0].toLowerCase()===c);return m?m[1]:(P.color?'مخصص':'')}
+function specs(){const a=[];
+ if(kind==='window')a.push(['المقاس',nv('w',120)+' × '+nv('h',120)+' سم'],['عدد الضلف',Math.round(nv('sashes',2))],['الفتح',P.open==='slide'?'جرّار':'مفصلي']);
+ else if(kind==='door')a.push(['المقاس',nv('w',90)+' × '+nv('h',210)+' سم'],['الزجاج',P.glass==='1'?'بزجاج':'بدون زجاج']);
+ else if(kind==='shutter')a.push(['المقاس',nv('w',150)+' × '+nv('h',150)+' سم']);
+ else if(kind==='wardrobe')a.push(['المقاس',nv('w',180)+' × '+nv('h',210)+' × '+nv('d',60)+' سم'],['عدد الضلف',Math.round(nv('doors',3))]);
+ else if(kind==='bed')a.push(['المقاس',nv('w',160)+' × '+nv('l',200)+' سم']);
+ else if(kind==='kitchen')a.push(['الطول',nv('len',240)+' سم']);
+ const cn=colName();if(cn)a.push(['اللون',cn]);return a}
+function quote(){const sp=specs().map(x=>x[0]+': '+x[1]).join('، ');const t=String(P.title||NAMES[kind]).replace(/\s*·\s*نموذج توضيحي/,'');
+ const msg='مرحباً Horizon، أريد عرض سعر لـ: '+t+(sp?' — '+sp:'')+' (من معاينة 3D)';window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank')}
+function hdr(){const h=ov.querySelector('.h3h');h.innerHTML='<button id="h3x" type="button" aria-label="إغلاق">✕</button><b id="h3t"></b><button id="h3r" type="button" aria-label="إعادة العرض" title="إعادة العرض">↺</button><button id="h3f" type="button" aria-label="ملء الشاشة" title="ملء الشاشة">⛶</button>'}
+function addHint(){const v=$('#h3v');if(!v||$('#h3hint'))return;const h=document.createElement('div');h.id='h3hint';h.textContent='↔ اسحب للف · بإصبعين للتقريب';v.appendChild(h);setTimeout(()=>{if(h.parentNode)h.remove()},4600)}
+function studio(b,s){const m=Math.max(s.x,s.y,s.z);root.traverse(o=>{if(o.isMesh&&o.material&&!o.material.map&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true}});
+ const g=new T.Mesh(new T.PlaneGeometry(m*4,m*4),new T.ShadowMaterial({opacity:.16}));g.rotation.x=-Math.PI/2;g.position.set(tgt.x,b.min.y+.001,tgt.z);g.receiveShadow=true;root.add(g);
+ if(KL){const e=m*1.4,c=KL.shadow.camera;c.left=-e;c.right=e;c.top=e;c.bottom=-e;c.near=.1;c.far=m*9;c.updateProjectionMatrix();KL.position.set(tgt.x+m*.9,tgt.y+m*2.2,tgt.z+m*1.3);KL.target.position.copy(tgt);KL.target.updateMatrixWorld()}}
+function panel(){const el=$('#h3p'),A=ANIMALS.includes(kind),sp=A?[]:specs(),sk=SW[SK[kind]],cur=String(P.color||'').toLowerCase(),demo=/نموذج توضيحي/.test(P.title||'');
+ let h='<div class="h3seg"><button type="button" class="'+(mode==='360'?'on':'')+'" data-h3m="360">🔄 عرض 360°</button><button type="button" class="'+(mode==='try'?'on':'')+'" data-h3m="try">🖐️ تفاعلي</button></div>';
+ if(A)h+='<div class="h3row">'+ANIMALS.map(k=>'<button type="button" class="pill '+(k===kind?'on':'')+'" data-h3k="'+k+'">'+NAMES[k]+'</button>').join('')+'</div>';
+ if(sp.length)h+='<div class="h3sp">'+sp.map(x=>'<div><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div>';
+ if(demo&&sp.length)h+='<p class="h3n">نموذج توضيحي بأبعاد افتراضية</p>';
+ if(sk)h+='<div class="h3sw"><span>اللون</span>'+sk.map(c=>'<button type="button" class="h3c'+(cur===c[0].toLowerCase()?' on':'')+'" data-h3c="'+c[0]+'" style="--c:'+c[0]+'" aria-label="'+c[1]+'" title="'+c[1]+'"></button>').join('')+'</div>';
+ h+='<p class="h3t">'+(A?'دوس على الحيوان يطلّع صوته ويتحرك. جرّب تدوس على الضرع في البقرة 🥛':mode==='try'?'اضغط على أي جزء (باب، غطاء، علبة) عشان يتفتح أو يتحرك.':'المعاينة بتلف لوحدها. اسحب للف وقرّب ببصباعين.')+'</p>';
+ h+='<div class="h3row"><button type="button" class="pill" data-h3a="1">افتح الكل</button><button type="button" class="pill" data-h3a="0">اقفل الكل</button>'+[['f','أمام'],['s','جنب'],['b','خلف'],['t','فوق'],['u','تحت']].map(v=>'<button type="button" class="pill" data-h3v="'+v[0]+'">'+v[1]+'</button>').join('')+'</div>';
+ if(QK.includes(kind))h+='<button type="button" class="h3q" data-h3q="1">💬 اطلب عرض سعر عبر واتساب</button>';
+ el.innerHTML=h;$('#h3v').dataset.bg=mode==='360'?'white':BG[kind]}
+function css3(){if($('#h3css3'))return;const s=document.createElement('style');s.id='h3css3';s.textContent=`#h3p{display:block;padding:12px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--card);max-height:46vh;overflow:auto}
+.h3seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:10px}
+.h3seg button{flex:1;border:0;background:none;padding:8px;border-radius:9px;font-family:inherit;font-weight:600;font-size:13px;color:var(--mut);cursor:pointer}
+.h3seg button.on{background:var(--p,#0F766E);color:#fff}
+.h3sp{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-bottom:10px}
+.h3sp div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 9px}
+.h3sp small{display:block;color:var(--mut);font-size:11px}.h3sp b{font-size:13px}
+.h3sw{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;color:var(--mut)}
+.h3c{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--c);padding:0;cursor:pointer}
+.h3c.on{border-color:var(--p,#0F766E);box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--p,#0F766E)}
+.h3row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}.h3row .pill{flex:none}
+.h3q{width:100%;border:0;border-radius:12px;padding:13px;background:#16a34a;color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer}
+#h3p .h3n,#h3p .h3t{margin:0 0 8px;font-size:12px;color:var(--mut);text-align:center}
+#h3hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.72);color:#fff;font-size:12px;padding:6px 12px;border-radius:99px;pointer-events:none;animation:h3f 4.6s forwards;white-space:nowrap}
+@keyframes h3f{0%,80%{opacity:1}100%{opacity:0}}
+#hz3d.fs #h3p,#hz3d.spin #h3r,#hz3d.spin #h3f{display:none}
+#h3v[data-bg=white]{background:radial-gradient(ellipse at 50% 38%,#fff 0,#eef3f1 58%,#dce6e3 100%)}
+[data-theme=dark] #h3v[data-bg=white]{background:radial-gradient(ellipse at 50% 38%,#223a3f 0,#122428 60%,#0b1416 100%)}`;document.head.appendChild(s)}
+function build(){if(root)sc.remove(root);acts=[];ticks=[];root=new T.Group();sc.add(root);M[kind]();const b=new T.Box3().setFromObject(root),s=b.getSize(new T.Vector3());tgt=b.getCenter(new T.Vector3());view.fit=view.d=Math.max(s.x,s.y,s.z)*1.9+.4;shadow(b,s);studio(b,s)}
 function shadow(b,s){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,62);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,128,128);
  const z=Math.max(s.x,s.z)*1.6+.3,p=new T.Mesh(new T.PlaneGeometry(z,z),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true,depthWrite:false}));p.rotation.x=-Math.PI/2;p.position.set((b.min.x+b.max.x)/2,b.min.y+.002,(b.min.z+b.max.z)/2);root.add(p)}
 function fit(){const v=$('#h3v');if(!v||!R)return;R.setSize(v.clientWidth,v.clientHeight);cam.aspect=v.clientWidth/Math.max(1,v.clientHeight);cam.updateProjectionMatrix()}
 function loop(){raf=requestAnimationFrame(loop);if(!ov||ov.hidden||spinOn)return;acts.forEach(a=>{a.t+=(a.g-a.t)*a.sp;if(Math.abs(a.g-a.t)<.002)a.t=a.g;a.fn(a.t)});ticks.forEach(f=>f(.016));
- const c=Math.cos(view.p);cam.position.set(tgt.x+view.d*c*Math.sin(view.y),tgt.y+view.d*Math.sin(view.p),tgt.z+view.d*c*Math.cos(view.y));cam.lookAt(tgt);R.render(sc,cam)}
+ if(VT){view.y+=(VT.y-view.y)*.16;view.p+=(VT.p-view.p)*.16;if(VT.d)view.d+=(VT.d-view.d)*.16;if(Math.abs(VT.y-view.y)+Math.abs(VT.p-view.p)<.004){view.y=VT.y;view.p=VT.p;if(VT.d)view.d=VT.d;VT=null}}else if(!drag){if(Math.abs(view.vy)>.0004){view.y+=view.vy;view.vy*=.93}else if(mode==='360'&&performance.now()-lastT>2200)view.y+=.0035}
+const c=Math.cos(view.p);cam.position.set(tgt.x+view.d*c*Math.sin(view.y),tgt.y+view.d*Math.sin(view.p),tgt.z+view.d*c*Math.cos(view.y));cam.lookAt(tgt);R.render(sc,cam)}
 function pick(e){if(spinOn||!root||!cvs)return;const r=cvs.getBoundingClientRect(),m=new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),rc=new T.Raycaster();rc.setFromCamera(m,cam);for(const x of rc.intersectObjects(root.children,true)){const a=x.object.userData.act;if(a){if(a.tap)a.tap(a);else a.g=a.g?0:1;return}}}
 function wire(){const v=$('#h3v');let pts={},moved=0,pd=0;
- v.addEventListener('pointerdown',e=>{v.setPointerCapture&&v.setPointerCapture(e.pointerId);pts[e.pointerId]=[e.clientX,e.clientY];moved=0;const k=Object.values(pts);pd=k.length==2?Math.hypot(k[0][0]-k[1][0],k[0][1]-k[1][1]):0});
+ v.addEventListener('pointerdown',e=>{v.setPointerCapture&&v.setPointerCapture(e.pointerId);pts[e.pointerId]=[e.clientX,e.clientY];moved=0;drag=1;VT=null;view.vy=0;lastT=performance.now();const hh=$('#h3hint');if(hh)hh.remove();const k=Object.values(pts);pd=k.length==2?Math.hypot(k[0][0]-k[1][0],k[0][1]-k[1][1]):0});
  v.addEventListener('pointermove',e=>{const p=pts[e.pointerId];if(!p)return;const dx=e.clientX-p[0],dy=e.clientY-p[1];pts[e.pointerId]=[e.clientX,e.clientY];const k=Object.values(pts);
   if(k.length==2){const d=Math.hypot(k[0][0]-k[1][0],k[0][1]-k[1][1]);if(pd)view.d=Math.max(view.fit*.35,Math.min(view.fit*2.6,view.d*pd/d));pd=d;moved=9;return}
-  moved+=Math.abs(dx)+Math.abs(dy);view.y-=dx*.008;view.p=Math.max(-1.45,Math.min(1.45,view.p+dy*.006))});
- const up=e=>{const was=pts[e.pointerId];delete pts[e.pointerId];if(was&&moved<8&&mode==='try'&&e.type==='pointerup')pick(e)};v.addEventListener('pointerup',up);v.addEventListener('pointercancel',up);
+  moved+=Math.abs(dx)+Math.abs(dy);view.y-=dx*.008;view.vy=-dx*.008;view.p=Math.max(-1.45,Math.min(1.45,view.p+dy*.006))});
+ const up=e=>{const was=pts[e.pointerId];delete pts[e.pointerId];drag=Object.keys(pts).length?1:0;lastT=performance.now();if(was&&moved<8&&mode==='try'&&e.type==='pointerup')pick(e)};v.addEventListener('pointerup',up);v.addEventListener('pointercancel',up);
  v.addEventListener('wheel',e=>{e.preventDefault();view.d=Math.max(view.fit*.35,Math.min(view.fit*2.6,view.d*(1+e.deltaY*.001)))},{passive:false});
  ov.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
   if(t.id==='h3x'){closeOv();return}
+  if(t.id==='h3r'){goV(.5,.15,view.fit);return}
+  if(t.id==='h3f'){ov.classList.toggle('fs');setTimeout(fit,60);return}
+  if(t.dataset.h3c){P.color=t.dataset.h3c;const d0=view.d;build();view.d=d0;panel();return}
+  if(t.dataset.h3q){quote();return}
   if(t.dataset.h3k){kind=t.dataset.h3k;P={};acts.forEach(a=>a.g=0);build();panel();return}
   if(t.dataset.h3m){mode=t.dataset.h3m;acts.forEach(a=>a.g=0);panel();return}
   if(t.dataset.h3a!==undefined){acts.forEach(a=>a.g=+t.dataset.h3a);return}
-  if(t.dataset.h3v){const m={f:[0,.1],s:[1.57,.1],b:[3.14,.1],t:[.01,1.45],u:[.01,-1.4]}[t.dataset.h3v];view.y=m[0];view.p=m[1]}})}
+  if(t.dataset.h3v){const m={f:[0,.1],s:[1.57,.1],b:[3.14,.1],t:[.01,1.45],u:[.01,-1.4]}[t.dataset.h3v];goV(m[0],m[1])}})}
 function closeOv(){if(ov)ov.hidden=true;document.body.style.overflow='';if(pushed){pushed=0;skip=1;try{history.back()}catch(_){window.hz3dOpen=0}}else window.hz3dOpen=0}
 addEventListener('popstate',()=>{if(skip)skip=0;else if(ov&&!ov.hidden){ov.hidden=true;document.body.style.overflow='';pushed=0}setTimeout(()=>{window.hz3dOpen=0},0)});
-async function open(k,p){P=p||{};spinOn=0;kind=M[k]?k:'phone';mode='try';css();css2();
+async function open(k,p){P=p||{};spinOn=0;kind=M[k]?k:'phone';mode=PRO.includes(kind)?'360':'try';css();css2();css3();
  if(!ov){ov=document.createElement('div');ov.id='hz3d';ov.innerHTML='<div class="h3h"><button id="h3x" type="button" aria-label="إغلاق">✕</button><b id="h3t"></b><span style="width:40px"></span></div><div id="h3v"><p class="empty" style="padding:30px;text-align:center">جاري تحميل المعاينة…</p></div><div id="h3p"></div>';document.body.appendChild(ov);wire()}
- ov.hidden=false;document.body.style.overflow='hidden';window.hz3dOpen=1;if(!pushed){try{history.pushState({hz3d:1},'');pushed=1}catch(_){}}$('#h3t').textContent='معاينة: '+(P.title||NAMES[kind]);
+ ov.hidden=false;document.body.style.overflow='hidden';window.hz3dOpen=1;if(!pushed){try{history.pushState({hz3d:1},'');pushed=1}catch(_){}}ov.classList.remove('spin','fs');hdr();$('#h3t').textContent='معاينة: '+(P.title||NAMES[kind]);
  try{await loadT()}catch(_){$('#h3v').innerHTML='<p class="msg" style="padding:30px;text-align:center">محتاج إنترنت عشان تتحمّل المعاينة.</p>';return}
  T=window.THREE;const v=$('#h3v');
- if(!R){v.innerHTML='';R=new T.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));v.appendChild(R.domElement);cvs=R.domElement;sc=new T.Scene();cam=new T.PerspectiveCamera(40,1,.05,100);sc.add(new T.HemisphereLight(0xffffff,0x667788,.95));const d=new T.DirectionalLight(0xffffff,.8);d.position.set(2,4,3);sc.add(d);addEventListener('resize',fit);loop()}
+ if(!R){v.innerHTML='';R=new T.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));v.appendChild(R.domElement);cvs=R.domElement;sc=new T.Scene();cam=new T.PerspectiveCamera(40,1,.05,100);sc.add(new T.HemisphereLight(0xffffff,0x667788,.8));R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;KL=new T.DirectionalLight(0xffffff,.85);KL.castShadow=true;KL.shadow.mapSize.set(1024,1024);KL.shadow.bias=-.0004;KL.position.set(2,4,3);sc.add(KL);sc.add(KL.target);const fl=new T.DirectionalLight(0xdbeafe,.28);fl.position.set(-3,2,-2);sc.add(fl);const rm=new T.DirectionalLight(0xffffff,.22);rm.position.set(-1,3,-4);sc.add(rm);addEventListener('resize',fit);loop()}
  else if(!v.contains(cvs)){v.innerHTML='';v.appendChild(cvs)}
- view.y=.5;view.p=.15;build();panel();fit();setTimeout(fit,60)}
+ view.y=.5;view.p=.15;view.vy=0;VT=null;lastT=performance.now();build();panel();fit();setTimeout(fit,60);addHint()}
 /* ===== v16: new 3D kinds (parametric: they read P = supplier/product params) + 360 photo viewer ===== */
 Object.assign(NAMES,{wardrobe:'دولاب',bed:'سرير',door:'باب',window:'شباك UPVC',kitchen:'مطبخ',sofa:'ركنة / كنب',table:'سفرة',car:'سيارة',shutter:'شتر',profile:'قطاع UPVC',planks:'خشب',glass:'زجاج',house:'عقار (نموذج مبسّط)'});
 Object.assign(BG,{wardrobe:'room',bed:'room',door:'wall',window:'wall',kitchen:'kitchen',sofa:'living',table:'living',car:'garage',shutter:'wall',profile:'white',planks:'shop',glass:'shop',house:'living'});
@@ -217,10 +271,10 @@ M.house=function(){
 
 /* ---- 360° photo viewer ---- */
 async function openSpin(urls,title){
- css();css2();
+ css();css2();css3();
  if(!ov){ov=document.createElement('div');ov.id='hz3d';ov.innerHTML='<div class="h3h"><button id="h3x" type="button" aria-label="إغلاق">✕</button><b id="h3t"></b><span style="width:40px"></span></div><div id="h3v"></div><div id="h3p"></div>';document.body.appendChild(ov);wire()}
  ov.hidden=false;document.body.style.overflow='hidden';window.hz3dOpen=1;if(!pushed){try{history.pushState({hz3d:1},'');pushed=1}catch(_){}}
- spinOn=1;$('#h3t').textContent=title||'معاينة 360°';
+ spinOn=1;ov.classList.add('spin');ov.classList.remove('fs');$('#h3t').textContent=title||'معاينة 360°';
  const v=$('#h3v');v.dataset.bg='white';v.innerHTML='<img id="h3img" alt="" draggable="false" style="width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;pointer-events:none"><div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:12px;color:#64748b;pointer-events:none">↔ اسحب بصباعك عشان تلف المنتج</div>';
  $('#h3p').innerHTML='<p>صور المورد من كل الزوايا. اسحب يمين وشمال للف.</p>';
  const im=$('#h3img'),n=urls.length;let i=0,auto=1,ax=0;urls.forEach(u=>{const x=new Image();x.src=u});
