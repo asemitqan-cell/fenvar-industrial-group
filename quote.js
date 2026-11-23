@@ -159,6 +159,7 @@ function simSpecs(){const id=Q.sec,lines=(Q.res?Q.res.lines:Q.lines).filter(l=>l
    else if(/دريسنج/.test(n))sp={kind:'wardrobe',type:'drawers',w:240};
    else if(/مطبخ/.test(n))sp={kind:'kitchen',type:'hinged',w:240,h:90,d:60};
    else if(/باب خشب/.test(n))sp={kind:'door',type:'hinged',glass:0,tint};
+   else if(/سرير/.test(n))sp={kind:'bed'};
    if(sp)sp.color=sp.kind==='door'?pickC(SC,t,'brown'):pickC(SW,t,'walnut');
   }else if(id==='iron'){
    if(/باب حديد/.test(n))sp={kind:'door',type:'hinged',glass:0,color:'black',prof:60};
@@ -169,7 +170,9 @@ function simSpecs(){const id=Q.sec,lines=(Q.res?Q.res.lines:Q.lines).filter(l=>l
  return out}
 function simBtns(multi){const a=simSpecs();if(!multi)return `<button type="button" class="pill" style="width:100%;margin:8px 0" data-q="sim:0">🧊 ${T('Preview your order in 3D','شاهد عينة لطلبك 3D')}</button>`;
  if(!a.length)return '';return `<div style="display:grid;gap:6px;margin:10px 0">${a.map((x,i)=>`<button type="button" class="btn" data-q="sim:${i}">🧊 ${T('Preview your order','شاهد عينة لطلبك')}: ${E(x.label)}</button>`).join('')}</div>`}
-function openSim(i){const a=simSpecs(),x=a[+i||0];if(!x){if(typeof toast==='function')toast(T('Pick an item like a window, door or wardrobe first.','اختار بند زي شباك أو باب أو دولاب الأول.'));return}if(window.hzSim)hzSim.open(x.spec);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}
+const WH={walnut:'#6B4423',oak:'#B58B52',white:'#EDEBE6',wenge:'#3A2A22',gray:'#8D9196'};
+function openSim(i){const a=simSpecs(),x=a[+i||0];if(x&&x.spec.kind==='bed'&&typeof hzLoad==='function'){const sp=x.spec;hzLoad('sec-3d').then(()=>{if(window.hz3d)hz3d.open('bed',{title:x.label,color:WH[sp.color]||'#8B5A2B',w:sp.w,l:sp.h})}).catch(()=>{});return}
+ if(!x){if(typeof toast==='function')toast(T('Pick an item like a window, door or wardrobe first.','اختار بند زي شباك أو باب أو دولاب الأول.'));return}if(window.hzSim)hzSim.open(x.spec);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}
 
 function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTML()}
 
