@@ -7,12 +7,13 @@
 const T=(en,ar)=>typeof L==='function'?L(en,ar):ar;
 const E=s=>typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $q=s=>document.querySelector(s);
-const MAP={upvc:'upvc',glass:'upvc',wood:'wood',furniture:'wood',health:'nursing',iron:'iron',paints:'paints'};
+const MAP={upvc:'upvc',glass:'upvc',wood:'wood',furniture:'furniture',health:'nursing',iron:'iron',paints:'paints'};
+const OPEN_SECS=['upvc','furniture','wood'],HUB=['upvc','furniture'];
 const INTENT=/(عرض\s*(ال)?سعر|عروض\s*(ال)?[اأ]سعار|كوتيشن|تسعير|quotation|\bquote\b|price\s*quote|\bangebot\b)/i;
 const PRICEW=/(بكام|بكم|كام\s*سعر|سعر|اسعار|أسعار|تكلفة|تكلف|price|cost|how much|preis)/i;
-const SEC_WORDS=[['installment',/(قسط|تقسيط|بالقسط|installment)/i],['nursing',/(تمريض|ممرض|حقن|كانيولا|رعاية مسنين|nursing)/i],['accessories',/(مفصلة|كالون|ترباس|مقبض|عين سحرية|اكسسوار|إكسسوار)/i],['upvc',/(upvc|يو\s*بي\s*في\s*سي|قطاع|قطاعات|شباك|شبابيك|شتر|بلكونة|دبل جلاس|سيكوريت|زجاج)/i],['wood',/(خشب|أبلكاش|ابلكاش|mdf|مطبخ|دولاب|موبيليا)/i],['paints',/(بويات|بويه|بوية|دهان|دهانات|نقاش)/i],['iron',/(حديد|حدادة|درابزين|بوابة|سلم)/i]];
+const SEC_WORDS=[['installment',/(قسط|تقسيط|بالقسط|installment)/i],['nursing',/(تمريض|ممرض|حقن|كانيولا|رعاية مسنين|nursing)/i],['accessories',/(مفصلة|كالون|ترباس|مقبض|عين سحرية|اكسسوار|إكسسوار)/i],['upvc',/(upvc|يو\s*بي\s*في\s*سي|قطاع|قطاعات|شباك|شبابيك|شتر|بلكونة|دبل جلاس|سيكوريت|زجاج)/i],['furniture',/(موبيليا|اثاث|أثاث|غرفة نوم|غرف نوم|أوضة|اوضة|سفرة|ركنة|انتريه|أنتريه|دولاب|دريسنج|مطبخ|سرير|تسريحة)/i],['wood',/(خشب|أبلكاش|ابلكاش|mdf)/i],['paints',/(بويات|بويه|بوية|دهان|دهانات|نقاش)/i],['iron',/(حديد|حدادة|درابزين|بوابة|سلم)/i]];
 const OR={belgian:['بلجيكي','الخامات عالية الجودة'],turkish:['تركي','عالي - متوسط'],egyptian:['مصري','متوسط - أقل']};
-const Q={sec:null,origin:'',stats:{},sent:0,lines:[],custom:'',budget:'',city:'',prices:null,res:null,busy:0,msg:''};
+const Q={sec:null,step:1,system:'',ftype:'',origin:'',stats:{},sent:0,lines:[],custom:'',budget:'',city:'',prices:null,res:null,busy:0,msg:''};
 let AVAIL={};
 
 function ensureModal(){if($q('#qtModal'))return;
@@ -27,7 +28,9 @@ function ensureModal(){if($q('#qtModal'))return;
 #qtModal .qt-s{font-size:12px;color:var(--mut)}#qtModal .qt-t{font-size:20px;font-weight:800}
 #qtModal table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}#qtModal td{padding:3px 0;border-bottom:1px dashed var(--line)}
 #qtModal .qt-o label{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px;margin:6px 0;cursor:pointer}
-#qtModal .qt-b .qt-o input{width:auto;margin:0}
+#qtModal .qt-b .qt-o input{width:auto;margin:0}#qtModal .qt-st{display:flex;gap:4px;margin:10px 0 14px}#qtModal .qt-st span{flex:1;text-align:center;font-size:11px;color:var(--mut)}#qtModal .qt-st i{display:grid;place-items:center;width:26px;height:26px;margin:0 auto 3px;border-radius:50%;background:var(--line);color:var(--mut);font-style:normal;font-weight:700}#qtModal .qt-st .on i{background:var(--p);color:#fff}#qtModal .qt-st .on{color:var(--p);font-weight:700}#qtModal .qt-st .ok i{background:#d1fae5;color:#065f46}
+#qtModal .qt-h{margin:6px 0 8px;font-size:16px}#qtModal .qt-tc{align-items:flex-start!important}#qtModal .qt-tc span{display:grid;gap:2px}#qtModal .qt-tc small{color:var(--mut);font-size:12px}#qtModal .qt-tc .qt-w{color:var(--p)}#qtModal .qt-gr{display:grid;grid-template-columns:1fr 1fr;gap:6px}#qtModal .qt-gr label{margin:0}
+#qtModal .qt-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}#qtModal .qt-nav .btn{flex:1}
 .qt-card{cursor:pointer}`;document.head.appendChild(st);
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="qtModal" hidden><div class="sheet st"><button type="button" class="x" data-qclose>×</button><div id="qtBody"></div></div></div>')}
 
@@ -84,28 +87,67 @@ async function loadPrices(secId){
  AVAIL={};(Q.prices||[]).forEach(x=>{(AVAIL[x.group_key]=AVAIL[x.group_key]||new Set()).add(x.name)});
  return Q.prices}
 
-const orgNote=()=>Q.sec==='upvc'&&OR[Q.origin]?'القطاعات المطلوبة: '+OR[Q.origin][0]+' ('+OR[Q.origin][1]+')':'';
-function originHTML(){if(Q.sec!=='upvc')return '';
- return `<div class="qt-o" style="margin-top:10px"><b style="display:block;margin-bottom:4px">${T('Our profile (section) types','القطاعات بتاعتنا (اختار نوع القطاعات)')}</b>${Object.keys(OR).map((k,i)=>`<label><input type="radio" name="qorigin" data-qf="origin" value="${k}"${Q.origin===k?' checked':''}><span>${i+1}- ${OR[k][0]} (${OR[k][1]})</span></label>`).join('')}</div>`}
-function newLine(){const s=sec(Q.sec);const g=s.groups.find(g=>g.k!=='install')||s.groups[0];return{g:g.k,name:'',qty:1,note:''}}
+/* ---- أنظمة / قطاعات UPVC (المالك يقدر يضيف عليها) + أنواع الموبيليا ---- */
+const SYS0=[{n:'SETI 60',d:'نظام SETI',g:'الأنظمة'},{n:'SETI 90',d:'نظام SETI',g:'الأنظمة'},{n:'SETI 100',d:'نظام SETI',g:'الأنظمة'},{n:'FRANKFORT 70',d:'نظام FRANKFORT',g:'الأنظمة'},{n:'FRANKFORT 120',d:'نظام FRANKFORT',g:'الأنظمة'},{n:'FRANKFORT 140',d:'نظام FRANKFORT',g:'الأنظمة'},
+ {n:'بلجيكي',d:'الخامات عالية الجودة',g:'حسب المنشأ'},{n:'تركي',d:'عالي - متوسط',g:'حسب المنشأ'},{n:'مصري',d:'متوسط - أقل',g:'حسب المنشأ'}];
+const SYSX={extra:[],loaded:0};
+function lsGet(){try{return JSON.parse(localStorage.getItem('hz_sys_extra')||'[]')}catch(_){return[]}}
+function getSys(){const seen={},out=[];SYS0.concat(SYSX.extra||[]).forEach(x=>{if(x&&x.n&&!seen[x.n]){seen[x.n]=1;out.push(x)}});return out}
+async function loadSys(){SYSX.extra=lsGet();
+ try{if(sb){const r=await sb.from('hz_settings').select('value').eq('key','upvc_systems').maybeSingle();if(!r.error&&r.data&&Array.isArray(r.data.value))SYSX.extra=r.data.value}}catch(_){}
+ SYSX.loaded=1;return getSys()}
+function isOwner(){try{return !!(user&&typeof OWNER_EMAILS!=='undefined'&&OWNER_EMAILS.includes(user.email))}catch(_){return false}}
+async function saveSys(){try{localStorage.setItem('hz_sys_extra',JSON.stringify(SYSX.extra))}catch(_){}
+ try{if(sb){const r=await sb.from('hz_settings').upsert({key:'upvc_systems',value:SYSX.extra});if(r.error)throw r.error;return 1}}catch(_){}
+ return 0}
+async function addSys(n,d,g){n=String(n||'').trim();if(!n||!isOwner())return -1;if(getSys().some(x=>x.n===n))return -2;
+ SYSX.extra.push({n:n,d:String(d||'').trim(),g:String(g||'قطاعات إضافية').trim()||'قطاعات إضافية'});return saveSys()}
+async function delSys(n){if(!isOwner())return -1;SYSX.extra=SYSX.extra.filter(x=>x.n!==n);return saveSys()}
+window.hzSys={get:getSys,load:loadSys,add:addSys,del:delSys,owner:isOwner,custom:n=>(SYSX.extra||[]).some(x=>x.n===n)};
+
+const FT={commission:{n:'عمولة',ico:'🔨',d:'بتفصّل الموبيليا بالمقاس والتصميم اللي تحدده، وبينفّذها النجارين.',w:'الموردين: ورش ونجارين'},
+ finished:{n:'موبيليا متشطبة جاهزة',ico:'🛋️',d:'موبيليا جاهزة ومدهونة، بتتشاف في المعرض وتستلمها.',w:'الموردين: معارض الموبيليا (بعد الدهان)'},
+ white:{n:'نجارة أبيض',ico:'🪚',d:'موبيليا خشب قبل الدهان، تدهنها بالشكل واللون اللي تحبه.',w:'الموردين: معارض النجارة الأبيض (قبل الدهان)'}};
+window.HZ_FTYPES=FT;
+const orgNote=()=>{if(Q.sec==='upvc')return Q.system?T('Requested system / profile: ','النظام / القطاع المطلوب: ')+Q.system:'';
+ if(Q.sec==='furniture'&&FT[Q.ftype])return T('Furniture type: ','نوع الموبيليا: ')+FT[Q.ftype].n;return ''};
+function newLine(){const s=sec(Q.sec);let g=s.groups.find(g=>g.k!=='install')||s.groups[0];if(Q.sec==='furniture'&&FT[Q.ftype])g=s.groups.find(x=>x.k===Q.ftype)||g;return{g:g.k,name:'',qty:1,note:''}}
 function names(gk){const s=sec(Q.sec),g=s.groups.find(x=>x.k===gk);if(!g)return[];
  const av=AVAIL[gk]?[...AVAIL[gk]]:[];return [...new Set(g.pre.filter(n=>av.includes(n)).concat(av))]}
 
-function formHTML(){const s=sec(Q.sec);
+/* ---- الخطوات: (1) النظام/النوع  (2) البنود  (3) التفاصيل  (4) العروض ---- */
+function stepsBar(){const n=Q.sec==='upvc'?['النظام','البنود','التفاصيل','العروض']:['النوع','البنود','التفاصيل','العروض'],cur=Q.res?4:Q.step;
+ return `<div class="qt-st">${n.map((x,i)=>`<span class="${i+1===cur?'on':i+1<cur?'ok':''}"><i>${i+1<cur?'✓':i+1}</i><b>${x}</b></span>`).join('')}</div>`}
+function step1HTML(){
+ if(Q.sec==='furniture')return `<h4 class="qt-h">${T('What kind of furniture?','عايز موبيليا من أنهي نوع؟')}</h4><div class="qt-o">${Object.keys(FT).map(k=>`<label class="qt-tc"><input type="radio" name="qft" data-qf="ftype" value="${k}"${Q.ftype===k?' checked':''}><span><b>${FT[k].ico} ${FT[k].n}</b><small>${FT[k].d}</small><small class="qt-w">${FT[k].w}</small></span></label>`).join('')}</div>`;
+ if(Q.sec==='upvc'){const L2=getSys(),gs=[...new Set(L2.map(x=>x.g))];
+  return `<h4 class="qt-h">${T('Pick the profile system','اختار نظام القطاعات')}</h4><div class="qt-o"><label class="qt-tc"><input type="radio" name="qsys" data-qf="system" value=""${!Q.system?' checked':''}><span><b>${T('Any system','أي نظام')}</b><small>${T('Show me all offers','اعرضلي كل العروض المتاحة')}</small></span></label></div>`
+  +gs.map(g=>`<div class="qt-s" style="margin:10px 0 2px">${E(g)}</div><div class="qt-o qt-gr">${L2.filter(x=>x.g===g).map(x=>`<label class="qt-tc"><input type="radio" name="qsys" data-qf="system" value="${E(x.n)}"${Q.system===x.n?' checked':''}><span><b>${E(x.n)}</b>${x.d?`<small>${E(x.d)}</small>`:''}</span></label>`).join('')}</div>`).join('')}
+  return ''}
+function step2HTML(){const s=sec(Q.sec),fur=Q.sec==='furniture';
  const lines=Q.lines.map((l,i)=>{const g=s.groups.find(x=>x.k===l.g)||s.groups[0],nn=names(g.k);
   return `<div class="qt-l"><button type="button" class="qt-x" data-q="del:${i}">×</button>
-  <select data-qi="${i}" data-f="g">${s.groups.map(x=>`<option value="${x.k}"${x.k===l.g?' selected':''}>${x.ar}</option>`).join('')}</select>
+  ${fur?'':`<select data-qi="${i}" data-f="g">${s.groups.map(x=>`<option value="${x.k}"${x.k===l.g?' selected':''}>${x.ar}</option>`).join('')}</select>`}
   ${nn.length?`<select data-qi="${i}" data-f="name"><option value="">${T('Choose','اختار')}…</option>${nn.map(n=>`<option${n===l.name?' selected':''}>${E(n)}</option>`).join('')}</select>`
-   :`<input data-qi="${i}" data-f="name" value="${E(l.name)}" placeholder="${T('Type what you need','اكتب اللي محتاجه')}">`}
+   :`<input data-qi="${i}" data-f="name" list="qtdl${i}" value="${E(l.name)}" placeholder="${T('Type or pick what you need','اكتب أو اختار اللي محتاجه')}"><datalist id="qtdl${i}">${g.pre.map(n=>`<option value="${E(n)}">`).join('')}</datalist>`}
   <div class="qt-2"><input type="number" min="0" step="any" inputmode="decimal" data-qi="${i}" data-f="qty" value="${E(l.qty)}" placeholder="${T('Quantity','الكمية')}"><input data-qi="${i}" data-f="note" value="${E(l.note)}" placeholder="${T('Size / color (optional)','المقاس / اللون (اختياري)')}"></div></div>`}).join('');
- return `<div class="qt-b"><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><h3 style="margin:0">${s.ico} ${T('Request a quote','طلب عرض سعر')} · ${s.ar}</h3></div>
- <p class="qt-s">${T('Tell us what you need. We build the quote from our suppliers\' own prices.','قولنا محتاج إيه، وإحنا بنحسب العرض من أسعار الموردين نفسهم.')}</p>
+ return `<h4 class="qt-h">${fur&&FT[Q.ftype]?FT[Q.ftype].ico+' '+FT[Q.ftype].n+' · ':''}${T('What do you need?','محتاج إيه؟')}</h4>
  ${Q.prices&&!Q.prices.length?`<p class="msg">${T('No supplier prices yet for this section. You can still send a custom request.','لسه مفيش أسعار موردين في القسم ده. تقدر تبعت طلب خاص.')}</p>`:''}
- ${lines}<button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>
- <label style="display:block;margin-top:10px"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
- ${originHTML()}
+ ${lines}<button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>`}
+function step3HTML(){return `<h4 class="qt-h">${T('Details','تفاصيل الطلب')}</h4>
+ <label style="display:block"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
  <div class="qt-2" style="margin-top:10px"><label><span>${T('Budget (optional)','ميزانيتك كام (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
- ${simBtns(0)}<p class="msg">${E(Q.msg)}</p><button type="button" class="btn" data-q="calc"${Q.busy?' disabled':''}>${T('Show my quotes','اعرض عروض الأسعار')}</button></div>`}
+ ${simBtns(0)}`}
+function formHTML(){const s=sec(Q.sec),st=Q.step,last=st===3;
+ const body=st===1?step1HTML():st===2?step2HTML():step3HTML();
+ return `<div class="qt-b"><h3 style="margin:0 0 4px">${s.ico} ${T('Request a quote','طلب عرض سعر')} · ${s.ar}</h3>${stepsBar()}${body}<p class="msg">${E(Q.msg)}</p>
+ <div class="qt-nav">${st>1?`<button type="button" class="pill" data-q="prev">${lang==='ar'?'›':'‹'} ${T('Back','السابق')}</button>`:'<span></span>'}${last?`<button type="button" class="btn" data-q="calc"${Q.busy?' disabled':''}>${T('Show my quotes','اعرض عروض الأسعار')}</button>`:`<button type="button" class="btn" data-q="next">${T('Next','التالي')} ${lang==='ar'?'‹':'›'}</button>`}</div></div>`}
+function nextStep(){Q.msg='';
+ if(Q.step===1){if(Q.sec==='furniture'){if(!FT[Q.ftype]){Q.msg=T('Pick a furniture type first.','اختار نوع الموبيليا الأول.');draw();return}
+   Q.lines.forEach(l=>{if(l.g!==Q.ftype){l.g=Q.ftype;l.name=''}})}Q.step=2}
+ else if(Q.step===2){if(!Q.lines.some(l=>String(l.name).trim()&&+l.qty>0)){Q.msg=T('Add at least one item.','ضيف بند واحد على الأقل.');draw();return}Q.step=3}
+ draw();const m=$q('#qtModal .sheet');if(m)m.scrollTop=0}
+function prevStep(){Q.msg='';if(Q.step>1)Q.step--;draw()}
 
 async function qStats(){try{const ids=(Q.res?Q.res.res:[]).map(x=>x.id);if(!ids.length)return;const r=await sb.rpc('hzq_provider_stats',{p_ids:ids});if(!r.error&&r.data){Q.stats=r.data;if(Q.res)draw()}}catch(_){}}
 const ageTag=u=>{if(!u)return '';const d=Math.floor((Date.now()-new Date(u))/864e5);return `<span class="qt-s"> · ${d<1?T('prices updated today','أسعاره محدّثة النهاردة'):T('prices updated '+d+'d ago','أسعاره محدّثة من '+d+' يوم')}</span>`};
@@ -154,7 +196,7 @@ function simSpecs(){const id=Q.sec,lines=(Q.res?Q.res.lines:Q.lines).filter(l=>l
    else if(/باب مفصلي/.test(n))sp={kind:'door',type:'hinged'};
    else if(/زجاج|سيكوريت|دبل|عاكس|ملون/.test(n)){sp={kind:'glass',type:'fixed',tint:/عاكس/.test(n)?'mirror':/ملون/.test(n)?'bronze':tint};const th=(nt.match(/(\d+)\s*(?:مم|mm)?/)||[])[1];if(th&&[6,8,10,12].includes(+th))sp.thick=+th}
    if(sp){sp.color=pickC(SC,t,'white');if(sp.kind!=='glass'||!sp.tint)sp.tint=sp.tint||tint}
-  }else if(id==='wood'){
+  }else if(id==='wood'||id==='furniture'){
    if(/دولاب/.test(n))sp={kind:'wardrobe',type:/جرار|سحاب/.test(nt)?'sliding':'hinged'};
    else if(/دريسنج/.test(n))sp={kind:'wardrobe',type:'drawers',w:240};
    else if(/مطبخ/.test(n))sp={kind:'kitchen',type:'hinged',w:240,h:90,d:60};
@@ -176,13 +218,15 @@ function openSim(i){const a=simSpecs(),x=a[+i||0];if(x&&x.spec.kind==='bed'&&typ
 
 function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTML()}
 
-async function openQuote(secId,seed){
+async function openQuote(secId,seed,opt){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
- if(id!=='upvc'&&id!=='wood'){if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
+ if(!OPEN_SECS.includes(id)){if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
  if(!user){Q.pend=[secId,seed];if(typeof toast==='function')toast(T('Sign in first to request a quote.','سجّل دخول الأول عشان تطلب عرض سعر.'));if(typeof needLogin==='function')needLogin();return true}
- Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=seed||'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
+ Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=typeof seed==='string'?seed:'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
+ opt=opt||{};Q.step=1;Q.system=opt.system||'';Q.ftype=opt.type&&FT[opt.type]?opt.type:'';
  show();$q('#qtBody').innerHTML='<p class="hs-box">…</p>';
- await loadPrices(id);Q.lines=[newLine()];draw();return true}
+ await Promise.all([loadPrices(id),id==='upvc'&&!SYSX.loaded?loadSys():0]);Q.lines=[newLine()];
+ if(opt.skip&&(Q.system||Q.ftype))Q.step=2;draw();return true}
 
 async function save(chosen){
  const r=Q.res;if(!r)return;Q.msg='…';Q.ok=0;draw();
@@ -198,9 +242,11 @@ document.addEventListener('click',e=>{
  const a=e.target.closest('[data-q]');if(!a||!$q('#qtModal')||!$q('#qtModal').contains(a))return;
  const [k,v]=a.dataset.q.split(':');
  if(k==='add'){Q.lines.push(newLine());draw()}
+ else if(k==='next')nextStep()
+ else if(k==='prev')prevStep()
  else if(k==='del'){Q.lines.splice(+v,1);if(!Q.lines.length)Q.lines.push(newLine());draw()}
  else if(k==='calc'){calc();draw();qStats();if(Q.res&&(!Q.res.lines.length||!Q.res.res.length))save(null)}
- else if(k==='edit'){Q.res=null;Q.msg='';draw()}
+ else if(k==='edit'){Q.res=null;Q.msg='';Q.step=3;draw()}
  else if(k==='sim')openSim(v)
  else if(k==='send')save(v)
  else if(k==='sendall')save(null)
@@ -228,13 +274,14 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target&&e
 /* كارت "طلب عرض سعر" في أول صفحة القسم */
 function inject(){const g=$q('#grid');if(!g||typeof cat==='undefined')return;
  const id=MAP[cat];if(!id||!sec(id))return;
+ if(HUB.includes(cat))return;
  if(g.querySelector('.qt-card'))return;
  g.insertAdjacentHTML('afterbegin',`<article class="card qt-card" data-qs="${cat}"><div class="thumb"><div class="ph" style="background:linear-gradient(135deg,#0F766E,#155E75);font-size:54px">🧾</div></div><div class="cb"><h3>${T('Request a quote','طلب عرض سعر')}</h3><small>${T('Answer a few questions, get prices from suppliers','جاوب كام سؤال وخد أسعار من الموردين')}</small><button class="btn" type="button">${T('Start','ابدأ')}</button></div></article>`)}
 function boot(){const g=$q('#grid');if(!g){setTimeout(boot,300);return}
  new MutationObserver(()=>{if(!g.querySelector('.qt-card'))inject()}).observe(g,{childList:true});inject()}
 boot();
 function picker(seed){ensureModal();show();Q.res=null;
- $q('#qtBody').innerHTML=`<div class="qt-b"><h3>🧾 ${T('Request a quote','طلب عرض سعر')}</h3><p class="qt-s">${T('Pick a section','اختار القسم')}</p><div class="hs-g">${sections().map(s=>`<button type="button" class="hs-r" data-qpick="${s.id}"><span class="hs-i" style="--c:#0F766E">${s.ico}</span><span class="hs-t">${s.ar}</span></button>`).join('')}</div></div>`;
+ $q('#qtBody').innerHTML=`<div class="qt-b"><h3>🧾 ${T('Request a quote','طلب عرض سعر')}</h3><p class="qt-s">${T('Pick a section','اختار القسم')}</p><div class="hs-g">${sections().filter(s=>OPEN_SECS.includes(s.id)).map(s=>`<button type="button" class="hs-r" data-qpick="${s.id}"><span class="hs-i" style="--c:#0F766E">${s.ico}</span><span class="hs-t">${s.ar}</span></button>`).join('')}</div></div>`;
  Q.seed=seed||''}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qpick]');if(b&&$q('#qtModal')&&$q('#qtModal').contains(b))openQuote(b.dataset.qpick,Q.seed)});
 

@@ -218,11 +218,7 @@ document.addEventListener('click',e=>{const r=e.target.closest('[data-qxrow]');i
 function bootS(){const b=document.getElementById('hsBody');if(!b){setTimeout(bootS,300);return}new MutationObserver(inject).observe(b,{childList:true});inject()}
 
 /* شريط التركيز على الأقسام التلاتة في الرئيسية */
-function focusBar(){const ch=$q('#chips');if(!ch)return;let w=$q('#qxFocus');
- if(!w){w=document.createElement('div');w.id='qxFocus';
-  w.innerHTML=`<h4>اطلب عرض سعر دلوقتي</h4><div class="qx-g"><button type="button" data-qxq="upvc"><i>🪟</i>UPVC</button><button type="button" data-qxq="wood"><i>🛋️</i>موبيليا</button></div><div class="qx-m"><button type="button" class="pill" data-qxrow="mine">🧾 طلباتي</button><button type="button" class="pill" data-qxrow="prov">📥 طلبات العملاء</button></div>`;
-  const hw=$q('#hzHomeW');(hw||ch).before(w)}
- w.hidden=(typeof cat!=='undefined'&&cat!=='all')}
+function focusBar(){const w=$q('#qxFocus');if(w)w.remove()}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qxq]');if(!b)return;if(typeof window.hzQuote==='function')window.hzQuote(b.dataset.qxq)});
 function bootF(){const g=$q('#grid');if(!g){setTimeout(bootF,300);return}new MutationObserver(()=>{try{focusBar()}catch(_){}}).observe(g,{childList:true});focusBar()}
 css();bootS();bootF();

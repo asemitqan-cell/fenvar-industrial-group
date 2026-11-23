@@ -7,12 +7,17 @@ const T=(en,ar)=>typeof L==='function'?L(en,ar):ar;
 const U={m2:'متر مربع',m:'متر طولي',piece:'قطعة',set:'طقم',kg:'كجم',ton:'طن',service:'خدمة',visit:'زيارة',hour:'ساعة',shift:'شيفت 12 ساعة',day:'يوم',month:'شهر',liter:'لتر'};
 const COL=['color','اللون','t'],BR=['brand','الماركة','t'],SZ=['size','المقاسات','t'],TH=['thick','السُمك (مم)','n'],MT=['mat','الخامة','t'];
 const INST=[['m2','piece'],['تركيب','فك وتركيب','تركيب وتشطيب']];
+const RM=['غرفة نوم','غرفة أطفال','غرفة سفرة','ركنة / أنتريه','غرفة معيشة','دولاب','دريسنج','مطبخ','سرير','تسريحة','ترابيزة','مكتب'];
 const S=[
 {id:'upvc',ico:'🪟',ar:'UPVC',groups:[
- {k:'sector',ar:'القطاعات',u:['m2','piece'],pre:['شباك مفصلي','شباك سحاب','باب بلكونة','باب مفصلي','فيكس','قلاب'],f:[BR,COL,SZ]},
+ {k:'sector',ar:'القطاعات',u:['m2','piece'],pre:['شباك مفصلي','شباك سحاب','باب بلكونة','باب مفصلي','فيكس','قلاب'],f:[['system','النظام (SETI / FRANKFORT / ...)','t'],BR,COL,SZ]},
  {k:'glass',ar:'الزجاج',u:['m2'],pre:['زجاج مفرد','دبل جلاس','سيكوريت','عاكس','ملون'],f:[TH,COL]},
  {k:'acc',ar:'الإكسسوارات',u:['piece','set'],pre:['مقبض','قفل','سلك حشرات'],f:[BR,COL]},
  {k:'install',ar:'التركيب',u:['m2','piece'],pre:INST[1],f:[]}]},
+{id:'furniture',ico:'🛋️',ar:'موبيليا',groups:[
+ {k:'commission',ar:'عمولة (نجارين)',u:['piece','set','m'],pre:RM,f:[MT,['finish','التشطيب',['دوكو','بويه','لاكيه','قشرة','طبيعي']],['days','مدة التنفيذ (يوم)','n']]},
+ {k:'finished',ar:'متشطبة جاهزة (معارض)',u:['piece','set'],pre:RM,f:[MT,['finish','التشطيب',['دوكو','بويه','لاكيه','قشرة','طبيعي']],COL,SZ]},
+ {k:'white',ar:'نجارة أبيض (قبل الدهان)',u:['piece','set'],pre:RM,f:[MT,COL,SZ]}]},
 {id:'wood',ico:'🪵',ar:'الخشب',groups:[
  {k:'raw',ar:'الخامات',u:['m2','piece','m'],pre:['زان','موسكي','سويد','أبلكاش','MDF','HDF','قشرة / فينير'],f:[TH,SZ,['origin','المصدر',['محلي','مستورد']]]},
  {k:'work',ar:'التصنيع',u:['m','m2','piece'],pre:['مطبخ خشب','دولاب','باب خشب','دريسنج','سرير','تفصيل حسب الطلب'],f:[MT,['finish','التشطيب',['دوكو','بويه','لاكيه','قشرة','طبيعي']]]},
@@ -35,7 +40,7 @@ const S=[
  {k:'extra',ar:'إضافات',u:['piece','visit','day'],pre:['زيادة ليلي','زيادة إجازة','مواصلات'],f:[]}]}
 ];
 window.HZ_SECTIONS=S;window.HZ_UNITS=U;
-const OPENS=['upvc','wood'];
+const OPENS=['upvc','furniture','wood'];
 const PR={sec:null,gi:0,rows:null,del:[],msg:'',err:0,busy:0};
 const g$=()=>PR.sec.groups[PR.gi];
 const mk=(g,n,it,pre)=>({id:it?it.id:null,g:g.k,name:n,pre,unit:it?it.unit:g.u[0],price:it&&it.price!=null?it.price:'',specs:(it&&it.specs)||{},note:(it&&it.note)||'',open:0,vd:(it&&it.validity_days)||7,vu:it?it.valid_until:null,ua:it?it.updated_at:null});
