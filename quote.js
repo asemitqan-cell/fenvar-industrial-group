@@ -80,7 +80,7 @@ async function loadPrices(secId){
   const ok=new Set(provs.filter(p=>p.verified).map(p=>p.user_id));
   const nm={};ids.forEach(id=>{const p=profs.find(x=>x.id===id)||{},v=provs.find(x=>x.user_id===id)||{};nm[id]=p.business_name||p.brand||v.business_name||v.name||p.full_name||T('Supplier','مورد')});
   Q.prices=items.filter(x=>ok.has(x.provider_id)&&x.price!=null&&!(x.valid_until&&new Date(x.valid_until)<Date.now())).map(x=>Object.assign({},x,{pname:nm[x.provider_id]}));
- }catch(e){Q.prices=[];Q.msg=(e&&e.message)||''}
+ }catch(e){Q.prices=[];Q.msg=T('Could not load supplier prices. Check your connection and try again.','مقدرناش نحمّل أسعار الموردين. اتأكد من النت وجرّب تاني.')}
  AVAIL={};(Q.prices||[]).forEach(x=>{(AVAIL[x.group_key]=AVAIL[x.group_key]||new Set()).add(x.name)});
  return Q.prices}
 
@@ -189,7 +189,7 @@ async function save(chosen){
  const body={user_id:user.id,section:Q.sec,lines:r.lines,custom:[Q.custom,orgNote()].filter(Boolean).join('\n')||null,budget:Q.budget?+Q.budget:null,city:Q.city||null,
   chosen_provider:chosen||null,quote:r.res.map(x=>({provider_id:x.id,total:x.total,covered:x.hit,full:x.full,price_date:x.upd||null})),status:'new'};
  try{const x=await sb.from('hz_quote_requests').insert(body);if(x.error)throw x.error;Q.ok=1;Q.sent=1;Q.msg='✓ '+(chosen?T('Request sent. The supplier will reply with an offer.','الطلب اتبعت. المورد هيرد بعرضه، وهتوصلك إشعار.'):T('Request sent to all matching suppliers. You will get a notification with each offer.','الطلب اتبعت لكل الموردين المناسبين. هيوصلك إشعار مع كل عرض.'))}
- catch(e){Q.msg=(typeof hzErr==='function'?hzErr(e):(e.message||String(e)))}
+ catch(e){Q.msg=(typeof hzErr==='function'?hzErr(e):T('Something went wrong. Please try again.','حصلت مشكلة. جرّب تاني بعد شوية.'))}
  draw()}
 
 document.addEventListener('click',e=>{
@@ -221,7 +221,7 @@ function intercept(getEl,e){const el=getEl();if(!el)return;const q=(el.value||''
  if(!sec(MAP[id]||id))return;
  e.stopImmediatePropagation();e.preventDefault();el.value='';
  const ch=$q('#chat');if(ch)ch.hidden=true;const ai=$q('#ai');if(ai)ai.hidden=true;
- try{openQuote(id,q)}catch(err){if(typeof toast==='function')toast(String(err&&err.message||err))}}
+ try{openQuote(id,q)}catch(err){if(typeof toast==='function')toast(T('Something went wrong. Please try again.','حصلت مشكلة. جرّب تاني بعد شوية.'))}}
 document.addEventListener('click',e=>{if(e.target.closest('#aiGo'))intercept(()=>$q('#q'),e);else if(e.target.closest('#cGo'))intercept(()=>$q('#cIn'),e)},true);
 document.addEventListener('keydown',e=>{if(e.key!=='Enter')return;if(e.target&&e.target.id==='q')intercept(()=>$q('#q'),e);else if(e.target&&e.target.id==='cIn')intercept(()=>$q('#cIn'),e)},true);
 

@@ -7,7 +7,7 @@ const view={y:.5,p:.15,d:5,fit:5,vy:0};let drag=0,lastT=0,VT=null,KL=null;const 
 function goV(y,p,d){const k=Math.PI*2;VT={y:y+k*Math.round((view.y-y)/k),p:p,d:d};view.vy=0}
 const NAMES={phone:'موبايل',laptop:'لابتوب',pc:'كمبيوتر',fridge:'ثلاجة',washer:'غسالة',pot:'حلة',plates:'أطباق وصيني',pharmacy:'علبة وشريط وزجاجة دواء',perfume:'عطر',tv:'شاشة تلفزيون',microwave:'ميكروويف',earbuds:'سماعات أذن (علبة وسماعتين)'};
 const BG={phone:'desk',laptop:'desk',pc:'desk',fridge:'kitchen',washer:'kitchen',pot:'kitchen',plates:'kitchen',pharmacy:'pharm',perfume:'room',tv:'living',microwave:'kitchen',earbuds:'desk'};
-const loadT=()=>window.THREE?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+const loadT=()=>window.THREE?Promise.resolve():new Promise((ok,no)=>{const u=['three.min.js?v=1','https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'];let i=0;const nx=()=>{if(window.THREE)return ok();if(i>=u.length)return no();const s=document.createElement('script');s.src=u[i++];s.onload=nx;s.onerror=nx;document.head.appendChild(s)};nx()});
 const mat=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.45,metalness:.15},o||{}));
 const bx=(w,h,d,m,x,y,z,p)=>{const o=new T.Mesh(new T.BoxGeometry(w,h,d),m);o.position.set(x||0,y||0,z||0);(p||root).add(o);return o};
 const cy=(rt,rb,h,m,x,y,z,p)=>{const o=new T.Mesh(new T.CylinderGeometry(rt,rb,h,40),m);o.position.set(x||0,y||0,z||0);(p||root).add(o);return o};

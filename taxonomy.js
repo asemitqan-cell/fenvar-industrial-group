@@ -669,7 +669,7 @@ try{renderChips();render()}catch(_){}
 'use strict';
 const $=s=>document.querySelector(s),E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const u=.01;let T=null;
-const loadT=()=>T?Promise.resolve():window.THREE?(T=window.THREE,Promise.resolve()):new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=()=>{T=window.THREE;ok()};s.onerror=no;document.head.appendChild(s)});
+const loadT=()=>T?Promise.resolve():window.THREE?(T=window.THREE,Promise.resolve()):new Promise((ok,no)=>{const u=['three.min.js?v=1','https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'];let i=0;const nx=()=>{if(window.THREE){T=window.THREE;return ok()}if(i>=u.length)return no();const s=document.createElement('script');s.src=u[i++];s.onload=nx;s.onerror=nx;document.head.appendChild(s)};nx()});
 const COL={white:['أبيض','#F4F4F2'],anth:['أنثراسيت','#3B3F45'],oak:['بلوط دهبي','#B07A3E'],brown:['بني','#5B3A24'],gray:['رمادي','#9AA0A6'],black:['أسود','#1F2124']};
 const WOOD={walnut:['جوز','#6B4423'],oak:['بلوط','#B58B52'],white:['أبيض','#EDEBE6'],wenge:['ونجي','#3A2A22'],gray:['رمادي','#8D9196']};
 const CAR={red:['أحمر','#C21E2B'],white:['أبيض','#F2F2F2'],black:['أسود','#1C1C1E'],blue:['أزرق','#1F4E9C'],silver:['فضي','#B8BDC4'],green:['أخضر','#2F7D4F']};
