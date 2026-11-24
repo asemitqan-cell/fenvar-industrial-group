@@ -102,14 +102,13 @@ function probe(){if(PH)return;PH=[];setTimeout(()=>{const e=document.createEleme
 const SEC={upvc:[1,5],glass:[1,5],furniture:[0,8,4,9],wood:[0,8,4,9],cars:[2,6],realestate:[3,7]};
 function photos(){probe();if(!PH.length)return;const R=document.documentElement,c=typeof cat==='undefined'?'all':cat,home=document.body.classList.contains('hzg');
  R.style.setProperty('--ph-upvc','url('+PH[1]+')');R.style.setProperty('--ph-furn','url('+PH[0]+')');
- const ix=home?PH.map((_,i)=>i):(SEC[c]||null);let L=document.getElementById('hzPhL');const k=ix?ix.join()+'|'+(home?1:0):'';
+ const all=PH.map((_,i)=>i),ix=home?all:(SEC[c]||all);let L=document.getElementById('hzPhL');const k=ix.join()+'|'+(home?1:SEC[c]?2:3);
  if(!ix){R.classList.remove('hzph');if(L)L.style.display='none';return}
  if(!L){L=document.createElement('div');L.id='hzPhL';L.setAttribute('aria-hidden','true');document.body.prepend(L)}
- R.classList.add('hzph');L.style.display='';if(L.dataset.k===k)return;L.dataset.k=k;L.style.setProperty('--po',home?.3:.2);
+ R.classList.add('hzph');L.style.display='';if(L.dataset.k===k)return;L.dataset.k=k;L.style.setProperty('--po',home?.3:SEC[c]?.2:.24);
  L.innerHTML=ix.map(i=>'<i class="ph" style="background-image:url('+PH[i]+')"></i>').join('');
  const e=[...L.children];let n=0;e[0].classList.add('on');clearInterval(window.__phT);if(e.length>1)window.__phT=setInterval(()=>{e[n].classList.remove('on');n=(n+1)%e.length;e[n].classList.add('on')},6000)}
-function dk(){const m=document.querySelector('#hzDock .dk-m');if(!m||m.querySelector('[data-v2d]'))return;
- [['mine','📦','My requests','طلباتي','Meine Anfragen'],['prov','📥','Customer requests','طلبات العملاء','Kundenanfragen'],['share','↗','Share Horizon','شارك Horizon','Horizon teilen']].forEach(x=>{const b=document.createElement('button');b.type='button';b.dataset.v2d=x[0];b.textContent=x[1]+' '+T(x[2],x[3],x[4]);m.append(b)})}
+function dk(){}/* القايمة الجانبية بقت في hz-home.js (المساعد · خدمة العملاء · الطلبات · شارك) */
 function wq(){if(window.hzQuote&&!window.hzQuote.__w){const o=window.hzQuote,w=async function(){try{return await o.apply(this,arguments)}catch(x){try{toast(T('Could not open the quote form. Refresh and try again.','عرض السعر مافتحش. حدّث الصفحة وجرّب تاني.')+' ['+((x&&x.message)||x)+']')}catch(_){}}};w.__w=1;window.hzQuote=w}}
 function ask(){const f=document.getElementById('fab');try{if(f)f.click()}catch(_){}setTimeout(()=>{const a=document.getElementById('ai');if(!a||a.hidden){const i=document.getElementById('q');if(i)i.focus()}},200)}
 function hero(){const home=(typeof cat==='undefined'||cat==='all')&&!document.body.classList.contains('hzo');let h=document.getElementById('hzV2');

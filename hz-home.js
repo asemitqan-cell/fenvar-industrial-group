@@ -9,7 +9,7 @@ const $q=s=>document.querySelector(s);
 const E=s=>typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const T=(en,ar)=>typeof L==='function'?L(en,ar):ar;
 const CT=()=>typeof CATALOG!=='undefined'?CATALOG:[];
-let last='',styled=0,trAt=0,fed=0,obs=0,bgT=null,qb=0;
+let last='',styled=0,fed=0,obs=0,bgT=null,qb=0;
 
 /* ---- المتاح الآن + التابات ---- */
 const QS=['upvc','glass','furniture','wood'];const NOW=['upvc','furniture'];                       // الأقسام اللي بياناتها جاهزة. زوّد عليها لما تدخل أقسام جديدة
@@ -54,7 +54,8 @@ body.hzg:not(.hzo) #hzTabs{background:transparent;-webkit-backdrop-filter:none;b
 .searchbar{top:calc(100px + env(safe-area-inset-top))!important}
 
 /* الرئيسية */
-body.hzg .top{visibility:visible}body.hzg .top .bw{visibility:hidden}
+body.hzg .top{visibility:visible}body.hzg .top .bw{opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .25s ease,transform .25s ease}body.hzg.hzsc .top .bw{opacity:1;transform:none;pointer-events:auto}
+body.hzg.hzsc .top{background:color-mix(in srgb,var(--bg) 88%,transparent)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 body.hzg:not(.hzo) .top{background:transparent!important;-webkit-backdrop-filter:none;backdrop-filter:none}
 body.hzg{min-height:100svh;background:radial-gradient(60% 40% at 12% 8%,color-mix(in srgb,var(--p) 17%,transparent),transparent 70%),radial-gradient(55% 38% at 92% 26%,rgba(124,92,255,.13),transparent 70%),radial-gradient(75% 45% at 50% 100%,rgba(245,166,35,.16),transparent 70%),var(--bg)!important;background-attachment:fixed}
 #hzTop{position:relative;overflow-x:clip;height:max(130px,calc((100svh - 340px) / 2.2 + 80px));box-sizing:border-box}
@@ -89,7 +90,7 @@ body.hzg:not(.hzo) #home,body.hzg:not(.hzo) main>.cta,body.hzg:not(.hzo) footer{
 body.hzo.hzg #home,body.hzo.hzc #home{animation:hzIn .35s both}
 .pt-pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:2px 18px 12px}
 .pt-pills::-webkit-scrollbar{display:none}
-.pt-pills[hidden],.pt-q[hidden],#gdTrack[hidden]{display:none!important}
+.pt-pills[hidden],.pt-q[hidden]{display:none!important}
 .pt-p{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .pt-p i{font-style:normal}
 .pt-q{width:100%;display:flex;align-items:center;gap:12px;text-align:start;border:1.5px solid color-mix(in srgb,var(--p) 38%,var(--line));background:var(--card);color:var(--ink);border-radius:20px;padding:12px 14px;font:inherit;cursor:pointer;box-shadow:0 8px 22px -16px rgba(15,23,42,.5)}
@@ -97,11 +98,6 @@ body.hzo.hzg #home,body.hzo.hzc #home{animation:hzIn .35s both}
 .pt-h{margin:20px 4px 10px;font-size:15px;font-weight:800}
 #hzEmpty{text-align:center;color:var(--mut);font-size:14px;padding:26px 10px}
 
-/* تتبّع الطلب */
-.gd-tk{margin-top:12px;border:1px solid var(--line);background:var(--card);border-radius:20px;padding:14px;display:grid;gap:8px}
-.gd-tk b{font-size:14px}.gd-tk small{color:var(--mut)}
-.gd-sp{display:flex;gap:4px}.gd-sp span{flex:1;text-align:center;font-size:11px;color:var(--mut)}.gd-sp i{display:grid;place-items:center;width:24px;height:24px;margin:0 auto 3px;border-radius:50%;background:var(--line);font-style:normal;font-weight:700}
-.gd-sp .ok i{background:#d1fae5;color:#065f46}.gd-sp .on i{background:var(--p);color:#fff}.gd-sp .on{color:var(--p);font-weight:700}
 .gd-app{display:block;margin:14px auto 0;background:none;border:0;color:var(--mut);font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer}
 .gd-app[hidden]{display:none!important}
 
@@ -110,7 +106,12 @@ body.hzo.hzg #home,body.hzo.hzc #home{animation:hzIn .35s both}
 #hzDock.off{opacity:0;transform:translateY(12px);pointer-events:none}
 #hzDock .dk-b{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--p);box-shadow:0 6px 16px -8px rgba(15,23,42,.45);font-size:20px;cursor:pointer;opacity:.92}
 #hzDock .dk-m{display:grid;gap:6px}#hzDock .dk-m[hidden]{display:none}
-#hzDock .dk-m button{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:9px 14px;font:inherit;font-size:13px;font-weight:700;box-shadow:0 6px 16px -10px rgba(15,23,42,.5);cursor:pointer;animation:hzIn .2s both}
+#hzDock .dk-m button{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:12px 20px 12px 16px;font:inherit;font-size:14.5px;font-weight:700;box-shadow:0 10px 24px -12px rgba(15,23,42,.55);cursor:pointer;animation:hzIn .22s both}
+#hzDock .dk-m button i{font-style:normal;font-size:17px;width:22px;text-align:center}
+#hzDock .dk-m button:nth-child(2){animation-delay:.04s}#hzDock .dk-m button:nth-child(3){animation-delay:.08s}#hzDock .dk-m button:nth-child(4){animation-delay:.12s}
+#hzDkBk{position:fixed;inset:0;z-index:55;background:rgba(7,28,32,.28);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .22s ease}
+#hzDkBk.on{opacity:1;pointer-events:auto}
+#hzDock.open{z-index:56}
 #aiGo{background:color-mix(in srgb,var(--p) 14%,var(--card))!important;color:var(--p)!important;box-shadow:none!important}`;
  document.head.appendChild(s)}
 
@@ -119,7 +120,6 @@ const moreBtn=id=>`<button type="button" class="hzm" id="${id}" data-gd="posts" 
 function panelHTML(){const ar=(typeof lang!=='undefined'&&lang==='ar');
  return `<div class="pt-pills" id="hzPills"></div>
  <button type="button" class="pt-q" data-gd="quote"><i>🧾</i><span><b>${T('Request a quote','اطلب عرض سعر')}</b><small>${T('Compare offers from suppliers','قارن عروض الموردين في مكان واحد')}</small></span><em>${ar?'‹':'›'}</em></button>
- <div id="gdTrack"></div>
  <button type="button" class="gd-app" data-gd="app" hidden>📲 ${T('Install the app','نزّل التطبيق على موبايلك')}</button>
  <h2 class="pt-h">${T('Posts','المنشورات')}</h2>`}
 const PH=()=>(typeof lang!=='undefined'&&lang==='ar')?['ابحث عن شباك UPVC 2 درفة…','ابحث عن غرفة نوم مودرن…','ابحث عن مورد زجاج سيكوريت…','اطلب عرض سعر باب بلكونة…','ابحث عن نجارة أبيض…','ابحث عن أنظمة FRANKFORT…','قول للمساعد اللي عايزه…']:['Search UPVC windows…','Search a modern bedroom…','Find a tempered glass supplier…','Request a balcony door quote…','Search white carpentry…','Ask the assistant anything…'];
@@ -163,8 +163,8 @@ function emptyUI(){const f=$q('#feed');if(!f)return;let p=$q('#hzEmpty');
 function syncMore(){const o=document.body.classList.contains('hzo');
  document.querySelectorAll('.hzm').forEach(m=>{m.setAttribute('aria-expanded',o?'true':'false');m.firstChild.textContent=o?T('Hide posts','إخفاء المنشورات'):T('Posts','المنشورات')})}
 function panelSync(){const pt=$q('#hzPT');if(!pt)return;const prod=isProd(),home=isHome();
- const q=pt.querySelector('.pt-q'),pl=pt.querySelector('#hzPills'),tk=pt.querySelector('#gdTrack');
- if(q)q.hidden=!QS.includes(typeof cat==='undefined'?'':cat);if(tk)tk.hidden=!prod;if(pl){pl.hidden=!home;if(home&&!pl.dataset.b){pl.dataset.b='1';pills()}}}
+ const q=pt.querySelector('.pt-q'),pl=pt.querySelector('#hzPills');
+ if(q)q.hidden=!QS.includes(typeof cat==='undefined'?'':cat);if(pl){pl.hidden=!home;if(home&&!pl.dataset.b){pl.dataset.b='1';pills()}}}
 function pills(){const box=$q('#hzPills');if(!box)return;
  box.innerHTML=nowCats().map(c=>`<button type="button" class="pt-p" data-gd="go:${c.id}">${c.e?`<i>${c.e}</i>`:''}${E(typeof N==='function'?N(c):(c.ar||c.en))}</button>`).join('')}
 function togglePosts(){const b=document.body;if(!b.classList.contains('hzg')&&!b.classList.contains('hzc'))return;
@@ -182,20 +182,6 @@ function phTick(){const q=$q('#q');if(!q)return;const home=document.body.classLi
  q.style.setProperty('--phO','0');setTimeout(()=>{q.placeholder=L2[phI];q.style.setProperty('--phO','1')},260)}
 function phStart(){if(phT)return;const q=$q('#q');if(q){q.placeholder=PH()[0]}phT=setInterval(phTick,2800)}
 
-/* ---- تتبّع آخر طلب ---- */
-const STG=['استلام','مراجعة','تنفيذ','تسليم'];
-const IDX={accepted:2,in_progress:2,delivered:3,closed:4};
-async function track(){const box=$q('#gdTrack');if(!box)return;
- if(typeof user==='undefined'||!user||typeof sb==='undefined'||!sb){box.innerHTML='';return}
- try{const r=await sb.from('hz_quote_requests').select('id,status,lines,section').eq('user_id',user.id).neq('status','cancelled').order('created_at',{ascending:false}).limit(1);
-  if(r.error||!r.data||!r.data.length){box.innerHTML='';return}
-  const q=r.data[0],d=await sb.from('hzq_deals').select('request_id,stage').eq('request_id',q.id),o=await sb.from('hzq_offers').select('request_id,status').eq('request_id',q.id);
-  const dl=(d.data||[]).find(x=>x.stage!=='cancelled'),no=(o.data||[]).filter(x=>x.status==='sent').length,i=dl?(IDX[dl.stage]!=null?IDX[dl.stage]:2):(q.status==='offered'||no>0?1:0);
-  const tx=dl?({accepted:'العرض اتقبل، المورد هيبدأ التنفيذ',in_progress:'الطلب قيد التنفيذ',delivered:'الطلب اتسلّم، أكّد استلامك',closed:'الطلب اتقفل ✓'}[dl.stage]||'الصفقة شغالة'):(no?'وصلت '+no+' عروض، راجعها واقبل الأنسب':'الطلب اتبعت للموردين وبنستنى عروضهم');
-  const ln=(q.lines&&q.lines[0]&&q.lines[0].name)||'';
-  box.innerHTML=`<div class="gd-tk"><b>📦 ${T('Track your order','تتبّع طلبك')}${ln?' · '+E(ln):''}</b><div class="gd-sp">${STG.map((x,k)=>`<span class="${k<i?'ok':k===i?'on':''}"><i>${k<i?'✓':k+1}</i>${x}</span>`).join('')}</div><small>${tx}</small></div>`
- }catch(_){box.innerHTML=''}}
-
 function ensureUI(){const sb2=$q('.searchbar');
  if(sb2&&sb2.parentNode){
   if(!$q('#hzTop')){const tp=document.createElement('div');tp.id='hzTop';tp.innerHTML='<div id="hzBg" aria-hidden="true"></div><div class="hz-name" dir="ltr">Horizon<i></i></div>';sb2.parentNode.insertBefore(tp,sb2)}
@@ -206,6 +192,9 @@ function ensureUI(){const sb2=$q('.searchbar');
   if(!$q('#hzPT')){const pt=document.createElement('div');pt.id='hzPT';pt.innerHTML=panelHTML();h.parentNode.insertBefore(pt,h)}}
  bgBuild()}
 
+function hdrSync(){const b=document.body;if(!b.classList.contains('hzg')){b.classList.remove('hzsc');return}
+ const t=$q('#hzTop'),lim=t?Math.max(60,t.offsetHeight-130):140;b.classList.toggle('hzsc',scrollY>lim)}
+addEventListener('scroll',hdrSync,{passive:true});
 function home(){style();tabs();phStart();const b=document.body,q=(($q('#q')||{}).value||'').trim(),noTyp=!(typeof typ!=='undefined'&&typ);
  const g=isHome()&&noTyp&&!q,c=!isHome()&&noTyp&&!q&&cat!=='fav';
  b.classList.toggle('hzg',g);b.classList.toggle('hzc',c);
@@ -213,12 +202,14 @@ function home(){style();tabs();phStart();const b=document.body,q=(($q('#q')||{})
  if(!g&&!c)b.classList.remove('hzo');
  const pt=$q('#hzPT');
  if(pt){panelSync();const ib=$q('#installBtn'),ab=pt.querySelector('[data-gd=app]');if(ab)ab.hidden=!ib||ib.hidden;
-  if(Date.now()-trAt>15000){trAt=Date.now();track()}}
- emptyUI();syncMore()}
+}
+ emptyUI();syncMore();hdrSync()}
 
-/* ---- زر المساعدة الواحد ---- */
+/* ---- زر المساعدة الواحد (القايمة الجانبية) ---- */
 function dock(){if($q('#hzDock'))return;style();
- document.body.insertAdjacentHTML('beforeend',`<div id="hzDock"><div class="dk-m" hidden><button type="button" data-dk="ai">✦ ${T('Ask the assistant','اسأل المساعد')}</button><button type="button" data-dk="wa">💬 ${T('WhatsApp support','واتساب خدمة العملاء')}</button></div><button type="button" class="dk-b" data-dk="tg" aria-label="${T('Help','مساعدة')}">💬</button></div>`);
+ document.body.insertAdjacentHTML('beforeend',`<div id="hzDkBk" aria-hidden="true"></div><div id="hzDock"><div class="dk-m" hidden><button type="button" data-dk="ai"><i>✦</i>${T('Ask the assistant','اسأل المساعد')}</button><button type="button" data-dk="wa"><i>💬</i>${T('WhatsApp support','واتساب خدمة العملاء')}</button><button type="button" data-dk="ord"><i>📦</i>${T('Orders','الطلبات')}</button><button type="button" data-dk="share"><i>↗</i>${T('Share Horizon','شارك Horizon')}</button></div><button type="button" class="dk-b" data-dk="tg" aria-label="${T('Help','مساعدة')}">💬</button></div>`);
+ const dk=$q('#hzDock'),mn=dk.querySelector('.dk-m'),bk=$q('#hzDkBk');
+ new MutationObserver(()=>{const o=!mn.hidden;bk.classList.toggle('on',o);dk.classList.toggle('open',o);document.body.classList.toggle('hzdk',o)}).observe(mn,{attributes:true,attributeFilter:['hidden']});
  let y=scrollY;addEventListener('scroll',()=>{const d=$q('#hzDock');if(!d)return;const n=scrollY,dn=n>y+6&&n>200;if(Math.abs(n-y)>6){d.classList.toggle('off',dn);if(dn)d.querySelector('.dk-m').hidden=true;y=n}},{passive:true})}
 
 document.addEventListener('click',e=>{
@@ -235,6 +226,8 @@ document.addEventListener('click',e=>{
   if(k==='tg'&&m)m.hidden=!m.hidden;
   else if(k==='ai'){if(m)m.hidden=true;const f=$q('#fab');if(f)f.click();else{const a=$q('#aiGo');if(a)a.click()}}
   else if(k==='wa'){if(m)m.hidden=true;const w=$q('#fabWa');if(w&&w.href)window.open(w.href,'_blank','noopener')}
+  else if(k==='ord'){if(m)m.hidden=true;if(window.hzOrders)window.hzOrders()}
+  else if(k==='share'){if(m)m.hidden=true;if(window.hzShare)window.hzShare()}
   return}
  if(m&&!m.hidden&&!e.target.closest('#hzDock'))m.hidden=true});
 

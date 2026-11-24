@@ -12,6 +12,7 @@ const OPEN_SECS=['upvc','furniture','wood'],HUB=['upvc','furniture'];
 const INTENT=/(عرض\s*(ال)?سعر|عروض\s*(ال)?[اأ]سعار|كوتيشن|تسعير|quotation|\bquote\b|price\s*quote|\bangebot\b)/i;
 const PRICEW=/(بكام|بكم|كام\s*سعر|سعر|اسعار|أسعار|تكلفة|تكلف|price|cost|how much|preis)/i;
 const SEC_WORDS=[['installment',/(قسط|تقسيط|بالقسط|installment)/i],['nursing',/(تمريض|ممرض|حقن|كانيولا|رعاية مسنين|nursing)/i],['accessories',/(مفصلة|كالون|ترباس|مقبض|عين سحرية|اكسسوار|إكسسوار)/i],['upvc',/(upvc|يو\s*بي\s*في\s*سي|قطاع|قطاعات|شباك|شبابيك|شتر|بلكونة|دبل جلاس|سيكوريت|زجاج)/i],['furniture',/(موبيليا|اثاث|أثاث|غرفة نوم|غرف نوم|أوضة|اوضة|سفرة|ركنة|انتريه|أنتريه|دولاب|دريسنج|مطبخ|سرير|تسريحة)/i],['wood',/(خشب|أبلكاش|ابلكاش|mdf)/i],['paints',/(بويات|بويه|بوية|دهان|دهانات|نقاش)/i],['iron',/(حديد|حدادة|درابزين|بوابة|سلم)/i]];
+const ORG_G='حسب المنشأ';
 const OR={belgian:['بلجيكي','الخامات عالية الجودة'],turkish:['تركي','عالي - متوسط'],egyptian:['مصري','متوسط - أقل']};
 const Q={sec:null,step:1,system:'',ftype:'',origin:'',stats:{},sent:0,lines:[],custom:'',budget:'',city:'',prices:null,res:null,busy:0,msg:''};
 let AVAIL={};
@@ -31,7 +32,18 @@ function ensureModal(){if($q('#qtModal'))return;
 #qtModal .qt-b .qt-o input{width:auto;margin:0}#qtModal .qt-st{display:flex;gap:4px;margin:10px 0 14px}#qtModal .qt-st span{flex:1;text-align:center;font-size:11px;color:var(--mut)}#qtModal .qt-st i{display:grid;place-items:center;width:26px;height:26px;margin:0 auto 3px;border-radius:50%;background:var(--line);color:var(--mut);font-style:normal;font-weight:700}#qtModal .qt-st .on i{background:var(--p);color:#fff}#qtModal .qt-st .on{color:var(--p);font-weight:700}#qtModal .qt-st .ok i{background:#d1fae5;color:#065f46}
 #qtModal .qt-h{margin:6px 0 8px;font-size:16px}#qtModal .qt-tc{align-items:flex-start!important}#qtModal .qt-tc span{display:grid;gap:2px}#qtModal .qt-tc small{color:var(--mut);font-size:12px}#qtModal .qt-tc .qt-w{color:var(--p)}#qtModal .qt-gr{display:grid;grid-template-columns:1fr 1fr;gap:6px}#qtModal .qt-gr label{margin:0}
 #qtModal .qt-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}#qtModal .qt-nav .btn{flex:1}
-.qt-card{cursor:pointer}`;document.head.appendChild(st);
+.qt-card{cursor:pointer}
+#qtModal .qt-chs{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:0 0 6px}
+#qtModal .qt-ch{position:relative;display:block;margin:0}
+#qtModal .qt-ch input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;padding:0;border:0;cursor:pointer}
+#qtModal .qt-ch span{display:grid;gap:1px;align-content:center;min-height:50px;padding:9px 12px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);transition:border-color .15s,background .15s}
+#qtModal .qt-ch b{font-size:13.5px}#qtModal .qt-ch small{color:var(--mut);font-size:11.5px;line-height:1.4}
+#qtModal .qt-ch input:checked+span{border-color:var(--p);background:color-mix(in srgb,var(--p) 10%,var(--card));box-shadow:0 0 0 1px var(--p) inset}
+#qtModal .qt-ch input:checked+span b{color:var(--p)}
+#qtModal .qt-gl{margin:14px 2px 6px;font-weight:700}
+#qtModal .qt-sec{margin:20px 0 4px;font-size:16px;font-weight:800}
+#qtModal .qt-own{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#qtModal .qt-own .pill u{text-decoration:none;color:#DC2626;padding-inline-start:6px}`;document.head.appendChild(st);
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="qtModal" hidden><div class="sheet st"><button type="button" class="x" data-qclose>×</button><div id="qtBody"></div></div></div>')}
 
 function show(){ensureModal();$q('#qtModal').hidden=false}
@@ -109,20 +121,24 @@ const FT={commission:{n:'عمولة',ico:'🔨',d:'بتفصّل الموبيلي
  finished:{n:'موبيليا متشطبة جاهزة',ico:'🛋️',d:'موبيليا جاهزة ومدهونة، بتتشاف في المعرض وتستلمها.',w:'الموردين: معارض الموبيليا (بعد الدهان)'},
  white:{n:'نجارة أبيض',ico:'🪚',d:'موبيليا خشب قبل الدهان، تدهنها بالشكل واللون اللي تحبه.',w:'الموردين: معارض النجارة الأبيض (قبل الدهان)'}};
 window.HZ_FTYPES=FT;
-const orgNote=()=>{if(Q.sec==='upvc')return Q.system?T('Requested system / profile: ','النظام / القطاع المطلوب: ')+Q.system:'';
+const orgNote=()=>{if(Q.sec==='upvc'){const a=[];if(Q.system)a.push(T('Requested system / profile: ','النظام / القطاع المطلوب: ')+Q.system);if(Q.origin)a.push(T('Origin: ','المنشأ: ')+Q.origin);return a.join(' · ')}
  if(Q.sec==='furniture'&&FT[Q.ftype])return T('Furniture type: ','نوع الموبيليا: ')+FT[Q.ftype].n;return ''};
 function newLine(){const s=sec(Q.sec);let g=s.groups.find(g=>g.k!=='install')||s.groups[0];if(Q.sec==='furniture'&&FT[Q.ftype])g=s.groups.find(x=>x.k===Q.ftype)||g;return{g:g.k,name:'',qty:1,note:''}}
 function names(gk){const s=sec(Q.sec),g=s.groups.find(x=>x.k===gk);if(!g)return[];
  const av=AVAIL[gk]?[...AVAIL[gk]]:[];return [...new Set(g.pre.filter(n=>av.includes(n)).concat(av))]}
 
 /* ---- الخطوات: (1) النظام/النوع  (2) البنود  (3) التفاصيل  (4) العروض ---- */
-function stepsBar(){const n=Q.sec==='upvc'?['النظام','البنود','التفاصيل','العروض']:['النوع','البنود','التفاصيل','العروض'],cur=Q.res?4:Q.step;
+function stepsBar(){const n=Q.sec==='upvc'?['النظام والمنشأ','البنود','التفاصيل','العروض']:['النوع','البنود','التفاصيل','العروض'],cur=Q.res?4:Q.step;
  return `<div class="qt-st">${n.map((x,i)=>`<span class="${i+1===cur?'on':i+1<cur?'ok':''}"><i>${i+1<cur?'✓':i+1}</i><b>${x}</b></span>`).join('')}</div>`}
 function step1HTML(){
  if(Q.sec==='furniture')return `<h4 class="qt-h">${T('What kind of furniture?','عايز موبيليا من أنهي نوع؟')}</h4><div class="qt-o">${Object.keys(FT).map(k=>`<label class="qt-tc"><input type="radio" name="qft" data-qf="ftype" value="${k}"${Q.ftype===k?' checked':''}><span><b>${FT[k].ico} ${FT[k].n}</b><small>${FT[k].d}</small><small class="qt-w">${FT[k].w}</small></span></label>`).join('')}</div>`;
- if(Q.sec==='upvc'){const L2=getSys(),gs=[...new Set(L2.map(x=>x.g))];
-  return `<h4 class="qt-h">${T('Pick the profile system','اختار نظام القطاعات')}</h4><div class="qt-o"><label class="qt-tc"><input type="radio" name="qsys" data-qf="system" value=""${!Q.system?' checked':''}><span><b>${T('Any system','أي نظام')}</b><small>${T('Show me all offers','اعرضلي كل العروض المتاحة')}</small></span></label></div>`
-  +gs.map(g=>`<div class="qt-s" style="margin:10px 0 2px">${E(g)}</div><div class="qt-o qt-gr">${L2.filter(x=>x.g===g).map(x=>`<label class="qt-tc"><input type="radio" name="qsys" data-qf="system" value="${E(x.n)}"${Q.system===x.n?' checked':''}><span><b>${E(x.n)}</b>${x.d?`<small>${E(x.d)}</small>`:''}</span></label>`).join('')}</div>`).join('')}
+ if(Q.sec==='upvc'){const all=getSys(),sy=all.filter(x=>x.g!==ORG_G),og=all.filter(x=>x.g===ORG_G),gs=[...new Set(sy.map(x=>x.g))],own=isOwner();
+  const ch=(f,val,label,sub)=>`<label class="qt-ch"><input type="radio" name="q_${f}" data-qf="${f}" value="${E(val)}"${Q[f]===val?' checked':''}><span><b>${E(label)}</b>${sub?`<small>${E(sub)}</small>`:''}</span></label>`;
+  const mine=all.filter(x=>window.hzSys&&hzSys.custom(x.n));
+  return `<h4 class="qt-h">${T('Profile system','نظام القطاعات')}</h4><div class="qt-chs">${ch('system','',T('Any system','أي نظام'),T('Show me all offers','كل العروض المتاحة'))}</div>`
+  +gs.map(g=>`<div class="qt-s qt-gl">${E(g)}</div><div class="qt-chs">${sy.filter(x=>x.g===g).map(x=>ch('system',x.n,x.n,x.d)).join('')}</div>`).join('')
+  +`<h4 class="qt-sec">${T('Origin','المنشأ')}</h4><div class="qt-chs">${ch('origin','',T('Any origin','أي منشأ'),T('No preference','من غير تفضيل'))}${og.map(x=>ch('origin',x.n,x.n,x.d)).join('')}</div>`
+  +(own?`<div class="qt-own"><button type="button" class="pill" data-q="sysadd">＋ ${T('Add a profile / system','إضافة قطاع أو نظام')}</button>${mine.map(x=>`<span class="pill">${E(x.n)}<u data-q="sysrm:${E(x.n)}" title="حذف">×</u></span>`).join('')}</div>`:'')}
   return ''}
 function step2HTML(){const s=sec(Q.sec),fur=Q.sec==='furniture';
  const lines=Q.lines.map((l,i)=>{const g=s.groups.find(x=>x.k===l.g)||s.groups[0],nn=names(g.k);
@@ -246,6 +262,10 @@ document.addEventListener('click',e=>{
  const [k,v]=a.dataset.q.split(':');
  if(k==='add'){Q.lines.push(newLine());draw()}
  else if(k==='design'){if(window.hzDesigner)hzDesigner.open({sys:Q.system})}
+ else if(k==='sysadd'){(async()=>{const n=prompt(T('Profile / system name','اسم القطاع أو النظام (مثلاً: REHAU 70)'));if(!n)return;const d=prompt(T('Short description (optional)','وصف قصير (اختياري)'))||'';
+  let g2=(prompt(T('Group (optional)','المجموعة (اختياري). اكتب: المنشأ لو ده منشأ، أو سيبها فاضية للأنظمة'))||'').trim();if(g2==='المنشأ'||g2.toLowerCase()==='origin')g2=ORG_G;if(!g2)g2='الأنظمة';
+  const x=await addSys(n,d,g2);if(x===-2&&typeof toast==='function')toast(T('Already exists.','موجود بالفعل.'));else if(x===0&&typeof toast==='function')toast(T('Saved on this device only. Run hz-hub.sql to share it with everyone.','اتحفظ على جهازك بس. شغّل hz-hub.sql عشان يظهر للكل.'));draw()})()}
+ else if(k==='sysrm'){if(confirm(T('Delete it?','تحذف '+v+'؟')))delSys(v).then(()=>{if(Q.system===v)Q.system='';if(Q.origin===v)Q.origin='';draw()})}
  else if(k==='next')nextStep()
  else if(k==='prev')prevStep()
  else if(k==='del'){Q.lines.splice(+v,1);if(!Q.lines.length)Q.lines.push(newLine());draw()}
