@@ -30,6 +30,12 @@ button,.btn{min-height:40px}
 #v2ch button{flex:none;white-space:nowrap;padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:inherit;font-size:13px;cursor:pointer;transition:background .15s,transform .15s}
 #v2ch button:hover{background:var(--bg)}#v2ch button:active{transform:scale(.97)}
 .v2rp{flex:none;background:none;border:0;color:var(--mut);cursor:pointer;min-width:36px;min-height:36px;font-size:16px;border-radius:8px}.v2rp:hover{background:var(--bg)}
+#hzV2{display:none!important}
+#hzBg .bgg{display:none}
+.hzph{position:absolute;inset:8%;border-radius:28px;overflow:hidden}
+.hzph .ph{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;animation:phz 16s ease-in-out infinite alternate}
+.hzph .ph.on{opacity:.4}
+@keyframes phz{from{transform:scale(1.04)}to{transform:scale(1.16)}}
 @keyframes v2f{from{opacity:0}}@keyframes v2u{from{transform:translateY(24px);opacity:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 #hzV2{padding:8px 16px 4px;max-width:960px;margin:0 auto}
@@ -83,6 +89,13 @@ function chips(){const c=document.getElementById('cB'),i=document.getElementById
  h.innerHTML=(st==='0'?PR.map((x,n)=>`<button type="button" data-v2p="${n}">${T(x[0],x[1],x[2])}</button>`).join(''):'')+`<button type="button" data-item="Custom request">${T('Send a custom request','ابعت طلب خاص','Individuelle Anfrage senden')}</button>`}
 function rps(){document.querySelectorAll('article.post:not([data-v2])').forEach(a=>{a.dataset.v2=1;const m=a.querySelector('[data-msg]'),pb=a.querySelector('.pb');if(!m||!pb)return;const b=document.createElement('button');b.type='button';b.className='v2rp';b.dataset.v2rl=m.dataset.msg;b.dataset.t=((a.querySelector('h3')||{}).textContent||'').slice(0,80);b.textContent='\u2691';pb.append(b)});
  document.querySelectorAll('.v2rp').forEach(b=>{const t=T('Report this listing','بلّغ عن الإعلان ده','Dieses Angebot melden');b.title=t;b.setAttribute('aria-label',t)})}
+let PH=null;
+function probe(){if(PH)return;PH=[];setTimeout(()=>{const e=document.createElement('script');e.src='hz-bg.js?v=1';e.onload=()=>{PH=(window.HZ_BG||[]).slice();q()};document.head.appendChild(e)},600)}
+function photos(){probe();const bg=document.getElementById('hzBg');if(!bg||!PH.length||bg.dataset.n==PH.length)return;bg.dataset.n=PH.length;
+ let w=bg.querySelector('.hzph');if(!w){w=document.createElement('div');w.className='hzph';bg.append(w)}
+ w.innerHTML=PH.map(u=>'<i class="ph" style="background-image:url('+u+')"></i>').join('');
+ const e=[...w.children];let k=0;e[0].classList.add('on');clearInterval(window.__phT);window.__phT=setInterval(()=>{e[k].classList.remove('on');k=(k+1)%e.length;e[k].classList.add('on')},5000)}
+function wq(){if(window.hzQuote&&!window.hzQuote.__w){const o=window.hzQuote,w=async function(){try{return await o.apply(this,arguments)}catch(x){try{toast(T('Could not open the quote form. Refresh and try again.','عرض السعر مافتحش. حدّث الصفحة وجرّب تاني.')+' ['+((x&&x.message)||x)+']')}catch(_){}}};w.__w=1;window.hzQuote=w}}
 function ask(){const f=document.getElementById('fab');try{if(f)f.click()}catch(_){}setTimeout(()=>{const a=document.getElementById('ai');if(!a||a.hidden){const i=document.getElementById('q');if(i)i.focus()}},200)}
 function hero(){const home=(typeof cat==='undefined'||cat==='all')&&!document.body.classList.contains('hzo');let h=document.getElementById('hzV2');
  if(!h){const a=document.getElementById('trendw')||document.getElementById('grid');if(!a)return;h=document.createElement('section');h.id='hzV2';a.before(h)}
@@ -92,7 +105,7 @@ function hero(){const home=(typeof cat==='undefined'||cat==='all')&&!document.bo
  h.innerHTML=`<div class="h"><h2>${T('Everything you need. One global marketplace.','كل اللي محتاجه. في سوق عالمي واحد.','Alles, was du brauchst. Ein globaler Markt.')}</h2><p>${T('Browse the marketplace yourself, or just tell Horizon AI what you are looking for.','اتصفح السوق بنفسك، أو قول لمساعد Horizon عايز إيه.','Stöbere selbst im Markt oder sag Horizon AI, was du suchst.')}</p><div class="two"><button type="button" data-v2h="x">${T('Explore the marketplace','تصفح السوق','Markt erkunden')}</button><button type="button" data-v2h="a">${T('Ask Horizon AI','اسأل مساعد Horizon','Horizon AI fragen')}</button></div></div>`
  +`<div class="d">${DST.map(d=>`<button type="button" data-v2t="${d[0]}"><i>${d[1]}</i><span><b>${T(d[2],d[3],d[4])}</b><small>${T(d[5],d[6],d[7])}</small></span></button>`).join('')}</div>`
  +(em.length?`<div class="e">${em.map(x=>`<div><b>${x[1]} ${T(x[2],x[3],x[4])}</b>${T(x[5],x[6],x[7])}</div>`).join('')}</div>`:'')}
-let raf=0;const run=()=>{raf=0;try{ft();emp();hero();chips();rps()}catch(_){}};
+let raf=0;const run=()=>{raf=0;try{ft();emp();photos();wq();chips();rps()}catch(_){}};
 const q=()=>{if(!raf)raf=requestAnimationFrame(run)};
 new MutationObserver(q).observe(document.body,{childList:true,subtree:true});
 new MutationObserver(q).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});

@@ -14,9 +14,9 @@ let last='',styled=0,trAt=0,fed=0,obs=0,bgT=null,qb=0;
 /* ---- المتاح الآن + التابات ---- */
 const NOW=['upvc','furniture'];                       // الأقسام اللي بياناتها جاهزة. زوّد عليها لما تدخل أقسام جديدة
 const PRODUCTS=['furniture','wood','glass','upvc','perfumes','realestate','cars','food','learning','used','livestock'];
-const MODES=[['now','المتاح الآن','Available now'],['products','منتجات','Products'],['services','خدمات','Services'],['consulting','استشارات','Consulting'],['culture','ثقافة ومجتمع','Culture & community']];
-const ROOT={products:'g_products',services:'g_services',consulting:'g_consulting',culture:'g_culture'};
-const FB={products:PRODUCTS,services:['services','events','health','news','translation','religion'],culture:['news','religion','countries','kids','sports'],consulting:['consulting']};
+const MODES=[['now','المتاح الآن','Available now'],['products','منتجات','Products'],['services','خدمات','Services'],['culture','ثقافة ومجتمع','Culture & community']];
+const ROOT={products:'g_products',services:'g_services',culture:'g_culture'};
+const FB={products:PRODUCTS,services:['services','events','health','news','translation','religion'],culture:['news','religion','countries','kids','sports']};
 const isHome=()=>typeof cat==='undefined'||cat==='all';
 function flat(id,seen){seen=seen||{};if(seen[id])return[];seen[id]=1;const c=CT().find(x=>x.id===id);
  if(!c||!c.grp)return[id];return[id].concat(...c.grp.map(g=>flat(g,seen)))}
@@ -25,7 +25,7 @@ function ensureRoot(k){const r=ROOT[k],C=CT();
  if(!C.some(x=>x.id===r)&&C.push){const m=MODES.find(x=>x[0]===k);C.push({id:r,en:m[2],ar:m[1],e:'📁',c:['#0F766E','#155E75'],list:[],sub:true,grp:FB[k].filter(i=>C.some(x=>x.id===i))})}}
 const feedIds=()=>isHome()?NOW:flat(cat);
 const isProd=()=>feedIds().some(i=>PRODUCTS.includes(i));
-function shown(){if(isHome())return'now';if(cat==='consulting'||cat===ROOT.consulting)return'consulting';
+function shown(){if(isHome())return'now';
  for(const m of MODES.slice(1)){if(cat===ROOT[m[0]]||tabIds(m[0]).includes(cat))return m[0]}return null}
 
 function style(){if(styled)return;styled=1;const s=document.createElement('style');s.textContent=`
@@ -139,7 +139,7 @@ function tabs(){const oc=$q('#chips');if(oc)oc.style.setProperty('display','none
   if(first)requestAnimationFrame(()=>requestAnimationFrame(()=>{ind.style.transition=''}))}
  else ind.style.opacity=0}
 function goTab(k){document.body.classList.remove('hzo');const q=$q('#q');if(q&&q.value)q.value='';
- if(typeof goCat==='function'){if(k==='now')goCat('all');else if(k==='consulting'&&CT().some(x=>x.id==='consulting'))goCat('consulting');else{ensureRoot(k);goCat(ROOT[k])}}
+ if(typeof goCat==='function'){if(k==='now')goCat('all');else{ensureRoot(k);goCat(ROOT[k])}}
  scrollTo({top:0,behavior:'smooth'})}
 
 /* ---- الخلفية: مربعات خفيفة بتتبدّل ببطء ---- */
