@@ -5,7 +5,8 @@ const LG=()=>typeof lang!=='undefined'?lang:'';
 try{if(typeof DE==='object')Object.assign(DE,{'Consulting':'Beratung','Products':'Produkte','Culture & community':'Kultur & Community','Available now':'Jetzt verfügbar'})}catch(_){}
 const s=document.createElement('style');s.textContent=`
 :focus-visible{outline:2px solid var(--p);outline-offset:2px;border-radius:8px}
-button,.btn{min-height:40px}
+.btn{min-height:40px}
+.ig-plus{min-height:0!important;min-width:0!important;border-radius:50%!important;aspect-ratio:1}
 .empty{display:block;text-align:center;padding:26px 18px;margin:12px 0;border:1px dashed var(--line);border-radius:18px;color:var(--mut);line-height:1.8}
 .empty[hidden]{display:none}
 .empty::before{content:'✦';display:block;font-size:26px;color:var(--p);margin-bottom:4px}
@@ -31,10 +32,17 @@ button,.btn{min-height:40px}
 #v2ch button:hover{background:var(--bg)}#v2ch button:active{transform:scale(.97)}
 .v2rp{flex:none;background:none;border:0;color:var(--mut);cursor:pointer;min-width:36px;min-height:36px;font-size:16px;border-radius:8px}.v2rp:hover{background:var(--bg)}
 #hzV2{display:none!important}
-#hzBg .bgg{display:none}
-.hzph{position:absolute;inset:8%;border-radius:28px;overflow:hidden}
-.hzph .ph{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease;animation:phz 16s ease-in-out infinite alternate}
-.hzph .ph.on{opacity:.4}
+#hzBg{display:none!important}
+html.hzph{background:var(--bg)!important}html.hzph body{background:transparent!important}
+#hzPhL{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+#hzPhL .ph{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.8s ease;animation:phz 18s ease-in-out infinite alternate}
+#hzPhL .ph.on{opacity:var(--po,.28)}
+#hzPills{display:grid!important;grid-template-columns:1fr 1fr;gap:10px;padding:4px 0 12px}
+#hzPills[hidden]{display:none!important}
+#hzPills .pt-p{height:118px;border-radius:20px;border:0;color:#fff;font-size:17px;font-weight:800;display:flex;align-items:flex-end;justify-content:flex-start;padding:12px 14px;text-shadow:0 1px 6px rgba(0,0,0,.5);background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.55)),var(--c,#0F766E);background-size:cover;background-position:center;cursor:pointer}
+#hzPills .pt-p i{font-style:normal;margin-inline-end:6px;font-size:20px}
+#hzPills .pt-p[data-gd="go:upvc"]{--c:var(--ph-upvc)}#hzPills .pt-p[data-gd="go:furniture"]{--c:var(--ph-furn)}
+[data-hub="mine"],[data-hub="req"]{display:none!important}
 @keyframes phz{from{transform:scale(1.04)}to{transform:scale(1.16)}}
 @keyframes v2f{from{opacity:0}}@keyframes v2u{from{transform:translateY(24px);opacity:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
@@ -91,10 +99,17 @@ function rps(){document.querySelectorAll('article.post:not([data-v2])').forEach(
  document.querySelectorAll('.v2rp').forEach(b=>{const t=T('Report this listing','بلّغ عن الإعلان ده','Dieses Angebot melden');b.title=t;b.setAttribute('aria-label',t)})}
 let PH=null;
 function probe(){if(PH)return;PH=[];setTimeout(()=>{const e=document.createElement('script');e.src='hz-bg.js?v=1';e.onload=()=>{PH=(window.HZ_BG||[]).slice();q()};document.head.appendChild(e)},600)}
-function photos(){probe();const bg=document.getElementById('hzBg');if(!bg||!PH.length||bg.dataset.n==PH.length)return;bg.dataset.n=PH.length;
- let w=bg.querySelector('.hzph');if(!w){w=document.createElement('div');w.className='hzph';bg.append(w)}
- w.innerHTML=PH.map(u=>'<i class="ph" style="background-image:url('+u+')"></i>').join('');
- const e=[...w.children];let k=0;e[0].classList.add('on');clearInterval(window.__phT);window.__phT=setInterval(()=>{e[k].classList.remove('on');k=(k+1)%e.length;e[k].classList.add('on')},5000)}
+const SEC={upvc:[1,5],glass:[1,5],furniture:[0,8,4,9],wood:[0,8,4,9],cars:[2,6],realestate:[3,7]};
+function photos(){probe();if(!PH.length)return;const R=document.documentElement,c=typeof cat==='undefined'?'all':cat,home=document.body.classList.contains('hzg');
+ R.style.setProperty('--ph-upvc','url('+PH[1]+')');R.style.setProperty('--ph-furn','url('+PH[0]+')');
+ const ix=home?PH.map((_,i)=>i):(SEC[c]||null);let L=document.getElementById('hzPhL');const k=ix?ix.join()+'|'+(home?1:0):'';
+ if(!ix){R.classList.remove('hzph');if(L)L.style.display='none';return}
+ if(!L){L=document.createElement('div');L.id='hzPhL';L.setAttribute('aria-hidden','true');document.body.prepend(L)}
+ R.classList.add('hzph');L.style.display='';if(L.dataset.k===k)return;L.dataset.k=k;L.style.setProperty('--po',home?.3:.2);
+ L.innerHTML=ix.map(i=>'<i class="ph" style="background-image:url('+PH[i]+')"></i>').join('');
+ const e=[...L.children];let n=0;e[0].classList.add('on');clearInterval(window.__phT);if(e.length>1)window.__phT=setInterval(()=>{e[n].classList.remove('on');n=(n+1)%e.length;e[n].classList.add('on')},6000)}
+function dk(){const m=document.querySelector('#hzDock .dk-m');if(!m||m.querySelector('[data-v2d]'))return;
+ [['mine','📦','My requests','طلباتي','Meine Anfragen'],['prov','📥','Customer requests','طلبات العملاء','Kundenanfragen'],['share','↗','Share Horizon','شارك Horizon','Horizon teilen']].forEach(x=>{const b=document.createElement('button');b.type='button';b.dataset.v2d=x[0];b.textContent=x[1]+' '+T(x[2],x[3],x[4]);m.append(b)})}
 function wq(){if(window.hzQuote&&!window.hzQuote.__w){const o=window.hzQuote,w=async function(){try{return await o.apply(this,arguments)}catch(x){try{toast(T('Could not open the quote form. Refresh and try again.','عرض السعر مافتحش. حدّث الصفحة وجرّب تاني.')+' ['+((x&&x.message)||x)+']')}catch(_){}}};w.__w=1;window.hzQuote=w}}
 function ask(){const f=document.getElementById('fab');try{if(f)f.click()}catch(_){}setTimeout(()=>{const a=document.getElementById('ai');if(!a||a.hidden){const i=document.getElementById('q');if(i)i.focus()}},200)}
 function hero(){const home=(typeof cat==='undefined'||cat==='all')&&!document.body.classList.contains('hzo');let h=document.getElementById('hzV2');
@@ -105,11 +120,15 @@ function hero(){const home=(typeof cat==='undefined'||cat==='all')&&!document.bo
  h.innerHTML=`<div class="h"><h2>${T('Everything you need. One global marketplace.','كل اللي محتاجه. في سوق عالمي واحد.','Alles, was du brauchst. Ein globaler Markt.')}</h2><p>${T('Browse the marketplace yourself, or just tell Horizon AI what you are looking for.','اتصفح السوق بنفسك، أو قول لمساعد Horizon عايز إيه.','Stöbere selbst im Markt oder sag Horizon AI, was du suchst.')}</p><div class="two"><button type="button" data-v2h="x">${T('Explore the marketplace','تصفح السوق','Markt erkunden')}</button><button type="button" data-v2h="a">${T('Ask Horizon AI','اسأل مساعد Horizon','Horizon AI fragen')}</button></div></div>`
  +`<div class="d">${DST.map(d=>`<button type="button" data-v2t="${d[0]}"><i>${d[1]}</i><span><b>${T(d[2],d[3],d[4])}</b><small>${T(d[5],d[6],d[7])}</small></span></button>`).join('')}</div>`
  +(em.length?`<div class="e">${em.map(x=>`<div><b>${x[1]} ${T(x[2],x[3],x[4])}</b>${T(x[5],x[6],x[7])}</div>`).join('')}</div>`:'')}
-let raf=0;const run=()=>{raf=0;try{ft();emp();photos();wq();chips();rps()}catch(_){}};
+let raf=0;const run=()=>{raf=0;try{ft();emp();photos();dk();wq();chips();rps()}catch(_){}};
 const q=()=>{if(!raf)raf=requestAnimationFrame(run)};
 new MutationObserver(q).observe(document.body,{childList:true,subtree:true});
 new MutationObserver(q).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
-document.addEventListener('click',e=>{const rl=e.target.closest('[data-v2rl]');if(rl){sheet('report',rl.dataset.t+' (#'+rl.dataset.v2rl+')');return}
+document.addEventListener('click',e=>{const dd=e.target.closest('[data-v2d]');if(dd){const m=dd.parentNode;if(m)m.hidden=true;const k=dd.dataset.v2d;
+ if(k==='share'){const u=location.href.split('#')[0];if(navigator.share)navigator.share({title:'Horizon',url:u}).catch(()=>{});else if(navigator.clipboard){navigator.clipboard.writeText(u);try{toast(T('Link copied','اللينك اتنسخ','Link kopiert'))}catch(_){}}}
+ else if(typeof user==='undefined'||!user){try{toast(T('Sign in first.','سجّل دخول الأول.','Bitte zuerst anmelden.'))}catch(_){}if(typeof needLogin==='function')needLogin()}
+ else if(window.hzQuotes)hzQuotes(k);return}
+ const rl=e.target.closest('[data-v2rl]');if(rl){sheet('report',rl.dataset.t+' (#'+rl.dataset.v2rl+')');return}
  const pp=e.target.closest('[data-v2p]');if(pp){const x=PR[+pp.dataset.v2p],i=document.getElementById('cIn');if(i&&typeof askAI==='function'){i.value=T(x[0],x[1],x[2]);askAI(null,true)}return}
  const t=e.target.closest('[data-v2t]');if(t){const b=document.querySelector('[data-tb="'+t.dataset.v2t+'"]');if(b)b.click();return}const h=e.target.closest('[data-v2h]');if(h){if(h.dataset.v2h==='a')ask();else{const b=document.querySelector('[data-tb="products"]');if(b)b.click()}return}
  const b=e.target.closest('[data-v2]');if(b){sheet(b.dataset.v2);return}

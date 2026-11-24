@@ -12,7 +12,7 @@ const CT=()=>typeof CATALOG!=='undefined'?CATALOG:[];
 let last='',styled=0,trAt=0,fed=0,obs=0,bgT=null,qb=0;
 
 /* ---- المتاح الآن + التابات ---- */
-const NOW=['upvc','furniture'];                       // الأقسام اللي بياناتها جاهزة. زوّد عليها لما تدخل أقسام جديدة
+const QS=['upvc','glass','furniture','wood'];const NOW=['upvc','furniture'];                       // الأقسام اللي بياناتها جاهزة. زوّد عليها لما تدخل أقسام جديدة
 const PRODUCTS=['furniture','wood','glass','upvc','perfumes','realestate','cars','food','learning','used','livestock'];
 const MODES=[['now','المتاح الآن','Available now'],['products','منتجات','Products'],['services','خدمات','Services'],['culture','ثقافة ومجتمع','Culture & community']];
 const ROOT={products:'g_products',services:'g_services',culture:'g_culture'};
@@ -164,7 +164,7 @@ function syncMore(){const o=document.body.classList.contains('hzo');
  document.querySelectorAll('.hzm').forEach(m=>{m.setAttribute('aria-expanded',o?'true':'false');m.firstChild.textContent=o?T('Hide posts','إخفاء المنشورات'):T('Posts','المنشورات')})}
 function panelSync(){const pt=$q('#hzPT');if(!pt)return;const prod=isProd(),home=isHome();
  const q=pt.querySelector('.pt-q'),pl=pt.querySelector('#hzPills'),tk=pt.querySelector('#gdTrack');
- if(q)q.hidden=!prod;if(tk)tk.hidden=!prod;if(pl){pl.hidden=!home;if(home&&!pl.dataset.b){pl.dataset.b='1';pills()}}}
+ if(q)q.hidden=!QS.includes(typeof cat==='undefined'?'':cat);if(tk)tk.hidden=!prod;if(pl){pl.hidden=!home;if(home&&!pl.dataset.b){pl.dataset.b='1';pills()}}}
 function pills(){const box=$q('#hzPills');if(!box)return;
  box.innerHTML=nowCats().map(c=>`<button type="button" class="pt-p" data-gd="go:${c.id}">${c.e?`<i>${c.e}</i>`:''}${E(typeof N==='function'?N(c):(c.ar||c.en))}</button>`).join('')}
 function togglePosts(){const b=document.body;if(!b.classList.contains('hzg')&&!b.classList.contains('hzc'))return;
@@ -226,7 +226,7 @@ document.addEventListener('click',e=>{
  if(g){const [k,v]=g.dataset.gd.split(':');
   if(k==='posts')togglePosts();
   else if(k==='go'&&typeof goCat==='function'){document.body.classList.remove('hzo');goCat(v);scrollTo({top:0,behavior:'smooth'})}
-  else if(k==='quote'&&window.hzQuote)window.hzQuote();
+  else if(k==='quote'&&window.hzQuote)window.hzQuote(typeof cat==='undefined'?'':cat);
   else if(k==='app'){const ib=$q('#installBtn');if(ib)ib.click()}
   return}
  const tb=e.target.closest('[data-tb]');if(tb){goTab(tb.dataset.tb);return}
