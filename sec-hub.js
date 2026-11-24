@@ -27,6 +27,9 @@ function css(){if(css0)return;css0=1;const s=document.createElement('style');s.t
 .hb-c{display:grid;gap:4px;text-align:start;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:18px;padding:14px;font:inherit;cursor:pointer}
 .hb-c i{font-style:normal;font-size:26px}.hb-c b{font-size:14px}.hb-c small{color:var(--mut);font-size:12px;line-height:1.5}
 .hb-ft{display:grid;gap:8px}.hb-ft .hb-c{grid-template-columns:auto 1fr;align-items:start;gap:4px 12px}.hb-ft .hb-c i{grid-row:span 3;font-size:30px}.hb-ft .hb-c em{font-style:normal;color:var(--p);font-size:12px}
+.hb-w{grid-column:1/-1;background:color-mix(in srgb,var(--p) 8%,var(--card))}
+.hb-tk{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:12px;display:grid;gap:8px}.hb-tk b{font-size:14px}.hb-tk small{color:var(--mut)}
+.hb-sp{display:flex;gap:4px}.hb-sp span{flex:1;text-align:center;font-size:11px;color:var(--mut)}.hb-sp i{display:grid;place-items:center;width:24px;height:24px;margin:0 auto 3px;border-radius:50%;background:var(--line);font-style:normal;font-weight:700;color:var(--mut)}.hb-sp .ok i{background:#d1fae5;color:#065f46}.hb-sp .on i{background:var(--p);color:#fff}.hb-sp .on{color:var(--p);font-weight:700}
 .hb-sep{grid-column:1/-1;margin:10px 2px 0;font-size:14px;font-weight:800}
 #hubModal .hp{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px;margin:8px 0}
 #hubModal .hp b{font-size:15px}#hubModal .hp small{color:var(--mut)}#hubModal .tg{display:inline-block;background:color-mix(in srgb,var(--p) 14%,transparent);color:var(--p);border-radius:999px;padding:2px 9px;font-size:11.5px;margin:4px 4px 0 0}
@@ -42,9 +45,11 @@ function hubHTML(id){const m=HUB[id],F=window.HZ_FTYPES||{},u=id==='upvc';
  const types=u?`<div class="hb-h">${T('Systems & profiles','الأنظمة والقطاعات')}</div>`+sysChips()
   :`<div class="hb-h">${T('Pick the furniture type','اختار نوع الموبيليا')}</div><div class="hb-ft">${FTK.map(k=>F[k]?`<button type="button" class="hb-c" data-hub="ft:${k}"><i>${F[k].ico}</i><b>${F[k].n}</b><small>${F[k].d}</small><em>${F[k].w}</em></button>`:'').join('')}</div>`;
  return `<div class="hb" id="hubBox"><div class="hb-top"><i>${m.ico}</i><div><b>${m.ar}</b><small>${m.sub}</small></div></div>
+ <div id="hubTrack"></div>
  <button type="button" class="hb-go" data-hub="quote"><span>🧾 ${T('Request a quote','اطلب عرض سعر')}<small>${T('Simple steps, then offers from suppliers','خطوات بسيطة وتوصلك عروض الموردين')}</small></span><span>${(typeof lang!=='undefined'&&lang==='ar')?'‹':'›'}</span></button>
  ${types}
  <div class="hb-g2">
+  ${u?`<button type="button" class="hb-c hb-w" data-hub="design"><i>🪟</i><b>${T('Window designer','مصمم الشبابيك')}</b><small>${T('Draw your window with real sizes and openings','ارسم شباكك بالمقاسات الفعلية وأنواع الفتح')}</small></button>`:''}
   <button type="button" class="hb-c" data-hub="sim"><i>🧊</i><b>${T('3D preview','عينة 3D')}</b><small>${u?T('See a window before you order','شوف الشباك قبل ما تطلب'):T('See a piece in 3D','شوف القطعة 3D')}</small></button>
   <button type="button" class="hb-c" data-hub="prov"><i>📍</i><b>${u?T('Find a supplier','ابحث عن مورد'):T('Suppliers & showrooms','الموردين والمعارض')}</b><small>${T('Verified suppliers with prices','موردين موثّقين بأسعارهم')}</small></button>
   <button type="button" class="hb-c" data-hub="mine"><i>🧾</i><b>${T('My requests','طلباتي')}</b><small>${T('Track offers and deals','تابع عروضك وصفقاتك')}</small></button>
@@ -54,8 +59,23 @@ function hubHTML(id){const m=HUB[id],F=window.HZ_FTYPES||{},u=id==='upvc';
 function inject(){const g=$q('#grid');if(!g||typeof cat==='undefined'||!HUB[cat])return;
  const q=(($q('#q')||{}).value||'').trim();if(q||(typeof typ!=='undefined'&&typ!==null)){const o=$q('#hubBox');if(o)o.remove();return}
  css();const old=$q('#hubBox');if(old)old.remove();const qc=g.querySelector('.qt-card');if(qc)qc.remove();
- g.insertAdjacentHTML('afterbegin',hubHTML(cat));
+ g.insertAdjacentHTML('afterbegin',hubHTML(cat));loadTrack(cat);
  if(cat==='upvc'&&window.hzSys&&!sysAsked){sysAsked=1;hzSys.load().then(()=>{if(cat==='upvc')inject()})}}
+
+
+/* ---- تتبّع الطلب (استلام / مراجعة / تنفيذ / تسليم) ---- */
+const STG=['استلام','مراجعة','تنفيذ','تسليم'];
+const stIdx=(r,d,o)=>d?({accepted:2,in_progress:2,delivered:3,closed:4}[d.stage]!=null?{accepted:2,in_progress:2,delivered:3,closed:4}[d.stage]:2):(r.status==='offered'||o>0?1:0);
+const stTxt=(r,d,o)=>d?({accepted:'العرض اتقبل، المورد هيبدأ التنفيذ',in_progress:'الطلب قيد التنفيذ',delivered:'الطلب اتسلّم، أكّد استلامك من طلباتي',closed:'الطلب اتقفل ✓'}[d.stage]||'الصفقة شغالة'):(o>0?'وصلت '+o+' عروض، راجعها واقبل الأنسب':'الطلب اتبعت للموردين وبنستنى عروضهم');
+async function loadTrack(id){const box=$q('#hubTrack');if(!box)return;
+ if(typeof user==='undefined'||!user||typeof sb==='undefined'||!sb){box.innerHTML='';return}
+ try{const r=await sb.from('hz_quote_requests').select('id,status,created_at,lines,section').eq('user_id',user.id).eq('section',id).neq('status','cancelled').order('created_at',{ascending:false}).limit(2);
+  if(r.error||!r.data||!r.data.length){box.innerHTML='';return}
+  const ids=r.data.map(x=>x.id),d=await sb.from('hzq_deals').select('request_id,stage').in('request_id',ids),o=await sb.from('hzq_offers').select('request_id,status').in('request_id',ids);
+  const deals=d.data||[],offs=o.data||[];
+  box.innerHTML=r.data.map(q=>{const dl=deals.find(x=>x.request_id===q.id&&x.stage!=='cancelled'),no=offs.filter(x=>x.request_id===q.id&&x.status==='sent').length,i=stIdx(q,dl,no),ln=(q.lines&&q.lines[0]&&q.lines[0].name)||'';
+   return `<div class="hb-tk"><b>📦 ${T('Track your order','تتبّع طلبك')}${ln?' · '+E(ln):''}</b><div class="hb-sp">${STG.map((x,k)=>`<span class="${k<i?'ok':k===i?'on':''}"><i>${k<i?'✓':k+1}</i>${x}</span>`).join('')}</div><small>${stTxt(q,dl,no)}</small><button type="button" class="pill" data-hub="mine">${T('Details','التفاصيل')}</button></div>`}).join('')
+ }catch(_){box.innerHTML=''}}
 
 /* ---- كل ما القسم يترسم ---- */
 const _r=render;render=function(){const r=_r.apply(this,arguments);try{inject()}catch(e){}return r};
@@ -103,6 +123,7 @@ document.addEventListener('click',async e=>{
  const [k,...r]=a.dataset.hub.split(':'),v=r.join(':'),id=H.sec&&$q('#hubModal')&&!$q('#hubModal').hidden?H.sec:cat;
  if(k==='quote'){closeM();window.hzQuote&&hzQuote(id)}
  else if(k==='sys'){window.hzQuote&&hzQuote('upvc','',{system:v,skip:1})}
+ else if(k==='design'){if(window.hzDesigner)hzDesigner.open({sys:''})}
  else if(k==='ft'){window.hzQuote&&hzQuote('furniture','',{type:v,skip:1})}
  else if(k==='sim'){const sp=cat==='furniture'?{kind:'wardrobe',type:'hinged',color:'walnut'}:{kind:'window',type:'casement2',color:'white'};
   if(window.hzSim)hzSim.open(sp);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}

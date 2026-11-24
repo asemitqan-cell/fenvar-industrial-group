@@ -133,7 +133,7 @@ function step2HTML(){const s=sec(Q.sec),fur=Q.sec==='furniture';
   <div class="qt-2"><input type="number" min="0" step="any" inputmode="decimal" data-qi="${i}" data-f="qty" value="${E(l.qty)}" placeholder="${T('Quantity','الكمية')}"><input data-qi="${i}" data-f="note" value="${E(l.note)}" placeholder="${T('Size / color (optional)','المقاس / اللون (اختياري)')}"></div></div>`}).join('');
  return `<h4 class="qt-h">${fur&&FT[Q.ftype]?FT[Q.ftype].ico+' '+FT[Q.ftype].n+' · ':''}${T('What do you need?','محتاج إيه؟')}</h4>
  ${Q.prices&&!Q.prices.length?`<p class="msg">${T('No supplier prices yet for this section. You can still send a custom request.','لسه مفيش أسعار موردين في القسم ده. تقدر تبعت طلب خاص.')}</p>`:''}
- ${lines}<button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>`}
+ ${lines}<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>${Q.sec==='upvc'?'<button type="button" class="pill" data-q="design">🪟 صمّم الشباك بالرسم</button>':''}</div>`}
 function step3HTML(){return `<h4 class="qt-h">${T('Details','تفاصيل الطلب')}</h4>
  <label style="display:block"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
  <div class="qt-2" style="margin-top:10px"><label><span>${T('Budget (optional)','ميزانيتك كام (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
@@ -218,6 +218,7 @@ function openSim(i){const a=simSpecs(),x=a[+i||0];if(x&&x.spec.kind==='bed'&&typ
 
 function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTML()}
 
+const fixL=l=>{const it=(Q.prices||[]).find(x=>x.group_key===l.g&&x.name===l.name);return{g:l.g,name:l.name,qty:l.area&&it&&it.unit==='m2'?l.area:1,note:l.note||''}};
 async function openQuote(secId,seed,opt){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
  if(!OPEN_SECS.includes(id)){if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
@@ -226,7 +227,9 @@ async function openQuote(secId,seed,opt){
  opt=opt||{};Q.step=1;Q.system=opt.system||'';Q.ftype=opt.type&&FT[opt.type]?opt.type:'';
  show();$q('#qtBody').innerHTML='<p class="hs-box">…</p>';
  await Promise.all([loadPrices(id),id==='upvc'&&!SYSX.loaded?loadSys():0]);Q.lines=[newLine()];
- if(opt.skip&&(Q.system||Q.ftype))Q.step=2;draw();return true}
+ if(opt.skip&&(Q.system||Q.ftype))Q.step=2;
+ if(opt.lines&&opt.lines.length){Q.lines=opt.lines.map(fixL);Q.step=2}
+ draw();return true}
 
 async function save(chosen){
  const r=Q.res;if(!r)return;Q.msg='…';Q.ok=0;draw();
@@ -242,6 +245,7 @@ document.addEventListener('click',e=>{
  const a=e.target.closest('[data-q]');if(!a||!$q('#qtModal')||!$q('#qtModal').contains(a))return;
  const [k,v]=a.dataset.q.split(':');
  if(k==='add'){Q.lines.push(newLine());draw()}
+ else if(k==='design'){if(window.hzDesigner)hzDesigner.open({sys:Q.system})}
  else if(k==='next')nextStep()
  else if(k==='prev')prevStep()
  else if(k==='del'){Q.lines.splice(+v,1);if(!Q.lines.length)Q.lines.push(newLine());draw()}
@@ -286,4 +290,7 @@ function picker(seed){ensureModal();show();Q.res=null;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qpick]');if(b&&$q('#qtModal')&&$q('#qtModal').contains(b))openQuote(b.dataset.qpick,Q.seed)});
 
 window.hzQuote=openQuote;
+window.hzQuoteAdd=async(lines,sys)=>{const m=$q('#qtModal');
+ if(!m||m.hidden||Q.sec!=='upvc'||Q.res){await openQuote('upvc','',{system:sys||'',skip:1,lines});return}
+ Q.lines=Q.lines.filter(l=>String(l.name).trim()).concat(lines.map(fixL));if(sys)Q.system=sys;Q.step=2;Q.msg='';draw()};
 })();
