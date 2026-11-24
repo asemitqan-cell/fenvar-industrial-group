@@ -20,6 +20,23 @@ html body #fab,html body #fab[hidden],html body #fabWa{display:none!important}
 button,.card,.tile,.gd-c{transition:transform .15s ease,box-shadow .2s ease,background-color .2s ease}
 button:active,.card:active,.tile:active,.gd-c:active{transform:scale(.97)}
 
+
+html body #chips,html body #gdAll,html body #hero,html body #hzHomeW{display:none!important}
+#hzTabs{position:sticky;top:calc(54px + env(safe-area-inset-top));z-index:21;background:var(--bg);border-bottom:1px solid var(--line)}
+#hzTabs .tb-in{position:relative;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:0 10px}
+#hzTabs .tb-in::-webkit-scrollbar{display:none}
+#hzTabs button{flex:none;border:0;background:none;color:var(--mut);font:inherit;font-size:15px;font-weight:600;padding:13px 14px;cursor:pointer;transition:color .2s}
+#hzTabs button.on{color:var(--p);font-weight:800}
+#hzTabs .tb-i{position:absolute;bottom:0;left:0;height:3px;border-radius:3px 3px 0 0;background:var(--p);transition:transform .3s cubic-bezier(.2,.7,.2,1),width .3s,opacity .2s;opacity:0}
+.searchbar{top:calc(98px + env(safe-area-inset-top))!important}
+body.hzg .searchbar{position:static!important;padding:6px 16px 4px!important}
+body.hzg .sb{min-height:58px;border-radius:20px!important;box-shadow:0 10px 28px -16px rgba(15,23,42,.45)!important}
+body.hzg #q{font-size:16px!important}
+#q::placeholder{opacity:var(--phO,1);transition:opacity .26s}
+#hzTop{display:none;text-align:center;padding:26px 20px 12px}body.hzg #hzTop{display:block}
+#hzTop h1{margin:0;font-size:26px;font-weight:800;line-height:1.35}#hzTop p{margin:6px 0 0;color:var(--mut);font-size:14px}
+.gd-sg{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:12px 0 18px}
+.gd-sg button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 #hzGuide{padding:6px 16px 4px}
 .gd-app[hidden]{display:none!important}
 .gd-hi{margin:6px 4px 14px}.gd-hi h1{margin:0;font-size:24px;line-height:1.35;font-weight:800}.gd-hi p{margin:4px 0 0;color:var(--mut);font-size:14px}
@@ -51,15 +68,36 @@ button:active,.card:active,.tile:active,.gd-c:active{transform:scale(.97)}
 #aiGo{background:color-mix(in srgb,var(--p) 14%,var(--card))!important;color:var(--p)!important;box-shadow:none!important}`;
  document.head.appendChild(s)}
 
-function guideHTML(){return `<div class="gd-hi"><h1>${T('Hi 👋 what do you need today?','أهلاً 👋 محتاج إيه النهاردة؟')}</h1><p>${T('Pick one and we will guide you step by step.','اختار وإحنا نمشّيك خطوة بخطوة.')}</p></div>
+function guideHTML(){const ar=(typeof lang!=='undefined'&&lang==='ar');
+ return `<div class="gd-sg">${SUG().map(x=>`<button type="button" data-gd="s:${E(x)}">${E(x)}</button>`).join('')}</div>
  <div class="gd-main">
   <button type="button" class="gd-c gd-u" data-gd="go:upvc"><i>🪟</i><span><b>UPVC</b><small>${T('Windows, doors and glass','شبابيك وأبواب وزجاج')}</small></span></button>
   <button type="button" class="gd-c gd-f" data-gd="go:furniture"><i>🛋️</i><span><b>${T('Furniture','موبيليا')}</b><small>${T('Commission, ready or white wood','عمولة · جاهزة · نجارة أبيض')}</small></span></button>
-  <button type="button" class="gd-c gd-q" data-gd="quote"><i>🧾</i><span><b>${T('Request a quote','اطلب عرض سعر')}</b><small>${T('Compare offers from suppliers','قارن عروض الموردين في مكان واحد')}</small></span><em>${(typeof lang!=='undefined'&&lang==='ar')?'‹':'›'}</em></button>
+  <button type="button" class="gd-c gd-q" data-gd="quote"><i>🧾</i><span><b>${T('Request a quote','اطلب عرض سعر')}</b><small>${T('Compare offers from suppliers','قارن عروض الموردين في مكان واحد')}</small></span><em>${ar?'‹':'›'}</em></button>
  </div>
  <div id="gdTrack"></div>
- <div class="gd-steps"><div><i>1</i><b>${T('Choose','اختار')}</b><small>${T('your section','القسم')}</small></div><div><i>2</i><b>${T('Describe','حدّد')}</b><small>${T('what you need','طلبك')}</small></div><div><i>3</i><b>${T('Compare','قارن')}</b><small>${T('and decide','واتفق')}</small></div></div>
  <button type="button" class="gd-app" data-gd="app" hidden>📲 ${T('Install the app','نزّل التطبيق على موبايلك')}</button>`}
+const SUG=()=>(typeof lang!=='undefined'&&lang==='ar')?['شباك UPVC','باب بلكونة','زجاج سيكوريت','غرفة نوم','نجارة أبيض','أنظمة FRANKFORT']:['UPVC window','Balcony door','Tempered glass','Bedroom set','White carpentry','FRANKFORT system'];
+const PH=()=>(typeof lang!=='undefined'&&lang==='ar')?['ابحث عن شباك UPVC 2 درفة…','ابحث عن غرفة نوم مودرن…','ابحث عن مورد زجاج سيكوريت…','اطلب عرض سعر باب بلكونة…','ابحث عن نجارة أبيض…','ابحث عن أنظمة FRANKFORT…','قول للمساعد اللي عايزه…']:['Search UPVC windows…','Search a modern bedroom…','Find a tempered glass supplier…','Request a balcony door quote…','Search white carpentry…','Ask the assistant anything…'];
+
+/* ---- شريط الأقسام (زي التابات فوق) ---- */
+const TABS=[['all','الرئيسية','Home'],['upvc','UPVC','UPVC'],['furniture','موبيليا','Furniture'],['g_products','منتجات','Products'],['g_services','خدمات','Services'],['g_culture','ثقافة','Culture']];
+function tabs(){const oc=$q('#chips');if(oc)oc.style.setProperty('display','none','important');let t=$q('#hzTabs');
+ if(!t){t=document.createElement('nav');t.id='hzTabs';t.innerHTML=`<div class="tb-in">${TABS.map(x=>`<button type="button" data-tb="${x[0]}">${T(x[2],x[1])}</button>`).join('')}<i class="tb-i"></i></div>`;
+  const sb2=$q('.searchbar');if(sb2&&sb2.parentNode)sb2.parentNode.insertBefore(t,sb2);else document.body.prepend(t)}
+ const cur=typeof cat!=='undefined'?cat:'all',ind=t.querySelector('.tb-i');let hit=null;
+ t.querySelectorAll('[data-tb]').forEach(b=>{const on=b.dataset.tb===cur;b.classList.toggle('on',on);if(on)hit=b});
+ if(hit){ind.style.opacity=1;ind.style.width=hit.offsetWidth+'px';ind.style.transform='translateX('+hit.offsetLeft+'px)';
+  try{hit.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}catch(_){}}
+ else ind.style.opacity=0}
+function goTab(k){if(k==='all'||k==='upvc'||k==='furniture'){if(typeof goCat==='function')goCat(k)}else{const tile=$q('#chips [data-c="'+k+'"]');if(tile)tile.click()}scrollTo({top:0,behavior:'smooth'})}
+
+/* ---- الجملة اللي في البحث بتتغير ---- */
+let phI=0,phT=null;
+function phTick(){const q=$q('#q');if(!q)return;const home=document.body.classList.contains('hzg');
+ if(!home||document.activeElement===q||q.value)return;const L2=PH();phI=(phI+1)%L2.length;
+ q.style.setProperty('--phO','0');setTimeout(()=>{q.placeholder=L2[phI];q.style.setProperty('--phO','1')},260)}
+function phStart(){if(phT)return;const q=$q('#q');if(q){q.placeholder=PH()[0]}phT=setInterval(phTick,2800)}
 
 /* ---- تتبّع آخر طلب (كل الأقسام) ---- */
 const STG=['استلام','مراجعة','تنفيذ','تسليم'];
@@ -75,12 +113,13 @@ async function track(){const box=$q('#gdTrack');if(!box)return;
   box.innerHTML=`<div class="gd-tk"><b>📦 ${T('Track your order','تتبّع طلبك')}${ln?' · '+E(ln):''}</b><div class="gd-sp">${STG.map((x,k)=>`<span class="${k<i?'ok':k===i?'on':''}"><i>${k<i?'✓':k+1}</i>${x}</span>`).join('')}</div><small>${tx}</small></div>`
  }catch(_){box.innerHTML=''}}
 
-function home(){style();const on=typeof cat!=='undefined'&&cat==='all'&&!(typeof typ!=='undefined'&&typ)&&!(($q('#q')||{}).value||'').trim();
+function home(){style();tabs();phStart();const on=typeof cat!=='undefined'&&cat==='all'&&!(typeof typ!=='undefined'&&typ)&&!(($q('#q')||{}).value||'').trim();
  document.body.classList.toggle('hzg',on);
  if(!on)return;
+ let tp=$q('#hzTop');if(!tp){tp=document.createElement('div');tp.id='hzTop';tp.innerHTML=`<h1>${T('What are you looking for?','تدوّر على إيه النهاردة؟')}</h1><p>${T('Search or pick a section — we guide you step by step.','دوّر أو اختار قسم، وإحنا نمشّيك خطوة بخطوة.')}</p>`;const sb2=$q('.searchbar');if(sb2&&sb2.parentNode)sb2.parentNode.insertBefore(tp,sb2)}
  let g=$q('#hzGuide');
  if(!g){g=document.createElement('section');g.id='hzGuide';const sb2=$q('.searchbar');if(sb2&&sb2.parentNode)sb2.parentNode.insertBefore(g,sb2.nextSibling);else document.body.prepend(g);
-  g.innerHTML=guideHTML();const ch=$q('#chips');if(ch&&!$q('#gdAll')){const h=document.createElement('div');h.id='gdAll';h.textContent=T('All sections','كل الأقسام');ch.parentNode.insertBefore(h,ch)}}
+  g.innerHTML=guideHTML()}
  const ib=$q('#installBtn'),ab=g.querySelector('[data-gd=app]');if(ab)ab.hidden=!ib||ib.hidden;
  track()}
 
@@ -95,7 +134,9 @@ document.addEventListener('click',e=>{
   if(k==='go'&&typeof goCat==='function'){goCat(v);scrollTo({top:0,behavior:'smooth'})}
   else if(k==='quote'&&window.hzQuote)window.hzQuote();
   else if(k==='app'){const ib=$q('#installBtn');if(ib)ib.click()}
+  else if(k==='s'){const q=$q('#q');if(q){q.value=g.dataset.gd.slice(2);q.focus();if(typeof askAI==='function')askAI();else q.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter'}))}}
   return}
+ const tb=e.target.closest('[data-tb]');if(tb){goTab(tb.dataset.tb);return}
  const d=e.target.closest('[data-dk]');const m=$q('#hzDock .dk-m');
  if(d){const k=d.dataset.dk;
   if(k==='tg'&&m)m.hidden=!m.hidden;
@@ -103,6 +144,15 @@ document.addEventListener('click',e=>{
   else if(k==='wa'){if(m)m.hidden=true;const w=$q('#fabWa');if(w&&w.href)window.open(w.href,'_blank','noopener')}
   return}
  if(m&&!m.hidden&&!e.target.closest('#hzDock'))m.hidden=true});
+
+
+let sx=0,sy=0,st=0;
+const hscroll=el=>{for(;el&&el!==document.body;el=el.parentElement){const c=getComputedStyle(el);if((c.overflowX==='auto'||c.overflowX==='scroll')&&el.scrollWidth>el.clientWidth+4)return true;if(c.position==='fixed')return true}return false};
+document.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();window.__hzSwipeOk=!hscroll(e.target)&&!e.target.closest('input,textarea,select,#hubModal,#qtModal,#wdModal,.modal,#chat')},{passive:true});
+document.addEventListener('touchend',e=>{if(!window.__hzSwipeOk)return;const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+ if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-st>600)return;
+ const cur=typeof cat!=='undefined'?cat:'all',i=TABS.findIndex(x=>x[0]===cur);if(i<0)return;
+ const rtl=(typeof lang!=='undefined'&&lang==='ar'),n=i+((dx<0)===rtl?-1:1);if(n>=0&&n<TABS.length)goTab(TABS[n][0])},{passive:true});
 
 /* ---- حركة دخول ناعمة لما القسم يتغير ---- */
 const _r=render;render=function(){const r=_r.apply(this,arguments);
