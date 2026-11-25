@@ -151,7 +151,7 @@ function step2HTML(){const s=sec(Q.sec),fur=Q.sec==='furniture';
   <div class="qt-2"><input type="number" min="0" step="any" inputmode="decimal" data-qi="${i}" data-f="qty" value="${E(l.qty)}" placeholder="${T('Quantity','الكمية')}"><input data-qi="${i}" data-f="note" value="${E(l.note)}" placeholder="${T('Size / color (optional)','المقاس / اللون (اختياري)')}"></div></div>`}).join('');
  return `<h4 class="qt-h">${fur&&FT[Q.ftype]?FT[Q.ftype].ico+' '+FT[Q.ftype].n+' · ':''}${T('What do you need?','محتاج إيه؟')}</h4>
  ${Q.prices&&!Q.prices.length?`<p class="msg">${T('No supplier prices yet for this section. You can still send a custom request.','لسه مفيش أسعار موردين في القسم ده. تقدر تبعت طلب خاص.')}</p>`:''}
- ${lines}<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>${Q.sec==='upvc'?'<button type="button" class="pill" data-q="design">🪟 صمّم الشباك بالرسم</button>':''}</div>`}
+ ${lines}<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>${Q.sec==='upvc'?'<button type="button" class="pill" data-q="design">🪟 صمّم الشباك بالرسم</button><button type="button" class="pill" data-q="design2:door">صمّم باب</button><button type="button" class="pill" data-q="design2:shutter">صمّم شتر</button>':'<button type="button" class="pill" data-q="design2:wardrobe">صمّم دولاب</button><button type="button" class="pill" data-q="design2:bedroom">صمّم غرفة نوم</button><button type="button" class="pill" data-q="design2:piece">صمّم قطعة</button>'}</div>`}
 function step3HTML(){return `<h4 class="qt-h">${T('Details','تفاصيل الطلب')}</h4>
  <label style="display:block"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
  <div class="qt-2" style="margin-top:10px"><label><span>${T('Budget (optional)','ميزانيتك كام (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
@@ -169,7 +169,7 @@ function prevStep(){Q.msg='';if(Q.step>1)Q.step--;draw()}
 
 async function qStats(){try{const ids=(Q.res?Q.res.res:[]).map(x=>x.id);if(!ids.length)return;const r=await sb.rpc('hzq_provider_stats',{p_ids:ids});if(!r.error&&r.data){Q.stats=r.data;if(Q.res)draw()}}catch(_){}}
 const ageTag=u=>{if(!u)return '';const d=Math.floor((Date.now()-new Date(u))/864e5);return `<span class="qt-s"> · ${d<1?T('prices updated today','أسعاره محدّثة النهاردة'):T('prices updated '+d+'d ago','أسعاره محدّثة من '+d+' يوم')}</span>`};
-const statLine=id=>{const s=(Q.stats||{})[id];return !s||!(+s.closed||+s.n)?'<span class="qt-s"> · مورد جديد على Horizon</span>':`<span class="qt-s"> · ${+s.n?'★ '+Number(s.avg).toFixed(1)+' ('+s.n+' تقييم) · ':''}${+s.closed} صفقة اتقفلت</span>`};
+const statLine=id=>{const s=(Q.stats||{})[id];return !s||!(+s.closed||+s.n)?'<span class="qt-s"> · مورد جديد على أفق</span>':`<span class="qt-s"> · ${+s.n?'★ '+Number(s.avg).toFixed(1)+' ('+s.n+' تقييم) · ':''}${+s.closed} صفقة اتقفلت</span>`};
 function calc(){
  const lines=Q.lines.filter(l=>l.name.trim()&&+l.qty>0);
  const by={};(Q.prices||[]).filter(okOrigin).forEach(x=>{(by[x.provider_id]=by[x.provider_id]||{name:x.pname,items:[]}).items.push(x)});
@@ -193,7 +193,7 @@ function resultHTML(){const {res,lines}=Q.res,bud=+Q.budget||0,s=sec(Q.sec);
   <table>${r.rows.map(x=>x.miss?`<tr><td>${E(x.l.name)}</td><td class="qt-s" style="text-align:end">${T('not offered','مش متوفر عنده')}</td></tr>`
    :`<tr><td>${E(x.l.name)} × ${E(x.l.qty)} ${unit(x.it.unit)}${sec(Q.sec).groups[0].inst?instM(x.it,x.sub):''}</td><td style="text-align:end">${fm(x.sub)}</td></tr>`).join('')}</table>
   <button type="button" class="btn" style="margin-top:8px" data-q="send:${r.id}">${T('Send my request to this supplier','ابعت طلبي للمورد ده')}</button></div>`).join('');
- return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${orgNote()?`<p class="qt-s">${E(orgNote())}</p>`:''}${head}${simBtns(1)}${res.length?`<p class="qt-s">🔒 بيانات تواصلك بتفضل مخفية عن المورد لحد ما تقبل عرضه. بعدها بتتابعوا التنفيذ والتقييم من Horizon.</p><button type="button" class="btn" data-q="sendall" style="margin:8px 0">📢 ابعت طلبي لكل الموردين المناسبين وخلّيهم يقدّموا عروضهم</button>`:''}${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>${Q.ok&&Q.sent?'<button type="button" class="btn" data-q="mine">🧾 تابع طلباتي وعروضك</button>':''}
+ return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${orgNote()?`<p class="qt-s">${E(orgNote())}</p>`:''}${head}${simBtns(1)}${res.length?`<p class="qt-s">🔒 بيانات تواصلك بتفضل مخفية عن المورد لحد ما تقبل عرضه. بعدها بتتابعوا التنفيذ والتقييم من أفق.</p><button type="button" class="btn" data-q="sendall" style="margin:8px 0">📢 ابعت طلبي لكل الموردين المناسبين وخلّيهم يقدّموا عروضهم</button>`:''}${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>${Q.ok&&Q.sent?'<button type="button" class="btn" data-q="mine">🧾 تابع طلباتي وعروضك</button>':''}
   <p class="qt-s">${T('Prices come from suppliers and may change at confirmation.','الأسعار من الموردين وممكن تتغير وقت التأكيد.')}</p></div>`}
 
 /* ---- عينة 3D لطلب العميل (بتشتغل من taxonomy.js: window.hzSim) ---- */
@@ -236,7 +236,7 @@ function openSim(i){const a=simSpecs(),x=a[+i||0];if(x&&x.spec.kind==='bed'&&typ
 
 function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTML()}
 
-const fixL=l=>{const it=(Q.prices||[]).find(x=>x.group_key===l.g&&x.name===l.name);return{g:l.g,name:l.name,qty:l.area&&it&&it.unit==='m2'?l.area:1,note:l.note||''}};
+const fixL=l=>{const it=(Q.prices||[]).find(x=>x.group_key===l.g&&x.name===l.name);return{g:l.g,name:l.name,qty:l.area&&it&&it.unit==='m2'?l.area:(+l.qty>0?+l.qty:1),note:l.note||''}};
 async function openQuote(secId,seed,opt){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
  if(!OPEN_SECS.includes(id)){if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
@@ -264,6 +264,7 @@ document.addEventListener('click',e=>{
  const [k,v]=a.dataset.q.split(':');
  if(k==='add'){Q.lines.push(newLine());draw()}
  else if(k==='design'){if(window.hzDesigner)hzDesigner.open({sys:Q.system})}
+  else if(k==='design2'){if(window.hzDesign2){const sid=Q.sec;hzDesign2.open(v,{onDone:ls=>{window.hzQuoteAdd(ls,Q.system,sid,ls[0]&&ls[0].g)}})}}
  else if(k==='sysadd'){(async()=>{const n=prompt(T('Profile / system name','اسم القطاع أو النظام (مثلاً: REHAU 70)'));if(!n)return;const d=prompt(T('Short description (optional)','وصف قصير (اختياري)'))||'';
   let g2=(prompt(T('Group (optional)','المجموعة (اختياري). اكتب: المنشأ لو ده منشأ، أو سيبها فاضية للأنظمة'))||'').trim();if(g2==='المنشأ'||g2.toLowerCase()==='origin')g2=ORG_G;if(!g2)g2='الأنظمة';
   const x=await addSys(n,d,g2);if(x===-2&&typeof toast==='function')toast(T('Already exists.','موجود بالفعل.'));else if(x===0&&typeof toast==='function')toast(T('Saved on this device only. Run hz-hub.sql to share it with everyone.','اتحفظ على جهازك بس. شغّل hz-hub.sql عشان يظهر للكل.'));draw()})()}
@@ -312,7 +313,7 @@ function picker(seed){ensureModal();show();Q.res=null;
 document.addEventListener('click',e=>{const b=e.target.closest('[data-qpick]');if(b&&$q('#qtModal')&&$q('#qtModal').contains(b))openQuote(b.dataset.qpick,Q.seed)});
 
 window.hzQuote=openQuote;
-window.hzQuoteAdd=async(lines,sys)=>{const m=$q('#qtModal');
- if(!m||m.hidden||Q.sec!=='upvc'||Q.res){await openQuote('upvc','',{system:sys||'',skip:1,lines});return}
+window.hzQuoteAdd=async(lines,sys,secId,g)=>{secId=secId||'upvc';const m=$q('#qtModal');
+ if(!m||m.hidden||Q.sec!==secId||Q.res){await openQuote(secId,'',{system:sys||'',skip:1,lines,type:secId==='furniture'&&FT[g]?g:undefined});return}
  Q.lines=Q.lines.filter(l=>String(l.name).trim()).concat(lines.map(fixL));if(sys)Q.system=sys;Q.step=2;Q.msg='';draw()};
 })();

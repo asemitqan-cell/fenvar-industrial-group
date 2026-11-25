@@ -35,20 +35,33 @@ function css(){if(css0)return;css0=1;const s=document.createElement('style');s.t
 #hubModal input.q{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg)}`;document.head.appendChild(s)}
 
 const chev=()=>(typeof lang!=='undefined'&&lang==='ar')?'‹':'›';
-function hubHTML(id){const m=HUB[id],u=id==='upvc';
- const row=(k,ic,t,d)=>`<button type="button" class="hb-r" data-hub="${k}"><i>${ic}</i><span><b>${t}</b><small>${d}</small></span><em>${chev()}</em></button>`;
- const rows=(u?row('design','🪟',T('Window designer','مصمم الشبابيك'),T('Draw your window with real sizes and openings','ارسم شباكك بالمقاسات وأنواع الفتح')):'')
-  +row('sim','🧊',T('3D preview','عينة 3D'),u?T('See a window before you order','شوف الشباك قبل ما تطلب'):T('See a piece in 3D','شوف القطعة 3D'))
-  +row('prov','📍',u?T('Find a supplier','ابحث عن مورد'):T('Suppliers & showrooms','الموردين والمعارض'),T('Verified suppliers with prices','موردين موثّقين بأسعارهم'));
- return `<div class="hb" id="hubBox"><div class="hb-top"><i>${m.ico}</i><div><b>${m.ar}</b><small>${m.sub}</small></div></div>
- <button type="button" class="hb-go" data-hub="quote"><span><b>🧾 ${T('Request a quote','اطلب عرض سعر')}</b><small>${u?T('Pick a system, list what you need, get supplier offers','اختار النظام والمنشأ، وحدد طلبك، وتوصلك عروض الموردين'):T('Pick a furniture type, list what you need, get offers','اختار نوع الموبيليا، وحدد طلبك، وتوصلك عروض الموردين')}</small></span><em>${chev()}</em></button>
+const sv=p=>`<svg class="hzi" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const HI={win:sv('<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M12 3v18M4 12h16"/>'),door:sv('<rect x="6" y="3" width="12" height="18" rx="1.5"/><circle cx="15" cy="12" r=".9"/>'),
+ ward:sv('<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M12 3v18M9.5 11v2M14.5 11v2"/>'),bed:sv('<path d="M3 19V6M3 14h18v5M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/>'),
+ shut:sv('<rect x="4" y="3" width="16" height="4" rx="1"/><path d="M5 9h14M5 12h14M5 15h14M5 18h14"/>'),sofa:sv('<path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><path d="M3 13a2 2 0 0 1 4 0v1h10v-1a2 2 0 0 1 4 0v5H3z"/>'),
+ pin:sv('<path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>'),rec:sv('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>')};
+function hubHTML(id){const u=id==='upvc';
+ const row=(k,ic,t,d,x)=>`<button type="button" class="hb-r" data-hub="${k}"${x||''}><i>${ic}</i><span><b>${t}</b><small>${d}</small></span><em>${chev()}</em></button>`;
+ const rows=(u?row('design',HI.win,T('Window designer','مصمم الشبابيك'),T('Draw your window with real sizes and openings','ارسم شباكك بالمقاسات وأنواع الفتح'))
+   +row('design2',HI.door,T('Door designer','مصمم الأبواب'),T('Single, double, sliding or balcony','ضلفة، ضلفتين، سحاب أو بلكونة'),' data-k="door"')
+   +row('design2',HI.shut,T('Shutter designer','مصمم الشتر'),T('Size, color, motor and ventilation','المقاس واللون والموتور والتهوية'),' data-k="shutter"')
+   +row('sim',HI.win,T('Window in 3D','عينة شباك 3D'),T('See the window before you order','شوف الشباك قبل ما تطلب'),' data-k="window"')
+   +row('sim',HI.door,T('Door in 3D','عينة باب 3D'),T('See the door before you order','شوف الباب قبل ما تطلب'),' data-k="door"')
+  :row('design2',HI.ward,T('Wardrobe designer','مصمم الدولاب'),T('Doors, drawers, mirror and finish','الضلف والأدراج والمراية والتشطيب'),' data-k="wardrobe"')
+   +row('design2',HI.bed,T('Bedroom designer','مصمم غرفة النوم'),T('Bed, wardrobe, nightstands and dresser','سرير ودولاب وكومودينو وتسريحة'),' data-k="bedroom"')
+   +row('design2',HI.sofa,T('Furniture piece designer','مصمم قطعة موبيليا'),T('Dining, corner, desk, dressing table...','سفرة، ركنة، مكتب، تسريحة...'),' data-k="piece"')
+   +row('sim',HI.ward,T('Wardrobe in 3D','عينة دولاب 3D'),T('See the wardrobe before you order','شوف الدولاب قبل ما تطلب'),' data-k="wardrobe"')
+   +row('sim',HI.bed,T('Bedroom in 3D','عينة غرفة نوم 3D'),T('See the bedroom before you order','شوف غرفة النوم قبل ما تطلب'),' data-k="bed"'))
+  +row('prov',HI.pin,u?T('Find a supplier','ابحث عن مورد'):T('Suppliers & showrooms','الموردين والمعارض'),T('Verified suppliers with prices','موردين موثّقين بأسعارهم'));
+ return `<div class="hb" id="hubBox">
+ <button type="button" class="hb-go" data-hub="quote"><span><b>${HI.rec} ${T('Request a quote','اطلب عرض سعر')}</b><small>${u?T('Pick a system, list what you need, get supplier offers','اختار النظام والمنشأ، وحدد طلبك، وتوصلك عروض الموردين'):T('Pick a furniture type, list what you need, get offers','اختار نوع الموبيليا، وحدد طلبك، وتوصلك عروض الموردين')}</small></span><em>${chev()}</em></button>
  <div class="hb-lst">${rows}</div>
  <div class="hb-sep">${T('Designs gallery','معرض التصاميم')}</div></div>`}
 
-function inject(){const g=$q('#grid');if(!g||typeof cat==='undefined'||!HUB[cat])return;
- const q=(($q('#q')||{}).value||'').trim();if(q||(typeof typ!=='undefined'&&typ!==null)){const o=$q('#hubBox');if(o)o.remove();return}
+function inject(){const g=$q('#grid');if(!g||typeof cat==='undefined'||!HUB[cat]){document.body.classList.remove('hzhub');return}
+ const q=(($q('#q')||{}).value||'').trim();if(q||(typeof typ!=='undefined'&&typ!==null)){const o=$q('#hubBox');if(o)o.remove();document.body.classList.remove('hzhub');return}
  css();const old=$q('#hubBox');if(old)old.remove();const qc=g.querySelector('.qt-card');if(qc)qc.remove();
- g.insertAdjacentHTML('afterbegin',hubHTML(cat))}
+ g.insertAdjacentHTML('afterbegin',hubHTML(cat));document.body.classList.add('hzhub')}
 
 /* ---- كل ما القسم يترسم ---- */
 const _r=render;render=function(){const r=_r.apply(this,arguments);try{inject()}catch(e){}return r};
@@ -96,8 +109,11 @@ document.addEventListener('click',async e=>{
  const [k,...r]=a.dataset.hub.split(':'),v=r.join(':'),id=H.sec&&$q('#hubModal')&&!$q('#hubModal').hidden?H.sec:cat;
  if(k==='quote'){closeM();window.hzQuote&&hzQuote(id)}
  else if(k==='design'){if(window.hzDesigner)hzDesigner.open({sys:''})}
- else if(k==='sim'){const sp=cat==='furniture'?{kind:'wardrobe',type:'hinged',color:'walnut'}:{kind:'window',type:'casement2',color:'white'};
-  if(window.hzSim)hzSim.open(sp);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}
+ else if(k==='sim'){const kd=a.dataset.k||(cat==='furniture'?'wardrobe':'window');
+  if(kd==='bed'){if(typeof hzLoad==='function')hzLoad('sec-3d').then(()=>{if(window.hz3d)hz3d.open('bed',{title:T('Bedroom','غرفة نوم'),color:'#8B5A2B'})}).catch(()=>{if(typeof toast==='function')toast(T('Needs internet to load the preview.','محتاج إنترنت عشان المعاينة تتحمّل.'))});else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}
+  else{const sp=kd==='wardrobe'?{kind:'wardrobe',type:'hinged',color:'walnut'}:kd==='door'?{kind:'door',type:'hinged',color:'white'}:{kind:'window',type:'casement2',color:'white'};
+   if(window.hzSim)hzSim.open(sp);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}}
+ else if(k==='design2'){if(window.hzDesign2)hzDesign2.open(a.dataset.k,{onDone:ls=>{window.hzQuoteAdd&&hzQuoteAdd(ls,'',cat,ls[0]&&ls[0].g)}});else if(typeof toast==='function')toast(T('Designer is not loaded yet.','المصمم لسه ما اتحمّلش.'))}
  else if(k==='prov')openProv(cat,'')
 },true);
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.hubq!=null){H.q=t.value;const p=t.selectionStart;drawProv();const n=$q('#hubBody [data-hubq]');if(n){n.focus();try{n.setSelectionRange(p,p)}catch(_){}}}});
