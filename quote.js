@@ -124,8 +124,10 @@ window.HZ_FTYPES=FT;
 const orgNote=()=>{if(Q.sec==='upvc'){const a=[];if(Q.system)a.push(T('Requested system / profile: ','النظام / القطاع المطلوب: ')+Q.system);if(Q.origin)a.push(T('Origin: ','المنشأ: ')+Q.origin);return a.join(' · ')}
  if(Q.sec==='furniture'&&FT[Q.ftype])return T('Furniture type: ','نوع الموبيليا: ')+FT[Q.ftype].n;return ''};
 function newLine(){const s=sec(Q.sec);let g=s.groups.find(g=>g.k!=='install')||s.groups[0];if(Q.sec==='furniture'&&FT[Q.ftype])g=s.groups.find(x=>x.k===Q.ftype)||g;return{g:g.k,name:'',qty:1,note:''}}
+/* المنشأ: لو العميل اختار منشأ، بنخفي بنود القطاعات اللي المورد حدد ليها منشأ تاني. البنود من غير منشأ بتفضل ظاهرة */
+function okOrigin(x){return Q.sec!=='upvc'||!Q.origin||x.group_key!=='sector'||!x.specs||!x.specs.origin||x.specs.origin===Q.origin}
 function names(gk){const s=sec(Q.sec),g=s.groups.find(x=>x.k===gk);if(!g)return[];
- const av=AVAIL[gk]?[...AVAIL[gk]]:[];return [...new Set(g.pre.filter(n=>av.includes(n)).concat(av))]}
+  const av=[...new Set((Q.prices||[]).filter(x=>x.group_key===gk&&okOrigin(x)).map(x=>x.name))];return [...new Set(g.pre.filter(n=>av.includes(n)).concat(av))]}
 
 /* ---- الخطوات: (1) النظام/النوع  (2) البنود  (3) التفاصيل  (4) العروض ---- */
 function stepsBar(){const n=Q.sec==='upvc'?['النظام والمنشأ','البنود','التفاصيل','العروض']:['النوع','البنود','التفاصيل','العروض'],cur=Q.res?4:Q.step;
@@ -170,7 +172,7 @@ const ageTag=u=>{if(!u)return '';const d=Math.floor((Date.now()-new Date(u))/864
 const statLine=id=>{const s=(Q.stats||{})[id];return !s||!(+s.closed||+s.n)?'<span class="qt-s"> · مورد جديد على Horizon</span>':`<span class="qt-s"> · ${+s.n?'★ '+Number(s.avg).toFixed(1)+' ('+s.n+' تقييم) · ':''}${+s.closed} صفقة اتقفلت</span>`};
 function calc(){
  const lines=Q.lines.filter(l=>l.name.trim()&&+l.qty>0);
- const by={};(Q.prices||[]).forEach(x=>{(by[x.provider_id]=by[x.provider_id]||{name:x.pname,items:[]}).items.push(x)});
+ const by={};(Q.prices||[]).filter(okOrigin).forEach(x=>{(by[x.provider_id]=by[x.provider_id]||{name:x.pname,items:[]}).items.push(x)});
  const res=Object.keys(by).map(id=>{const sp=by[id];let total=0,hit=0;
   const rows=lines.map(l=>{const it=sp.items.find(x=>x.group_key===l.g&&x.name===l.name.trim());
    if(!it)return{l,miss:1};const sub=Number(it.price)*Number(l.qty);total+=sub;hit++;return{l,it,sub}});

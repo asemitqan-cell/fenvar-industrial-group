@@ -38,6 +38,18 @@ const st=document.createElement('style');st.textContent=`
 .od-s .ok i{background:#d1fae5;color:#065f46}.od-s .on i{background:var(--p);color:#fff}.od-s .on{color:var(--p);font-weight:700}
 .od-e{text-align:center;color:var(--mut);padding:18px 12px;border:1px dashed var(--line);border-radius:16px;line-height:1.8;font-size:13.5px}
 .od-e .btn{margin-top:8px}
+/* لوحة المالك + الفحص السريع */
+.ow-h{margin:2px 0 4px;font-size:21px}
+.ow-g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+.ow-k{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px}
+.ow-k b{display:block;font-size:22px;line-height:1.2}.ow-k small{color:var(--mut);font-size:12px}
+.ow-s{margin:18px 2px 8px;font-size:13px;font-weight:800;color:var(--mut)}
+.ow-pb{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 2px}.ow-pb i{display:block;height:100%;background:var(--p);border-radius:99px}
+.ow-card{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px;margin:0 0 8px;display:grid;gap:6px}
+.ow-card>b{font-size:15px}.ow-row{display:flex;justify-content:space-between;gap:8px;font-size:13px}.ow-row span:first-child{color:var(--mut)}
+.ow-bars{display:flex;align-items:flex-end;gap:4px;height:70px;padding:6px 2px}.ow-bars i{flex:1;min-width:6px;background:var(--p);border-radius:5px 5px 0 0;opacity:.85}
+.ow-ck{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.6;padding:6px 2px;border-bottom:1px solid var(--line)}
+.ow-ck i{font-style:normal;flex:none}
 @media (prefers-reduced-motion:reduce){.hz-gt{animation:none!important}}
 #hsBody [data-qxrow]{display:none!important}
 /* زر ✦ القديم جوه البحث: مخفي دايماً (بيظهر بس وقت التسجيل الصوتي) */
@@ -158,6 +170,56 @@ document.addEventListener('click',e=>{const t=e.target;if(!t||!t.matches)return;
  try{MS.pop()}catch(_){}
  cur.hidden=true;pm.hidden=false;
  try{if(typeof setBar==='function')setBar('barProf')}catch(_){}},true);
+
+/* ---------- لوحة المالك (أرقام من السيرفر: hzq_stats + hzq_revenue، والسيرفر هو اللي بيتأكد إنك المالك) ---------- */
+const SECA={upvc:'UPVC',furniture:'موبيليا',wood:'خشب',iron:'حديد',paints:'دهانات',nursing:'تمريض'};
+const ltr=t=>'<bdi dir="ltr">'+t+'</bdi>';
+const fmn=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+const mins=m=>m==null?'—':(m<60?m+' د':m<1440?Math.round(m/60)+' س':Math.round(m/1440)+' يوم');
+function ownEnsure(){if($q('#ownModal'))return;document.body.insertAdjacentHTML('beforeend','<div class="modal" id="ownModal" hidden><div class="sheet st"><button type="button" class="x" data-close>×</button><div id="ownBody"></div></div></div>')}
+function goal(label,v,t){const p=Math.max(0,Math.min(100,Math.round(v/t*100)));return `<div class="ow-k"><small>${label}</small><b>${ltr(fmn(v)+' / '+t)}</b><div class="ow-pb"><i style="width:${p}%"></i></div></div>`}
+async function ownDraw(){const b=$q('#ownBody');if(!b)return;const s=SBC();
+ b.innerHTML=`<h3 class="ow-h">📊 ${T('Owner dashboard','لوحة المالك')}</h3><p class="od-e">…</p>`;
+ if(!s){b.innerHTML+='<p class="od-e">مفيش اتصال بالسيرفر.</p>';return}
+ try{const [a,r]=await Promise.all([s.rpc('hzq_stats'),s.rpc('hzq_revenue')]);
+  if(a.error)throw a.error;if(r.error)throw r.error;
+  const st=a.data||{},rv=r.data||{},secs=(st.sections||[]).filter(x=>x.section==='upvc'||x.section==='furniture'||x.requests||x.price_items||x.deals);
+  const core=secs.filter(x=>x.section==='upvc'||x.section==='furniture'),sum=k=>core.reduce((n,x)=>n+(+x[k]||0),0);
+  const pv=st.providers||{};
+  const goals=`<div class="ow-s">هدف الـ30 يوم (UPVC + موبيليا)</div><div class="ow-g">${goal('موردين موثّقين بأسعار',sum('providers_verified'),5)}${goal('طلبات حقيقية',sum('requests'),20)}${goal('صفقات متقفلة',sum('closed'),3)}${goal('عملاء طلبوا',st.customers_requesting||0,10)}</div>`;
+  const kpi=`<div class="ow-g"><div class="ow-k"><b>${ltr(fmn(pv.verified)+' / '+fmn(pv.registered))}</b><small>موردين موثّقين / مسجّلين${pv.pending?' · '+pv.pending+' منتظر مراجعة':''}</small></div><div class="ow-k"><b>${fmn(st.repeat_customers)}</b><small>عملاء كرّروا الطلب</small></div><div class="ow-k"><b>${fmn(rv.due)}</b><small>عمولة مستحقة (جنيه)</small></div><div class="ow-k"><b>${fmn(rv.paid)}</b><small>عمولة اتسدّدت (جنيه)</small></div></div>${rv.open_disputes?`<p class="od-e">⚠️ ${rv.open_disputes} شكوى مفتوحة محتاجة مراجعة</p>`:''}`;
+  const cards=secs.map(x=>{const ans=x.requests?Math.round((x.answered||0)/x.requests*100):0;return `<div class="ow-card"><b>${SECN[x.section]||SECA[x.section]||E(x.section)}</b>
+   <div class="ow-row"><span>طلبات (آخر 7 أيام)</span><span>${ltr(fmn(x.requests)+' ('+fmn(x.requests_7d)+')')}</span></div>
+   <div class="ow-row"><span>اتردّ عليها</span><span>${ans}% · ${fmn(x.offers)} عرض</span></div>
+   <div class="ow-row"><span>أول عرض بعد</span><span>${mins(x.avg_first_offer_min)}</span></div>
+   <div class="ow-row"><span>صفقات / متقفلة</span><span>${ltr(fmn(x.deals)+' / '+fmn(x.closed))}</span></div>
+   <div class="ow-row"><span>قيمة الصفقات / العمولة</span><span>${ltr(fmn(x.gmv)+' / '+fmn(x.commission))}</span></div>
+   <div class="ow-row"><span>موردين موثّقين بأسعار</span><span>${fmn(x.providers_verified)} من ${fmn(x.providers_priced)} · ${fmn(x.price_items)} بند</span></div>
+   <div class="ow-row"><span>التقييم</span><span>${x.avg_rating!=null?x.avg_rating+' / 5':'—'}</span></div></div>`}).join('');
+  const d=st.daily||[],mx=Math.max(1,...d.map(z=>+z.n||0));
+  const daily=d.length?`<div class="ow-s">الطلبات في آخر 14 يوم</div><div class="ow-bars">${d.map(z=>`<i title="${E(z.d)}: ${z.n}" style="height:${Math.max(8,Math.round((+z.n||0)/mx*100))}%"></i>`).join('')}</div>`:'';
+  const cities=(st.cities||[]).length?`<div class="ow-s">أكتر المدن طلباً</div><div class="ow-card">${st.cities.map(c=>`<div class="ow-row"><span>${E(c.city)}</span><span>${fmn(c.n)}</span></div>`).join('')}</div>`:'';
+  const un=(rv.unpaid||[]).length?`<div class="ow-s">عمولات مستحقة</div>${rv.unpaid.map(u=>`<div class="ow-card"><b>${E(u.name)} · ${SECN[u.section]||E(u.section)}</b><div class="ow-row"><span>قيمة الصفقة / العمولة</span><span>${ltr(fmn(u.total)+' / '+fmn(u.commission))}</span></div><button type="button" class="pill" data-owpay="${E(u.deal)}">تم السداد</button></div>`).join('')}`:'';
+  b.innerHTML=`<h3 class="ow-h">📊 ${T('Owner dashboard','لوحة المالك')}</h3><p class="od-p">أرقام حقيقية من قاعدة البيانات.</p>${goals}${kpi}<div class="ow-s">الأقسام</div>${cards||'<p class="od-e">لسه مفيش نشاط.</p>'}${daily}${cities}${un}<div class="ow-s">فحص التطبيق</div><button type="button" class="od-r" data-owtest="1"><i>🧪</i><span><b>فحص سريع</b><small>يتأكد إن الملفات والوظايف الأساسية شغالة بعد أي رفع</small></span><em>${chev()}</em></button>`;
+ }catch(e){b.innerHTML=`<h3 class="ow-h">📊 ${T('Owner dashboard','لوحة المالك')}</h3><p class="od-e">مقدرناش نحمّل الأرقام. ${E((e&&e.message)||'')}</p>`}}
+window.hzOwner=function(){ownEnsure();showModal('#ownModal');ownDraw()};
+document.addEventListener('click',async e=>{
+ const pay=e.target.closest&&e.target.closest('[data-owpay]');
+ if(pay){const s=SBC();if(!s||!confirm('تأكيد إن المورد سدّد العمولة دي؟'))return;const r=await s.rpc('hzq_mark_commission',{p_deal:pay.dataset.owpay,p_paid:true});if(r.error)say(r.error.message);else{say('اتسجّل ✓');ownDraw()}return}
+ if(e.target.closest&&e.target.closest('[data-owtest]')){window.hzSelfTest()}});
+
+/* ---------- فحص سريع (بعد أي رفع): ?selftest=1 أو من لوحة المالك ---------- */
+window.hzSelfTest=async function(){ownEnsure();const m=$q('#ownModal');if(m&&m.hidden)showModal('#ownModal');const b=$q('#ownBody');
+ b.innerHTML='<h3 class="ow-h">🧪 فحص سريع</h3><p class="od-e">…</p>';const out=[];const ok=(t,v,d)=>out.push([v,t,d||'']);
+ const scripts=[...document.querySelectorAll('script[src]')].filter(x=>x.getAttribute('src')&&!/^https?:/.test(x.getAttribute('src')));
+ for(const el of scripts){const u=el.getAttribute('src'),opt=el.hasAttribute('onerror');try{const r=await fetch(u,{cache:'no-store'});ok('ملف '+u.split('?')[0],r.ok||opt,r.ok?'':opt?'اختياري، مش موجود وده عادي':'HTTP '+r.status+' (مش مرفوع على GitHub؟)')}catch(_){ok('ملف '+u.split('?')[0],opt,opt?'اختياري':'مش بيتحمّل')}}
+ try{const r=await fetch('sw.js',{cache:'no-store'}),t=await r.text(),v=(t.match(/const V='([^']+)'/)||[])[1];ok('إصدار التطبيق (sw.js)',!!v,v||'')}catch(_){ok('إصدار التطبيق (sw.js)',false,'مش متاح')}
+ [['hzQuote','عرض السعر'],['hzQuotes','متابعة العروض والطلبات'],['hzOrders','شاشة الطلبات'],['hzSys','أنظمة وقطاعات UPVC'],['hzShare','المشاركة'],['hzDesigner','مصمم الشبابيك'],['hzSim','عينة 3D']].forEach(([k,n])=>ok(n,typeof window[k]!=='undefined'));
+ [['#grid','الشبكة الرئيسية'],['#q','خانة البحث'],['#hzDock','القايمة الجانبية'],['#chat','المساعد'],['#hzTabs','التابات']].forEach(([s,n])=>ok(n,!!$q(s)));
+ const s=SBC();if(s){try{const r=await s.from('hz_settings').select('key').limit(1);ok('الاتصال بقاعدة البيانات',!r.error,r.error?r.error.message:'')}catch(e){ok('الاتصال بقاعدة البيانات',false,String(e&&e.message||e))}}else ok('الاتصال بقاعدة البيانات',false,'مفيش اتصال');
+ const bad=out.filter(x=>!x[0]).length;
+ b.innerHTML=`<h3 class="ow-h">🧪 فحص سريع</h3><p class="od-p">${bad?'⚠️ في '+bad+' حاجة محتاجة مراجعة.':'✅ كل حاجة تمام.'}</p>`+out.map(x=>`<div class="ow-ck"><i>${x[0]?'✅':'❌'}</i><span>${E(x[1])}${x[2]?' <small style="color:var(--mut)">· '+E(x[2])+'</small>':''}</span></div>`).join('')};
+if(/[?&]selftest=1/.test(location.search))setTimeout(()=>window.hzSelfTest(),2500);
 
 /* ---------- مساعد Horizon: ترحيب + placeholder + مراعاة الكيبورد ---------- */
 function chatUI(){const c=$q('#cB');if(!c)return;const has=c.querySelector('.m'),h=c.querySelector('.hzc-hello');
