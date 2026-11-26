@@ -425,29 +425,3 @@ body:not(.ar) #chat .cb:empty:after{content:"Tell me what you need, and I'll hel
  #chat .chat-welcome-title{font-size:29px!important}
  #chat .chat-welcome-sub{font-size:14px!important}
 }
-
-
-/* v22 — precise assistant top bar */
-#chat .ch{direction:rtl!important;display:flex!important;align-items:center!important;gap:12px!important;min-height:58px!important;padding:7px 15px!important}
-#chat .ch .ch-mark{width:27px!important;height:27px!important;flex:0 0 27px!important;color:var(--p)!important}
-#chat .ch .ch-mark svg{width:25px!important;height:25px!important}
-#chat .ch .ch-title-wrap{display:flex!important;flex:1 1 auto!important;min-width:0!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:2px!important}
-#chat .ch .ch-title-wrap>b{font-size:15px!important;line-height:1.35!important;font-weight:800!important}
-#chat .ch .ch-status{display:flex!important;align-items:center!important;gap:5px!important;color:#0d9b78!important;font-size:11px!important;line-height:1.2!important}
-#chat .ch .ch-status i{display:block!important;width:6px!important;height:6px!important;border-radius:50%!important;background:#10b981!important}
-#chat .ch #cSpk,#chat .ch #cMin,#chat .ch #cX{
- display:grid!important;place-items:center!important;flex:0 0 31px!important;
- width:31px!important;min-width:31px!important;height:31px!important;min-height:31px!important;
- margin:0!important;padding:0!important;border:0!important;border-radius:50%!important;
- background:transparent!important;box-shadow:none!important;color:var(--mut)!important;
- font-size:0!important;line-height:1!important
-}
-#chat .ch #cSpk{font-size:17px!important}
-#chat .ch #cMin:before{width:14px!important;height:2px!important}
-#chat .ch #cX:before,#chat .ch #cX:after{width:15px!important;height:2px!important}
-#chat .ch #cWa{display:none!important}
-#chat .cb:before,#chat .cb:after{content:none!important;display:none!important}
-@media(max-width:640px){
- #chat .ch{min-height:58px!important;padding:6px 13px!important;gap:10px!important}
- #chat .ch .ch-title-wrap>b{font-size:15px!important}
-}
