@@ -315,3 +315,36 @@ body:not(.ar) #chat .cb:empty:after{content:"Ask about products, services, suppl
 #chips button.tile .ti:empty{background-image:none!important}
 #chips button.tile .ti .gi{display:none!important}
 .demo-photo-tag{display:block!important;color:var(--mut)!important;font-size:10px!important;line-height:1.5!important;font-weight:500!important}
+
+
+/* v19: assistant compact controls and welcome, after all existing rules */
+#chat .ch{min-height:42px!important;padding:5px 12px!important;gap:9px!important;background:var(--card,#fff)!important;color:var(--ink)!important;border-bottom:1px solid var(--line)!important}
+#chat .ch>.ch-mark{width:25px!important;height:25px!important;display:grid!important;place-items:center!important;border-radius:0!important;background:transparent!important;color:var(--p)!important;font-size:0!important;flex:none!important}
+#chat .ch>.ch-mark svg{width:22px;height:22px;display:block}
+#chat .ch>b{font-size:14px!important;font-weight:700!important}
+#chat .ch>button{width:28px!important;height:28px!important;min-width:28px!important;border-radius:50%!important;background:transparent!important;color:var(--mut)!important}
+#chat .cb:empty{align-items:center!important;justify-content:center!important;text-align:center!important}
+#chat .cb:empty:before{content:"أهلاً 👋"!important;display:block;width:100%;color:var(--ink);font-size:25px;font-weight:800;line-height:1.5;text-align:center}
+#chat .cb:empty:after{content:"قولي محتاج إيه، وأنا أساعدك."!important;display:block;width:100%;color:var(--mut);font-size:14px;font-weight:500;line-height:1.8;text-align:center}
+body:not(.ar) #chat .cb:empty:before{content:"Hello 👋"!important}
+body:not(.ar) #chat .cb:empty:after{content:"Tell me what you need, and I'll help."!important}
+#chat .cf{min-height:42px!important;align-items:center!important;margin:7px 10px calc(7px + env(safe-area-inset-bottom))!important;padding:3px 5px!important;gap:3px!important;border-radius:999px!important;background:var(--card,#fff)!important;box-shadow:none!important}
+#chat .cf input{height:32px!important;min-height:32px!important;padding:5px 3px!important;font-size:13px!important;border:0!important;background:transparent!important}
+#chat .cf>button{width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;padding:0!important;border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important}
+#chat .cf #cPlus{font-size:21px!important;color:var(--mut)!important}
+#chat .cf #cMic{color:var(--mut)!important}
+#chat .cf #cMic svg{width:17px!important;height:17px!important}
+#chat .cf #cGo{background:var(--ink)!important;color:var(--bg)!important}
+#chat .cf #cMic.recording{background:transparent!important;color:#DC2626!important}
+#aiGo{width:auto!important;min-width:36px!important;height:34px!important;padding:0 9px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;border:0!important;border-radius:999px!important;background:transparent!important;color:var(--p)!important;box-shadow:none!important;font-size:0!important}
+#aiGo svg{width:18px!important;height:18px!important;display:block}
+#aiGo span{font-size:10px!important;font-weight:700!important;white-space:nowrap}
+.searchbar .sb{min-height:42px!important;padding:3px 5px!important;gap:3px!important;border-radius:999px!important}
+.searchbar .sb>button{width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;border-radius:50%!important}
+.searchbar #q{font-size:13px!important;padding:6px 4px!important}
+.searchbar #plus{background:transparent!important;color:var(--mut)!important}
+#fab{width:auto!important;height:40px!important;min-width:40px!important;padding:0 12px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;border-radius:999px!important;font-size:0!important}
+#fab svg{width:18px!important;height:18px!important}
+#fab span{font-size:11px!important;font-weight:700!important;white-space:nowrap}
+#fab[hidden]{display:none!important}
+@media(max-width:420px){#aiGo span{font-size:9px!important}#chat .cf{margin-inline:8px!important}}
