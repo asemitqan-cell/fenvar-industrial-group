@@ -103,7 +103,7 @@ function inlineMedia(value: unknown, kind: "image" | "audio"): { inline_data: { 
   if (!value.startsWith("data:") || comma < 0) throw new Error("Invalid media encoding");
   const header = value.slice(5, comma);
   if (!header.endsWith(";base64")) throw new Error("Invalid media encoding");
-  const mime = header.slice(0, -7).toLowerCase();
+  const mime = header.split(";")[0].toLowerCase();
   const encoded = value.slice(comma + 1);
   if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) throw new Error("Invalid base64 media");
   const allowed = kind === "image"
