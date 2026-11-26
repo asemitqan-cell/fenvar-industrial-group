@@ -33,8 +33,8 @@ declare
   v_now timestamptz := clock_timestamp();
 begin
   if p_key is null or length(p_key) < 1 or length(p_key) > 256
-     or p_limit < 1 or p_limit > 1000
-     or p_window_seconds not in (60, 3600) then
+     or p_limit is null or p_limit < 1 or p_limit > 1000
+     or p_window_seconds is null or p_window_seconds not in (60, 3600) then
     return false;
   end if;
 
@@ -159,6 +159,12 @@ on conflict (user_id) do update set
   about = excluded.about,
   verified = true,
   updated_at = now();
+
+delete from public.hz_public_providers pub
+where not exists (
+  select 1 from public.hz_providers p
+  where p.user_id = pub.user_id and p.verified is true and p.status = 'approved'
+);
 
 -- Settings are public only for the three keys used by the public app.
 drop policy if exists "hz_settings read" on public.hz_settings;
