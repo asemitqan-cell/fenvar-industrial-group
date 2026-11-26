@@ -273,7 +273,7 @@ async function save(chosen){
       const path=user.id+'/'+x.data.id+'/'+Date.now()+'-'+i+'-'+clean;
       const up=await sb.storage.from('hz-quote-attachments').upload(path,blob,{contentType:item.mime||blob.type||'application/octet-stream',upsert:false});
       if(up.error)throw up.error;
-      const meta=await sb.from('hz_quote_attachments').insert({request_id:x.data.id,user_id:user.id,object_path:path,file_name:clean,mime_type:item.mime||blob.type||'application/octet-stream',file_size:blob.size});
+      const meta=await sb.from('hz_quote_attachments').insert({request_id:x.data.id,user_id:user.id,object_path:path,file_name:clean,mime_type:item.mime||blob.type||'application/octet-stream',file_size:blob.size,transcript:item.transcript||null});
       if(meta.error)throw meta.error;
     }catch(mediaErr){mediaError=true}
   }
