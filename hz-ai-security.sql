@@ -60,4 +60,62 @@ $$;
 revoke all on function public.hz_ai_consume_rate_limit(text, integer, integer) from public, anon, authenticated;
 grant execute on function public.hz_ai_consume_rate_limit(text, integer, integer) to service_role;
 
+-- Close the legacy blanket-read policies. Public quote screens use the sanitized views below.
+drop policy if exists "providers readable" on public.hz_providers;
+drop policy if exists "profiles readable" on public.hz_profiles;
+
+-- Public supplier directory: business-facing fields only. License documents, registration
+-- numbers, phone numbers and rejection notes remain in the protected base table.
+create or replace view public.hz_public_providers
+with (security_barrier = true)
+as
+select
+  p.user_id,
+  p.provider_type,
+  p.full_name,
+  p.business_name,
+  p.profession,
+  p.field,
+  p.experience_years,
+  p.areas,
+  p.work_hours,
+  p.website,
+  p.about,
+  p.verified,
+  to_jsonb(p)->>'city' as city,
+  to_jsonb(p)->>'governorate' as governorate
+from public.hz_providers p
+where p.verified is true and p.status = 'approved';
+
+-- Public-facing identity fields only; email and phone stay in the protected base table.
+create or replace view public.hz_public_profiles
+with (security_barrier = true)
+as
+select
+  p.id,
+  p.full_name,
+  p.brand,
+  p.avatar_url,
+  p.bio,
+  to_jsonb(p)->>'city' as city
+from public.hz_profiles p;
+
+revoke all on public.hz_public_providers from public, anon;
+revoke all on public.hz_public_profiles from public, anon;
+grant select on public.hz_public_providers to authenticated;
+grant select on public.hz_public_profiles to authenticated;
+
+-- Keep only the public configuration keys readable by ordinary users.
+drop policy if exists "hz_settings read" on public.hz_settings;
+drop policy if exists hz_settings_public_read on public.hz_settings;
+drop policy if exists hz_settings_owner_read on public.hz_settings;
+create policy hz_settings_public_read on public.hz_settings
+  for select to anon, authenticated
+  using (key in ('layout', 'commission', 'upvc_systems'));
+create policy hz_settings_owner_read on public.hz_settings
+  for select to authenticated
+  using (lower(coalesce(auth.jwt()->>'email','')) = 'asem.itqan@gmail.com');
+
+notify pgrst, 'reload schema';
+
 commit;
