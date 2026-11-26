@@ -97,10 +97,29 @@ if(/[?&]edit=1/.test(location.search)){let n=0;const iv=setInterval(()=>{n++;let
 window.hzSupport=()=>{let m=$q('#hzSup');if(!m){m=document.createElement('div');m.id='hzSup';m.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.45);display:grid;place-items:end center';m.innerHTML='<div class="hzx-w" style="width:100%;max-width:520px;border-radius:20px 20px 0 0"><h3>💬 الدعم</h3><select class="hzx-in" id="hsK"><option>مشكلة في التطبيق</option><option>بلاغ عن إعلان مشبوه أو نصب</option><option>اقتراح</option></select><textarea class="hzx-in" id="hsM" rows="4" placeholder="اكتب التفاصيل (ولو بلاغ عن إعلان اكتب اسمه أو رابطه)"></textarea><input class="hzx-in" id="hsC" placeholder="رقم موبايل أو إيميل للرد (اختياري)"><button class="btn" id="hsS">إرسال</button><button class="pill" id="hsX" style="margin-top:8px">إلغاء</button><p class="msg" id="hsR"></p></div>';document.body.appendChild(m);
   $q('#hsX').onclick=()=>m.remove();$q('#hsS').onclick=async()=>{const t=$q('#hsM').value.trim();if(t.length<5){$q('#hsR').textContent='اكتب التفاصيل الأول';return}try{const r=await sb.from('hz_reports').insert({kind:$q('#hsK').value,message:t,contact:$q('#hsC').value.trim()||null});if(r.error)throw r.error;$q('#hsR').textContent='وصلتنا، شكرًا ✓';setTimeout(()=>m.remove(),1200)}catch(_){$q('#hsR').textContent='معرفتش أبعت دلوقتي. جرّب تاني.'}}}};
 
-/* ===== نجوم التقييم (من تقييمات مربوطة بمحادثة فعلية) على كروت الإعلانات ===== */
-window.HZ_RATE=null;
-(async function(){try{const r=await sb.from('hz_ratings').select('provider_id,stars').limit(3000);if(r.error)return;const m={};(r.data||[]).forEach(x=>{(m[x.provider_id]=m[x.provider_id]||[]).push(+x.stars)});window.HZ_RATE=m;try{render()}catch(_){}}catch(_){}})();
-const uM=window.ulMeta;if(uM)window.ulMeta=function(l){const h=uM.apply(this,arguments),a=window.HZ_RATE&&window.HZ_RATE[l.owner];if(!a||!a.length)return h;const avg=a.reduce((x,y)=>x+y,0)/a.length;return h+'<small class="um">⭐ '+avg.toFixed(1)+' ('+a.length+') · تقييم من تجربة فعلية</small>'};
+/* ===== ملخص تقييمات الموردين من الصفقات المكتملة عبر RPC الآمنة ===== */
+window.HZ_RATE={};
+(async function(){
+ try{
+  if(!user||!Array.isArray(UL)||!UL.length)return;
+  const ids=[...new Set(UL.map(x=>x&&x.owner).filter(Boolean))];
+  const stats={};
+  for(let i=0;i<ids.length;i+=100){
+   const r=await sb.rpc('hzq_provider_stats',{p_ids:ids.slice(i,i+100)});
+   if(r.error)throw r.error;
+   Object.assign(stats,r.data||{});
+  }
+  window.HZ_RATE=stats;
+  try{render()}catch(_){}
+ }catch(_){}
+})();
+const uM=window.ulMeta;
+if(uM)window.ulMeta=function(l){
+ const h=uM.apply(this,arguments),v=window.HZ_RATE&&window.HZ_RATE[l.owner];
+ const n=Number(v&&v.n)||0,avg=Number(v&&v.avg);
+ if(!n||!Number.isFinite(avg))return h;
+ return h+'<small class="um">⭐ '+avg.toFixed(1)+' ('+n+') · تقييم من صفقات مكتملة</small>';
+};
 
 /* ===== الدعم والتعديل جوه الإعدادات (مش على الشاشة الرئيسية) ===== */
 const dS=window.drawSet;
