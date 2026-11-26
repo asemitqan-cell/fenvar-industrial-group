@@ -483,23 +483,7 @@ body:not(.ar) #chat .cb:empty:after{content:"Ask about products, suppliers, and 
 }
 
 
-/* Real imagery across the Horizon home and category catalogue */
-body.hzg #hzTop{
- height:clamp(220px,34vh,330px)!important;min-height:220px!important;
- align-items:flex-end!important;padding-bottom:30px!important;
- background:#092b30!important;border-radius:0 0 28px 28px!important;
- box-shadow:0 18px 45px rgba(4,30,34,.16)!important
-}
-body.hzg #hzTop:before{
- content:"";position:absolute;inset:0;z-index:0;
- background:linear-gradient(90deg,rgba(4,25,29,.78),rgba(4,25,29,.34) 58%,rgba(4,25,29,.12)),
- url("https://images.unsplash.com/photo-1774270906266-b36793fdc80d?auto=format&fit=crop&w=1800&q=85") center 48%/cover no-repeat;
- transform:scale(1.015)
-}
-body.hzg #hzBg{display:none!important}
-body.hzg .hz-name{color:#fff!important;text-shadow:0 2px 18px rgba(0,0,0,.3)!important}
-body.hzg .hz-name i{background:#f5c66a!important;box-shadow:0 0 18px #f5c66a99!important}
-body.hzg .searchbar{margin-top:12px!important}
+/* Keep the original homepage hero; category photography is handled separately. */
 #grid .card .thumb{height:156px!important;overflow:hidden!important;background:#e9efed!important}
 #grid .card .thumb img{width:100%!important;height:100%!important;display:block!important;object-fit:cover!important;transition:transform .45s ease!important}
 #grid .card:hover .thumb img{transform:scale(1.045)!important}
@@ -510,44 +494,24 @@ body.hzg .searchbar{margin-top:12px!important}
 #grid .card{border-radius:17px!important;overflow:hidden!important}
 #hzTop .hz-name{z-index:1!important}
 
-/* Assistant controls now use the same thin SVG-line language as Horizon's header. */
+/* Assistant controls: preserve the original actions and improve only their finish. */
 #chat .ch button#cMin,#chat .ch button#cX{
- position:relative!important;width:34px!important;height:34px!important;flex:0 0 34px!important;
- border:1px solid rgba(255,255,255,.18)!important;border-radius:50%!important;
- background:rgba(255,255,255,.07)!important;color:#e8f5f2!important;font-size:0!important;
- box-shadow:none!important
+  flex:0 0 34px!important;width:34px!important;height:34px!important;min-width:34px!important;
+  border:1px solid rgba(255,255,255,.24)!important;border-radius:11px!important;
+  background:rgba(255,255,255,.10)!important;color:#fff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important
 }
-#chat .ch #cX:before,#chat .ch #cMin:before{
- content:""!important;display:block!important;position:absolute!important;inset:8px!important;
- width:auto!important;height:auto!important;background:currentColor!important;
- mask-position:center!important;mask-repeat:no-repeat!important;mask-size:contain!important;
- -webkit-mask-position:center!important;-webkit-mask-repeat:no-repeat!important;-webkit-mask-size:contain!important;
- transform:none!important
+#chat .ch button#cMin:hover,#chat .ch button#cX:hover{background:rgba(255,255,255,.18)!important}
+#chat .cf #cPlus{
+  background:#edf5f2!important;color:#47716a!important;border:1px solid #e1ebe7!important;
+  border-radius:13px!important;box-shadow:inset 0 1px 0 #fff!important
 }
-#chat .ch #cX:before{
- mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='m6 6 12 12M18 6 6 18'/%3E%3C/svg%3E");
- -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='m6 6 12 12M18 6 6 18'/%3E%3C/svg%3E")
+#chat .cf #cGo{
+  background:linear-gradient(145deg,#168777,#0f766e)!important;
+  border-radius:14px!important;box-shadow:0 5px 13px rgba(22,126,114,.25),inset 0 1px 0 rgba(255,255,255,.16)!important
 }
-#chat .ch #cX:after{display:none!important;content:none!important}
-#chat .ch #cMin:before{
- mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E");
- -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E")
-}
-#chat .cf #cPlus{font-size:0!important;position:relative!important}
-#chat .cf #cPlus:before{
- content:""!important;width:18px!important;height:18px!important;display:block!important;
- background:currentColor!important;
- mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center/contain no-repeat!important;
- -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center/contain no-repeat!important
-}
-#chat .cf #cGo{font-size:0!important;text-indent:-9999px!important;position:relative!important}
-#chat .cf #cGo:before{
- content:""!important;position:absolute!important;inset:12px!important;width:auto!important;height:auto!important;
- background:#fff!important;transform:none!important;
- mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5m-6 6 6-6 6 6'/%3E%3C/svg%3E") center/contain no-repeat!important;
- -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5m-6 6 6-6 6 6'/%3E%3C/svg%3E") center/contain no-repeat!important
-}
-#chat .cf #cGo:after{display:none!important;content:none!important}
+#chat .cf #cGo:hover{filter:brightness(1.06)!important}
+#chat .cf #cGo:active{transform:translateY(1px) scale(.97)!important}
 
 
 /* Category shortcuts become photographic thumbnails; keep icon-only fallback for Home. */
