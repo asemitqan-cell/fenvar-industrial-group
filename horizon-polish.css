@@ -253,3 +253,57 @@ body:not(.ar) #chat .cb:empty:after{content:"Ask about products, services, suppl
 /* Center the desktop assistant consistently in both LTR and RTL layouts. */
 @media(min-width:641px){#chat{left:50%!important;right:auto!important;inset-inline:auto!important;transform:translateX(-50%)!important}}
 @media(max-width:640px){#chat,#chat.lg{left:0!important;right:0!important;inset-inline:0!important;transform:none!important}}
+
+
+/* Assistant controls: remove duplicate glyphs and make every control intentional. */
+#chat .ch{display:flex!important;align-items:center!important;gap:10px!important}
+#chat .ch>span:first-child{font-size:0!important;position:relative!important}
+#chat .ch>span:first-child:before{
+ content:"";width:18px;height:18px;display:block;
+ background:currentColor;opacity:0;
+}
+#chat .ch button#cMin,#chat .ch button#cX{
+ display:grid!important;place-items:center!important;flex:0 0 36px!important;
+ width:36px!important;height:36px!important;padding:0!important;
+ font-size:0!important;line-height:1!important;border-radius:11px!important;
+ background:transparent!important;border:1px solid var(--line)!important;color:var(--mut)!important;
+}
+#chat .ch #cMin:before{content:"";width:14px;height:2px;background:currentColor;border-radius:2px}
+#chat .ch #cX:before,#chat .ch #cX:after{
+ content:"";position:absolute;width:14px;height:2px;background:currentColor;border-radius:2px
+}
+#chat .ch #cX{position:relative!important}
+#chat .ch #cX:before{transform:rotate(45deg)}
+#chat .ch #cX:after{transform:rotate(-45deg)}
+#chat .ch #cWa{
+ display:none!important
+}
+#chat .cf{direction:rtl!important;align-items:center!important;flex-wrap:nowrap!important}
+#chat .cf #cPlus{order:0!important;flex:0 0 44px!important;width:44px!important;height:44px!important;
+ display:grid!important;place-items:center!important;font-size:0!important;border-radius:50%!important;
+ background:var(--bg)!important;color:var(--mut)!important}
+#chat .cf #cPlus:before{content:"+";font-size:25px;font-weight:400;line-height:1}
+#chat .cf #cIn{order:1!important;flex:1 1 auto!important;width:0!important;min-width:0!important;height:48px!important}
+#chat .cf #cGo{
+ order:2!important;position:relative!important;flex:0 0 46px!important;
+ width:46px!important;height:46px!important;min-width:46px!important;
+ padding:0!important;margin:0!important;overflow:hidden!important;
+ font-size:0!important;line-height:0!important;text-indent:-9999px!important;
+ white-space:nowrap!important;display:grid!important;place-items:center!important;
+ border:0!important;border-radius:14px!important;background:var(--p)!important;color:#fff!important
+}
+#chat .cf #cGo:before{
+ content:"";position:absolute;width:17px;height:17px;top:15px;left:14px;
+ border-top:2.5px solid #fff;border-right:2.5px solid #fff;transform:rotate(-45deg)
+}
+#chat .cf #cGo:after{
+ content:"";position:absolute;width:2.5px;height:21px;top:14px;left:22px;
+ background:#fff;border-radius:2px
+}
+#chat .cf #cPlusMenu{z-index:100!important}
+@media(max-width:640px){
+ #chat .cf #cPlus{flex-basis:40px!important;width:40px!important;height:40px!important}
+ #chat .cf #cGo{flex-basis:44px!important;width:44px!important;height:44px!important;min-width:44px!important}
+ #chat .cf #cGo:before{top:14px;left:13px}
+ #chat .cf #cGo:after{top:13px;left:21px}
+}
