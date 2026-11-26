@@ -104,3 +104,12 @@ footer{padding:36px 18px!important;color:#75817d!important}
  transform:none!important;box-shadow:none!important;border-color:transparent!important
 }
 .bar button .ib{transition:color .2s ease!important}
+
+
+/* Requested: transparent Horizon header */
+.top{
+  background:transparent!important;
+  background-color:transparent!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
