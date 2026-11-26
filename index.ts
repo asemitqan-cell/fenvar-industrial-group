@@ -21,10 +21,8 @@ const CATS = new Set(["furniture","wood","glass","upvc","realestate","cars","foo
 function allowedOrigin(origin: string | null): boolean {
   if (!origin) return true;
   const configured = Deno.env.get("ALLOWED_ORIGINS");
-  const list = configured
-    ? configured.split(",").map((x) => x.trim()).filter(Boolean)
-    : DEFAULT_ORIGINS;
-  return list.includes(origin);
+  const list = new Set([...DEFAULT_ORIGINS, ...(configured ? configured.split(",").map((x) => x.trim()).filter(Boolean) : [])]);
+  return list.has(origin);
 }
 function headersFor(req: Request): Record<string, string> {
   const origin = req.headers.get("origin");
