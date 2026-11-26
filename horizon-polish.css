@@ -348,3 +348,30 @@ body:not(.ar) #chat .cb:empty:after{content:"Tell me what you need, and I'll hel
 #fab span{font-size:11px!important;font-weight:700!important;white-space:nowrap}
 #fab[hidden]{display:none!important}
 @media(max-width:420px){#aiGo span{font-size:9px!important}#chat .cf{margin-inline:8px!important}}
+
+
+/* v20 — clean, minimal assistant controls + visible welcome */
+#chat .ch{min-height:48px!important;padding:7px 16px!important;gap:10px!important;border:0!important;border-bottom:1px solid var(--line)!important;background:var(--card)!important}
+#chat .ch>.ch-mark{width:27px!important;height:27px!important;background:transparent!important;box-shadow:none!important;color:var(--p)!important}
+#chat .ch>.ch-mark svg{width:23px!important;height:23px!important}
+#chat .ch>b{font-size:14px!important;font-weight:700!important}
+#chat .ch #cWa{display:none!important}
+#chat .ch #cMin,#chat .ch #cX{display:grid!important;place-items:center!important;width:30px!important;height:30px!important;flex:0 0 30px!important;padding:0!important;border:0!important;border-radius:50%!important;background:transparent!important;color:var(--mut)!important;font-size:19px!important}
+#chat .ch #cMin:before,#chat .ch #cX:before,#chat .ch #cX:after{content:none!important;display:none!important}
+#chat .cb:empty{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;gap:9px!important}
+#chat .cb:empty:before{content:"أهلاً 👋"!important;display:block!important;width:100%!important;max-width:560px!important;color:var(--ink)!important;font-size:clamp(27px,4vw,36px)!important;font-weight:800!important;line-height:1.35!important;text-align:center!important;letter-spacing:-.5px!important}
+#chat .cb:empty:after{content:"قولي عايز إيه، وأنا أساعدك."!important;display:block!important;width:100%!important;max-width:520px!important;color:var(--mut)!important;font-size:15px!important;font-weight:500!important;line-height:1.8!important;text-align:center!important}
+body:not(.ar) #chat .cb:empty:before{content:"Hello 👋"!important}
+body:not(.ar) #chat .cb:empty:after{content:"Tell me what you need, and I'll help."!important}
+#chat .cf{min-height:48px!important;margin:8px 12px calc(9px + env(safe-area-inset-bottom))!important;padding:4px 8px!important;gap:9px!important;border:1px solid var(--line)!important;border-radius:999px!important;background:var(--card)!important;box-shadow:none!important}
+#chat .cf #cPlus,#chat .cf #cMic,#chat .cf>button{width:30px!important;height:34px!important;min-width:30px!important;min-height:34px!important;flex:0 0 30px!important;padding:0!important;border:0!important;border-radius:50%!important;background:transparent!important;color:var(--mut)!important;box-shadow:none!important}
+#chat .cf #cPlus{font-size:0!important}
+#chat .cf #cPlus:before{content:"+"!important;font-size:23px!important;font-weight:400!important;line-height:1!important}
+#chat .cf #cMic svg{width:18px!important;height:18px!important;display:block!important}
+#chat .cf #cIn{height:36px!important;min-height:36px!important;padding:6px 5px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;font-size:14px!important}
+#chat .cf #cGo{width:32px!important;height:34px!important;min-width:32px!important;min-height:34px!important;flex:0 0 32px!important;border:0!important;border-radius:50%!important;background:transparent!important;color:var(--p)!important;box-shadow:none!important;text-indent:0!important;font-size:0!important;overflow:visible!important}
+#chat .cf #cGo:before{content:"↑"!important;position:static!important;display:block!important;width:auto!important;height:auto!important;border:0!important;transform:none!important;color:var(--p)!important;font-size:25px!important;font-weight:500!important;line-height:1!important}
+#chat .cf #cGo:after{content:none!important;display:none!important}
+#chat .cf #cMic.recording{color:#DC2626!important;background:transparent!important}
+#chat #cPlusMenu{border-radius:14px!important;box-shadow:0 12px 32px rgba(0,0,0,.13)!important}
+@media(max-width:640px){#chat .cf{margin-inline:9px!important;padding:3px 7px!important;gap:7px!important}#chat .cf #cIn{font-size:13px!important}}
