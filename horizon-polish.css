@@ -71,3 +71,47 @@ body.hmp-open main.hmp-mode>#hmp-root .hmp-card{border-radius:18px;transition:tr
 body.hmp-open main.hmp-mode>#hmp-root .hmp-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.09)}
 body.hmp-open main.hmp-mode>#hmp-root .hmp-cats{position:sticky;top:76px;z-index:4;padding:8px 0 16px;background:var(--bg)}
 @media(max-width:600px){body.hmp-open main.hmp-mode{padding:0 16px 24px!important}body.hmp-open main.hmp-mode>#hmp-root{padding-top:12px!important}body.hmp-open main.hmp-mode>#hmp-root .hmp-head{align-items:flex-start}body.hmp-open main.hmp-mode>#hmp-root .hmp-actions{width:100%}body.hmp-open main.hmp-mode>#hmp-root .hmp-actions button{flex:1}body.hmp-open main.hmp-mode>#hmp-root .hmp-photo{height:160px}}
+
+
+/* Focused corrections: launcher placement, predictable return, search clarity, assistant panel */
+#hmp-market-button.hmp-tab{order:0;flex:none;width:34px!important;height:34px!important;min-width:34px!important}
+/* In the RTL header the first control is the rightmost: keep marketplace immediately to the right of the moon. */
+.acts{direction:rtl!important;display:flex!important;align-items:center!important;gap:6px!important}
+#hmp-home-back{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:none;height:38px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+#hmp-home-back svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#hmp-root .hmp-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px}
+#hmp-root .hmp-head-copy{min-width:0}
+#hmp-root .hmp-tools{position:relative}
+#hmp-root .hmp-tools:before{inset-inline-start:18px;top:50%;width:19px;height:19px;transform:translateY(-50%)}
+#hmp-root .hmp-tools input{height:56px;padding-inline-start:48px;padding-inline-end:18px;border-radius:15px;font-size:15px;letter-spacing:0}
+#hmp-root .hmp-tools input::placeholder{color:var(--mut);opacity:.85}
+#hmp-root .hmp-cats{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+#hmp-root .hmp-cats button{font-weight:650;transition:background .15s,border-color .15s}
+#hmp-root .hmp-cats button.active{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+/* Assistant: keep its existing behavior, improve hierarchy and controls without replacing the engine. */
+#chat{width:min(480px,calc(100vw - 28px));max-width:480px;height:min(680px,78vh);bottom:16px;border-radius:22px;background:var(--card);border:1px solid var(--line);box-shadow:0 22px 70px rgba(4,20,24,.28)}
+#chat.lg{width:min(760px,calc(100vw - 28px));max-width:760px;height:min(820px,88vh)}
+#chat .ch{min-height:58px;padding:10px 14px;gap:9px;background:linear-gradient(110deg,#0b4e50,#0f766e 58%,#155e75)}
+#chat .ch>span{width:34px;height:34px;flex:none;border-radius:11px;background:#ffffff20;display:grid;place-items:center;font-size:18px}
+#chat .ch b{font-size:15px;letter-spacing:.1px}
+#chat .ch button{width:34px;height:34px;border:1px solid #ffffff30;border-radius:10px;background:#ffffff18;font-size:19px;line-height:1}
+#chat .cb{padding:16px;gap:12px;background:var(--bg)}
+#chat .m{max-width:min(88%,520px);padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.8;box-shadow:0 1px 2px rgba(0,0,0,.035)}
+#chat .m.u{border-end-end-radius:5px;background:#0f766e}
+#chat .m.a{border-end-start-radius:5px;background:var(--card);border:1px solid var(--line)}
+#chat .cf{padding:10px;gap:8px;align-items:center;background:var(--card)}
+#chat .cf input{height:46px;padding:9px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);font-size:14px;outline:none}
+#chat .cf input:focus{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 12%,transparent)}
+#chat .cf button{height:42px;min-width:42px;border-radius:13px;background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+#chat .cf #cGo{background:var(--p);color:#fff;border-color:var(--p);font-size:0}
+#chat .cf #cGo:after{content:'➤';font-size:17px}
+#chat .cf #cPlus{font-size:20px}
+/* Main assistant search stays an assistant prompt, but gets a clear, balanced input and controls. */
+.searchbar .sb{min-height:52px;border-radius:16px;padding:5px 7px;gap:8px;box-shadow:0 3px 14px rgba(11,42,46,.07)}
+.searchbar #q{height:42px;min-width:0;font-size:15px;padding-inline:10px!important;line-height:1.4}
+.searchbar #q::placeholder{color:var(--mut);opacity:.9}
+.searchbar .sb button{width:38px;height:38px;border-radius:12px;font-size:18px}
+.searchbar #plus{background:color-mix(in srgb,var(--ink) 7%,transparent);color:var(--ink)}
+.searchbar #aiGo{background:var(--p);box-shadow:none;font-size:0}
+.searchbar #aiGo:before{content:'✦';font-size:19px}
+@media(max-width:600px){#hmp-root .hmp-head{grid-template-columns:auto 1fr;align-items:start}#hmp-root .hmp-head .hmp-actions{grid-column:1/-1;width:100%}#hmp-root .hmp-head .hmp-actions button{flex:1}#chat{height:76vh;bottom:8px}#chat.lg{height:88vh}}
