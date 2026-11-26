@@ -772,31 +772,11 @@ window.renderProv=function(){
 /* ---------- "deal done" + stars inside the chat ---------- */
 window.drawDeal=async function(cid){
  const el=$('#dealBar');if(!el||!user)return;
- const r=await sb.from('hz_conversations').select('*').eq('id',cid).maybeSingle(),c=r.data;if(!c)return;
- const st=c.deal_status||'none',me=user.id,buyer=c.buyer_id===me;
- let mine=null;if(st==='agreed'&&buyer){const q=await sb.from('hz_ratings').select('stars,comment').eq('conversation_id',cid).maybeSingle();mine=q.data}
- const sig=[cid,st,c.deal_by,mine&&mine.stars,mine&&mine.comment].join('|');
- if(el.dataset.sig===sig)return;el.dataset.sig=sig;el.dataset.cid=cid;
- let h='';
- if(st==='none')h=`<button class="btn" data-deal="mark">✅ ${L('Deal done','تم الاتفاق')}</button><p class="tag">${L('Tap when you both agreed. The other side confirms.','دوس لما تتفقوا. والطرف التاني بيأكّد.')}</p>`;
- else if(st==='proposed'&&c.deal_by===me)h=`<p>⏳ ${L('Waiting for the other side to confirm.','مستني تأكيد الطرف التاني.')}</p><div class="row2"><button class="pill" data-deal="cancel">${L('Cancel','إلغاء')}</button></div>`;
- else if(st==='proposed')h=`<p>🤝 ${L('The other side says you agreed.','الطرف التاني بيقول إنكم اتفقتوا.')}</p><div class="row2"><button class="btn" data-deal="mark">✅ ${L('Confirm deal','أكّد الاتفاق')}</button><button class="pill" data-deal="cancel">${L('Not yet','لسه')}</button></div>`;
- else if(buyer){const n=mine?mine.stars:0;h=`<p class="msg ok">🤝 ${L('Deal confirmed. How was it?','تم الاتفاق. إيه تقييمك؟')}</p><div class="stars" data-n="${n}">${[1,2,3,4,5].map(i=>`<button type="button" data-star="${i}" class="${i<=n?'on':''}">★</button>`).join('')}</div><textarea id="rvTxt" rows="2" maxlength="500" placeholder="${L('Write a short review (optional)','اكتب رأيك باختصار (اختياري)')}">${esc(mine&&mine.comment||'')}</textarea><p class="msg" id="rvMsg"></p><div class="row2"><button class="btn" data-rate>${mine?L('Update rating','عدّل التقييم'):L('Send rating','ابعت التقييم')}</button></div>`}
- else h=`<p class="msg ok">🤝 ${L('Deal confirmed. The customer can now rate you.','تم الاتفاق. العميل هيقدر يقيّمك.')}</p>`;
- el.innerHTML=`<div class="deal">${h}</div>`;
+ if(el.dataset.cid===cid&&el.dataset.legacyNotice==='1')return;
+ el.dataset.cid=cid;el.dataset.legacyNotice='1';
+ el.innerHTML=`<div class="deal"><p class="tag">${L('Use Request a Quote to send offers and confirm a formal deal. This chat is for messages.','استخدم طلب عرض السعر لإرسال العروض وتأكيد الاتفاق. المحادثة هنا للرسائل.')}</p></div>`;
 };
 document.addEventListener('click',async e=>{const t=e.target;let x;
- if(x=t.closest('[data-deal]')){const cid=curConv;if(!cid)return;x.disabled=true;
-  const r=await sb.rpc('hz_deal',{p_conv:cid,p_action:x.dataset.deal});
-  if(r.error){toast(L('Could not update. Make sure the database setup was run.','معرفناش نحدّث. اتأكد إن إعداد قاعدة البيانات اتنفّذ.'));x.disabled=false;return}
-  const el=$('#dealBar');if(el)el.dataset.sig='';drawDeal(cid);return}
- if(x=t.closest('[data-star]')){const bx=x.closest('.stars'),n=+x.dataset.star;bx.dataset.n=n;bx.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.star<=n));return}
- if(t.closest('[data-rate]')){const cid=curConv,n=+(($('#dealBar .stars')||{dataset:{}}).dataset.n||0),m=$('#rvMsg');
-  if(!n){m.textContent=L('Pick 1 to 5 stars.','اختار من 1 لـ 5 نجوم.');return}
-  const r=await sb.rpc('hz_rate',{p_conv:cid,p_stars:n,p_comment:($('#rvTxt')||{}).value||null});
-  if(r.error){m.textContent=L('Could not send the rating.','معرفناش نبعت التقييم.');return}
-  const el=$('#dealBar');if(el)el.dataset.sig='';await drawDeal(cid);const mm=$('#rvMsg');if(mm){mm.className='msg ok';mm.textContent=L('Thank you for your rating!','شكرًا على تقييمك!')}
-  if(window.loadUL)loadUL();return}
  if(x=t.closest('[data-pprov]')){hzHideProf();showStore('prov');return}
  if(x=t.closest('[data-pimg]')){window.open(x.dataset.pimg,'_blank','noopener');return}
  if(x=t.closest('[data-admf]')){admF=x.dataset.admf;drawAdm();return}
