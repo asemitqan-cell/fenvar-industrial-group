@@ -277,8 +277,8 @@ async function save(chosen){
       if(meta.error)throw meta.error;
     }catch(mediaErr){mediaError=true}
   }
-  if(!mediaError){window.HZ_PENDING_MEDIA=[];Q.msg='✓ تم تسجيل طلبك بنجاح. رقم الطلب: '+reqNo+'. احتفظ بالرقم للمتابعة.'}
-  else{Q.msg='✓ تم تسجيل طلبك برقم '+reqNo+'، لكن تعذر رفع مرفق واحد على الأقل. تواصل مع الفريق واذكر رقم الطلب.'}
+  if(!mediaError){window.HZ_PENDING_MEDIA=[];window.HZ_PENDING_TRANSCRIPT='';Q.msg='✓ تم تسجيل طلبك بنجاح. رقم الطلب: '+reqNo+'. احتفظ بالرقم للمتابعة.'}
+  else{window.HZ_PENDING_TRANSCRIPT='';Q.msg='✓ تم تسجيل طلبك برقم '+reqNo+'، لكن تعذر رفع مرفق واحد على الأقل. تواصل مع الفريق واذكر رقم الطلب.'}
 }
  catch(e){Q.msg=(typeof hzErr==='function'?hzErr(e):T('Something went wrong. Please try again.','حصلت مشكلة. جرّب تاني بعد شوية.'))}
  draw()}
