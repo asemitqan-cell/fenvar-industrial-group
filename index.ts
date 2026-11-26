@@ -62,7 +62,7 @@ function clientAddress(req: Request): string | null {
   const real = req.headers.get("x-real-ip")?.trim();
   const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   const ip = cf || real || forwarded || "";
-  if (!ip || ip.length > 64 || /[\\r\\n]/.test(ip)) return null;
+  if (!ip || ip.length > 64 || ip.includes(String.fromCharCode(10)) || ip.includes(String.fromCharCode(13))) return null;
   return ip;
 }
 
@@ -73,7 +73,7 @@ async function consumeRateLimit(key: string, limit: number, windowSeconds: numbe
     throw new Error("Rate limiter is not configured");
   }
   const response = await fetch(
-    `${supabaseUrl.replace(/\\/$/, "")}/rest/v1/rpc/hz_ai_consume_rate_limit`,
+    `${supabaseUrl.endsWith("/") ? supabaseUrl.slice(0, -1) : supabaseUrl}/rest/v1/rpc/hz_ai_consume_rate_limit`,
     {
       method: "POST",
       headers: {
@@ -99,21 +99,25 @@ async function consumeRateLimit(key: string, limit: number, windowSeconds: numbe
 function inlineMedia(value: unknown, kind: "image" | "audio"): { inline_data: { mime_type: string; data: string } } | null {
   if (value == null || value === "") return null;
   if (typeof value !== "string") throw new Error("Invalid media payload");
-  const match = /^data:([a-zA-Z0-9.+-]+\\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
-  if (!match) throw new Error("Invalid media encoding");
-  const mime = match[1].toLowerCase();
+  const comma = value.indexOf(",");
+  if (!value.startsWith("data:") || comma < 0) throw new Error("Invalid media encoding");
+  const header = value.slice(5, comma);
+  if (!header.endsWith(";base64")) throw new Error("Invalid media encoding");
+  const mime = header.slice(0, -7).toLowerCase();
+  const encoded = value.slice(comma + 1);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) throw new Error("Invalid base64 media");
   const allowed = kind === "image"
     ? ["image/jpeg", "image/png", "image/webp", "image/gif"]
     : ["audio/webm", "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp4", "audio/aac"];
   if (!allowed.includes(mime)) throw new Error("Unsupported media type");
   let bytes: number;
   try {
-    bytes = atob(match[2]).length;
+    bytes = atob(encoded).length;
   } catch {
     throw new Error("Invalid base64 media");
   }
   if (bytes > MAX_MEDIA_BYTES) throw new Error("Media too large");
-  return { inline_data: { mime_type: mime, data: match[2] } };
+  return { inline_data: { mime_type: mime, data: encoded } };
 }
 
 async function callGemini(body: string): Promise<any> {
@@ -213,10 +217,7 @@ Deno.serve(async (req: Request) => {
       if (!entry || !["user", "model"].includes(entry.role) || typeof entry.text !== "string") {
         throw new Error("Invalid conversation history entry");
       }
-      return {
-        role: entry.role,
-        parts: [{ text: entry.text.slice(0, 1500) }],
-      };
+      return { role: entry.role, parts: [{ text: entry.text.slice(0, 1500) }] };
     });
 
     const result = await callGemini(JSON.stringify({
@@ -230,7 +231,13 @@ Deno.serve(async (req: Request) => {
 
     let output: any;
     try {
-      output = JSON.parse(answerText.replace(/^\x60\x60\x60(?:json)?\\s*|\\s*\x60\x60\x60$/g, ""));
+      let cleaned = answerText.trim();
+      if (cleaned.startsWith("```")) {
+        const firstBreak = cleaned.indexOf("\\n");
+        if (firstBreak >= 0) cleaned = cleaned.slice(firstBreak + 1);
+        if (cleaned.endsWith("```")) cleaned = cleaned.slice(0, -3);
+      }
+      output = JSON.parse(cleaned.trim());
     } catch {
       output = { answer: answerText, category: null };
     }
@@ -241,10 +248,9 @@ Deno.serve(async (req: Request) => {
     const message = error instanceof Error ? error.message : "";
     if (message === "Media too large") return reply(req, 413, { error: "Media file is too large" });
     if (message === "Unsupported media type") return reply(req, 415, { error: "Unsupported media type" });
-    if (message.startsWith("Invalid") || message === "Invalid conversation history entry") {
-      return reply(req, 400, { error: "Invalid request payload" });
-    }
+    if (message.startsWith("Invalid")) return reply(req, 400, { error: "Invalid request payload" });
     console.error("fenvar-ai request failed:", message || "unknown error");
     return reply(req, 503, { error: "The assistant is temporarily unavailable. Please try again." });
   }
+});
 });
