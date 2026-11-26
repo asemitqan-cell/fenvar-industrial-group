@@ -34,8 +34,7 @@ function headersFor(req: Request): Record<string, string> {
 }
 const J=(req: Request,o:any,status=200)=>new Response(JSON.stringify(o),{status,headers:headersFor(req)});
 function clientAddress(req: Request): string | null {
-  const ip = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") ||
-    req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+  const ip = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "").split(",")[0].trim();
   if (!ip || ip.length > 64 || ip.includes(String.fromCharCode(10)) || ip.includes(String.fromCharCode(13))) return null;
   return ip;
 }
@@ -47,17 +46,17 @@ async function limited(ip: string, limit: number, windowSeconds: number): Promis
   const r = await fetch(base + "/rest/v1/rpc/hz_ai_consume_rate_limit", {
     method: "POST",
     headers: { "Content-Type": "application/json", apikey: k, Authorization: "Bearer " + k },
-    body: JSON.stringify({ p_key: ip, p_limit: limit, p_window_seconds: windowSeconds }),
+    body: JSON.stringify({ p_key: ip + ":" + k, p_limit: limit, p_window_seconds: windowSeconds }),
     signal: AbortSignal.timeout(5000),
   });
   if (!r.ok) throw new Error("rate_limiter_unavailable");
   return (await r.json()) === true;
 }
-function mediaPart(value: unknown): any | null {
+function mediaPart(value: unknown, kind: "image" | "audio"): any | null {
   if (value == null || value === "") return null;
   if (typeof value !== "string") throw new Error("invalid_media");
   const m = /^data:([^;]+)(?:;[^,]*)?;base64,([A-Za-z0-9+/]+={0,2})$/.exec(value);
-  if (!m || !OKMIME.test(m[1])) throw new Error("invalid_media");
+  if (!m || !(kind === "image" ? /^image\/(jpeg|png|webp|gif)$/i : /^audio\/(webm|ogg|wav|mpeg|mp4|aac)$/i).test(m[1])) throw new Error("invalid_media");
   let bytes = 0;
   try { bytes = atob(m[2]).length; } catch { throw new Error("invalid_media"); }
   if (bytes > MAX_ATT) throw new Error("attachment_too_large");
@@ -97,7 +96,7 @@ Deno.serve(async(req: Request)=>{
   }
   if (!allowedOrigin(req.headers.get("origin"))) return J(req,{error:"origin_not_allowed"},403);
   if (req.method !== "POST") return J(req,{error:"method_not_allowed"},405);
-  if (!(req.headers.get("content-type") || "").toLowerCase().includes("application/json")) {
+  if ((req.headers.get("content-type") || "").toLowerCase().split(";")[0].trim() !== "application/json") {
     return J(req,{error:"content_type_must_be_json"},415);
   }
   if (Number(req.headers.get("content-length") || "0") > MAX_BODY) return J(req,{error:"too_large"},413);
@@ -122,8 +121,8 @@ Deno.serve(async(req: Request)=>{
     const history = inp.history == null ? [] : inp.history;
     if (!Array.isArray(history) || history.length > 10) return J(req,{error:"invalid_history"},400);
 
-    const imagePart = mediaPart(inp.image);
-    const audioPart = mediaPart(inp.audio);
+    const imagePart = mediaPart(inp.image, "image");
+    const audioPart = mediaPart(inp.audio, "audio");
     const pv = await providers();
     const prompt = "lang=" + lang + "\n" +
       (pv ? "PROVIDERS:\n" + pv + "\n\n" : "") +
