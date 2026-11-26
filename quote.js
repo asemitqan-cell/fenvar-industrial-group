@@ -257,7 +257,29 @@ async function save(chosen){
  if(!OPEN_SECS.includes(Q.sec)){if(window.HZ_AVAIL)HZ_AVAIL.say();else if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return}Q.msg='…';Q.ok=0;draw();
  const body={user_id:user.id,contact_name:Q.contactName.trim(),contact_phone:Q.contactPhone.trim(),request_source:user.is_anonymous?'guest':'account',section:Q.sec,lines:r.lines,custom:[Q.custom,orgNote()].filter(Boolean).join('\\n')||null,budget:Q.budget?+Q.budget:null,city:Q.city||null,
   chosen_provider:chosen||null,quote:r.res.map(x=>({provider_id:x.id,total:x.total,covered:x.hit,full:x.full,price_date:x.upd||null})),status:'new'};
- try{const x=await sb.from('hz_quote_requests').insert(body).select('id,req_no').single();if(x.error)throw x.error;Q.ok=1;Q.sent=1;Q.msg='✓ تم تسجيل طلبك بنجاح. رقم الطلب: '+x.data.req_no+'. احتفظ بالرقم للمتابعة.'}
+ try{
+  const x=await sb.from('hz_quote_requests').insert(body).select('id,req_no').single();
+  if(x.error)throw x.error;
+  Q.ok=1;Q.sent=1;
+  const reqNo=x.data.req_no;
+  const media=Array.isArray(window.HZ_PENDING_MEDIA)?window.HZ_PENDING_MEDIA.slice(0,6):[];
+  let mediaError=false;
+  for(let i=0;i<media.length;i++){
+    const item=media[i];if(!item||typeof item.data!=='string'||!item.data.startsWith('data:'))continue;
+    try{
+      const blob=await fetch(item.data).then(r=>r.blob());
+      if(blob.size>20*1024*1024)throw new Error('attachment_too_large');
+      const clean=String(item.name||('attachment-'+(i+1))).replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,90)||('attachment-'+(i+1));
+      const path=user.id+'/'+x.data.id+'/'+Date.now()+'-'+i+'-'+clean;
+      const up=await sb.storage.from('hz-quote-attachments').upload(path,blob,{contentType:item.mime||blob.type||'application/octet-stream',upsert:false});
+      if(up.error)throw up.error;
+      const meta=await sb.from('hz_quote_attachments').insert({request_id:x.data.id,user_id:user.id,object_path:path,file_name:clean,mime_type:item.mime||blob.type||'application/octet-stream',file_size:blob.size});
+      if(meta.error)throw meta.error;
+    }catch(mediaErr){mediaError=true}
+  }
+  if(!mediaError){window.HZ_PENDING_MEDIA=[];Q.msg='✓ تم تسجيل طلبك بنجاح. رقم الطلب: '+reqNo+'. احتفظ بالرقم للمتابعة.'}
+  else{Q.msg='✓ تم تسجيل طلبك برقم '+reqNo+'، لكن تعذر رفع مرفق واحد على الأقل. تواصل مع الفريق واذكر رقم الطلب.'}
+}
  catch(e){Q.msg=(typeof hzErr==='function'?hzErr(e):T('Something went wrong. Please try again.','حصلت مشكلة. جرّب تاني بعد شوية.'))}
  draw()}
 
