@@ -75,7 +75,7 @@ async function loadProv(id){H.loading=1;H.err='';H.data=null;drawProv();
   if(r.error)throw r.error;
   const items=(r.data||[]).filter(x=>x.price!=null&&!(x.valid_until&&new Date(x.valid_until)<Date.now())),ids=[...new Set(items.map(x=>x.provider_id))];
   let provs=[],profs=[];
-  if(ids.length){provs=(await sb.from('hz_providers').select('*').in('user_id',ids)).data||[];profs=(await sb.from('hz_profiles').select('*').in('id',ids)).data||[]}
+  if(ids.length){provs=(await sb.from('hz_public_providers').select('*').in('user_id',ids)).data||[];profs=(await sb.from('hz_public_profiles').select('*').in('id',ids)).data||[]}
   const ok=new Set(provs.filter(p=>p.verified).map(p=>p.user_id)),by={};
   items.filter(x=>ok.has(x.provider_id)).forEach(x=>{const p=profs.find(y=>y.id===x.provider_id)||{},v=provs.find(y=>y.user_id===x.provider_id)||{};
    const o=by[x.provider_id]=by[x.provider_id]||{id:x.provider_id,name:p.business_name||p.brand||v.business_name||v.name||p.full_name||T('Supplier','مورد'),city:String(p.city||v.city||v.governorate||'').trim(),groups:new Set(),n:0};o.groups.add(x.group_key);o.n++});
