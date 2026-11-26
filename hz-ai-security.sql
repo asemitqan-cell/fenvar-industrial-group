@@ -166,6 +166,62 @@ where not exists (
   where p.user_id = pub.user_id and p.verified is true and p.status = 'approved'
 );
 
+-- Replace the legacy SECURITY DEFINER profile view with a small, RLS-protected
+-- directory table. This prevents the view owner from bypassing hz_profiles RLS.
+drop view if exists public.hz_public_profiles;
+create table if not exists public.hz_public_profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  brand text,
+  avatar_url text,
+  bio text,
+  updated_at timestamptz not null default now()
+);
+alter table public.hz_public_profiles enable row level security;
+drop policy if exists hz_public_profiles_read on public.hz_public_profiles;
+create policy hz_public_profiles_read on public.hz_public_profiles
+  for select to anon, authenticated using (true);
+revoke all on table public.hz_public_profiles from public, anon, authenticated;
+grant select on table public.hz_public_profiles to anon, authenticated;
+
+create or replace function public.hz_sync_public_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if tg_op = 'DELETE' then
+    delete from public.hz_public_profiles where id = old.id;
+    return old;
+  end if;
+  insert into public.hz_public_profiles (id, full_name, brand, avatar_url, bio, updated_at)
+  values (new.id, new.full_name, new.brand, new.avatar_url, new.bio, now())
+  on conflict (id) do update set
+    full_name = excluded.full_name,
+    brand = excluded.brand,
+    avatar_url = excluded.avatar_url,
+    bio = excluded.bio,
+    updated_at = now();
+  return new;
+end;
+$$;
+revoke all on function public.hz_sync_public_profile() from public, anon, authenticated;
+drop trigger if exists hz_sync_public_profile on public.hz_profiles;
+create trigger hz_sync_public_profile
+  after insert or update or delete on public.hz_profiles
+  for each row execute function public.hz_sync_public_profile();
+
+insert into public.hz_public_profiles (id, full_name, brand, avatar_url, bio, updated_at)
+select id, full_name, brand, avatar_url, bio, now()
+from public.hz_profiles
+on conflict (id) do update set
+  full_name = excluded.full_name,
+  brand = excluded.brand,
+  avatar_url = excluded.avatar_url,
+  bio = excluded.bio,
+  updated_at = now();
+
 -- Settings are public only for the three keys used by the public app.
 drop policy if exists "hz_settings read" on public.hz_settings;
 drop policy if exists set_read on public.hz_settings;
@@ -174,6 +230,10 @@ drop policy if exists hz_settings_owner_read on public.hz_settings;
 create policy hz_settings_public_read on public.hz_settings
   for select to anon, authenticated
   using (key in ('layout', 'commission', 'upvc_systems'));
+drop policy if exists hz_settings_authenticated_quota_read on public.hz_settings;
+create policy hz_settings_authenticated_quota_read on public.hz_settings
+  for select to authenticated
+  using (key in ('free_deals', 'free_deals_from'));
 create policy hz_settings_owner_read on public.hz_settings
   for select to authenticated
   using (lower(coalesce(auth.jwt()->>'email','')) = 'asem.itqan@gmail.com');
