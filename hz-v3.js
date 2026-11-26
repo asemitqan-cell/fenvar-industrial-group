@@ -338,10 +338,19 @@ async function quotaBanner(){const body=$q('#qxBody');if(!body||body.querySelect
 new MutationObserver(()=>{if(qbT)return;qbT=setTimeout(()=>{qbT=0;try{quotaBanner()}catch(_){}},250)}).observe(document.body,{childList:true,subtree:true});
 
 /* ---------- مساعد Horizon: ترحيب + placeholder + مراعاة الكيبورد ---------- */
-function chatUI(){const c=$q('#cB');if(!c)return;const has=c.querySelector('.m'),h=c.querySelector('.hzc-hello');
- if(has&&h)h.remove();
- else if(!has&&!h)c.insertAdjacentHTML('afterbegin',`<div class="hzc-hello"><i>✦</i><b>${T('Hi, I am Horizon AI','أهلاً، أنا مساعد أفق')}</b><small>${T('Tell me what you need and I will take you to the right place.','قولّي عايز إيه، وأوديك للمكان الصح أو أجاوبك على طول.')}</small></div>`);
- const i=$q('#cIn');if(i&&!i.placeholder)i.placeholder=T('Ask Horizon anything…','اسأل أفق أي حاجة…')}
+function chatUI(){const c=$q('#cB');if(!c)return;
+ /* رسالة ترحيب واحدة بس (#chatWelcome). أي ترحيب قديم بيتشال، وبتترجع لو الشات فضي */
+ c.querySelectorAll('.hzc-hello').forEach(x=>x.remove());
+ const has=c.querySelector('.m'),w=c.querySelector('#chatWelcome');
+ if(has&&w)w.remove();
+ else if(!has&&!w){const d=document.createElement('div');d.id='chatWelcome';d.className='chat-welcome';
+  const ic=document.querySelector('#chat .ch-mark svg');
+  d.innerHTML='<span class="cw-ico" aria-hidden="true">'+(ic?ic.outerHTML.replace(/chG1/g,'chG2'):'')+'</span>'
+   +'<div class="chat-welcome-title" data-en="Hi, I\u2019m Horizon AI" data-ar="\u0623\u0647\u0644\u0627\u064b\u060c \u0623\u0646\u0627 \u0645\u0633\u0627\u0639\u062f \u0623\u0641\u0642" data-de="Hallo, ich bin Horizon AI"></div>'
+   +'<div class="chat-welcome-sub" data-en="Tell me what you need and I\u2019ll take you to the right place or answer right away." data-ar="\u0642\u0648\u0644\u0651\u0644\u064a \u0639\u0627\u064a\u0632 \u0625\u064a\u0647\u060c \u0648\u0623\u0648\u062f\u064a\u0643 \u0644\u0644\u0645\u0643\u0627\u0646 \u0627\u0644\u0635\u062d \u0623\u0648 \u0623\u062c\u0627\u0648\u0628\u0643 \u0639\u0644\u0649 \u0637\u0648\u0644." data-de="Sag mir, was du brauchst \u2013 ich bringe dich an die richtige Stelle oder antworte sofort."></div>';
+  c.prepend(d);
+  const lg=(typeof lang!=='undefined'?lang:'ar');d.querySelectorAll('[data-en]').forEach(e=>{e.textContent=e.dataset[lg]||e.dataset.en})}
+ const i=$q('#cIn');if(i&&!i.placeholder)i.placeholder=(typeof L==='function'?L('Ask Horizon anything\u2026','\u0627\u0633\u0623\u0644 \u0623\u0641\u0642 \u0623\u064a \u062d\u0627\u062c\u0629\u2026','Frag Horizon alles\u2026'):'')}
 const cb=$q('#cB');if(cb){new MutationObserver(chatUI).observe(cb,{childList:true});chatUI()}
 const chat=$q('#chat');if(chat)new MutationObserver(chatUI).observe(chat,{attributes:true,attributeFilter:['hidden','class']});
 if(window.visualViewport){const R=document.documentElement,f=()=>{const ch=$q('#chat');

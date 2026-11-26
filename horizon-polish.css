@@ -495,3 +495,38 @@ body:not(.ar) #chat .cb:empty:after{content:"Tell me what you need, and I'll hel
  #chat .ch #cSpk,#chat .ch #cMin,#chat .ch #cX{flex-basis:28px!important;width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important}
  #chat .chat-welcome{padding:16px 8px!important}
 }
+
+
+/* v23 — assistant: real icons (no boxes, prominent), one welcome, messages start from the top */
+#chat .ch{direction:inherit!important;display:flex!important;align-items:center!important;gap:12px!important;min-height:64px!important;padding:8px 12px!important;padding-top:calc(8px + env(safe-area-inset-top))!important;background:var(--card)!important;border:0!important;border-bottom:1px solid var(--line)!important;box-shadow:none!important}
+#chat.min .ch{padding-top:8px!important;min-height:54px!important}
+#chat .ch .ch-mark{display:grid!important;place-items:center!important;flex:0 0 42px!important;width:42px!important;height:42px!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:drop-shadow(0 4px 8px rgba(14,116,144,.34))}
+#chat .ch .ch-mark svg{display:block!important;width:42px!important;height:42px!important}
+#chat .ch .ch-title-wrap{display:flex!important;flex:1 1 auto!important;min-width:0!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:2px!important}
+#chat .ch .ch-title-wrap>b{display:block!important;flex:none!important;margin:0!important;color:var(--ink)!important;font-size:16.5px!important;font-weight:800!important;line-height:1.3!important;white-space:nowrap!important}
+#chat .ch .ch-status{display:flex!important;align-items:center!important;gap:5px!important;color:#0f9d6e!important;font-size:11px!important;font-weight:700!important}
+#chat .ch .ch-status i{display:block!important;width:7px!important;height:7px!important;border-radius:50%!important;background:#16b97f!important;box-shadow:0 0 0 3px rgba(22,185,127,.18)!important}
+#chat .ch #cWa{display:none!important}
+#chat .ch button#cSpk,#chat .ch button#cMin,#chat .ch button#cX{display:grid!important;place-items:center!important;position:relative!important;flex:0 0 42px!important;width:42px!important;min-width:42px!important;height:42px!important;min-height:42px!important;margin:0!important;padding:0!important;border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;color:var(--ink)!important;font-size:0!important;line-height:1!important;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#chat .ch button#cSpk svg,#chat .ch button#cMin svg,#chat .ch button#cX svg{display:block!important;width:26px!important;height:26px!important;overflow:visible}
+#chat .ch button#cMin:before,#chat .ch button#cMin:after,#chat .ch button#cX:before,#chat .ch button#cX:after{content:none!important;display:none!important}
+#chat .ch button#cSpk.on{color:var(--p)!important}
+#chat .ch button#cSpk:active,#chat .ch button#cMin:active,#chat .ch button#cX:active{background:color-mix(in srgb,var(--ink) 10%,transparent)!important}
+#chat .ch button#cSpk:focus-visible,#chat .ch button#cMin:focus-visible,#chat .ch button#cX:focus-visible{outline:2px solid var(--p)!important;outline-offset:1px!important}
+/* الرسايل تبدأ من فوق (كانت متوسّطة وبتقطع أول الرسايل لما تطول) والترحيب لوحده في النص */
+#chat .cb{justify-content:flex-start!important}
+#chat .hzc-hello{display:none!important}
+#chat .chat-welcome{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:10px!important;width:100%!important;max-width:520px!important;margin:auto!important;padding:24px 16px!important;text-align:center!important}
+#chat .chat-welcome .cw-ico{display:block;width:96px;height:96px;margin-bottom:6px;filter:drop-shadow(0 16px 24px rgba(14,116,144,.34));animation:cwFloat 4.4s ease-in-out infinite}
+#chat .chat-welcome .cw-ico svg{display:block;width:100%;height:100%}
+@keyframes cwFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){#chat .chat-welcome .cw-ico{animation:none}}
+#chat .chat-welcome-title{display:block!important;color:var(--ink)!important;font-size:clamp(24px,6.6vw,30px)!important;font-weight:800!important;line-height:1.35!important;letter-spacing:0!important}
+#chat .chat-welcome-sub{text-wrap:balance;max-width:340px!important;color:var(--mut)!important;font-size:15px!important;font-weight:500!important;line-height:1.85!important}
+@media(max-width:640px){#chat .ch{min-height:60px!important;padding-inline:8px!important;gap:9px!important}#chat .ch .ch-title-wrap>b{font-size:15.5px!important}}
+/* ترتيب شريط الكتابة يتبع اتجاه اللغة (كان معكوس في الإنجليزي) */
+#chat .cf{direction:inherit!important}
+#chat .cf #cIn{direction:inherit!important;text-align:start!important}
+
+/* علامة المساعد فوق كل رد: نفس أيقونة البار من غير مربع */
+#chat .m.a::before{content:''!important;display:block!important;width:28px!important;height:28px!important;margin:0 0 8px!important;border-radius:0!important;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22 aria-hidden=%22true%22%3E%3Cdefs%3E%3ClinearGradient id=%22chGb%22 x1=%224%22 y1=%224%22 x2=%2228%22 y2=%2230%22 gradientUnits=%22userSpaceOnUse%22%3E%3Cstop offset=%220%22 stop-color=%22%232DD4BF%22/%3E%3Cstop offset=%221%22 stop-color=%22%230E7490%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d=%22M16 8V4.6%22 stroke=%22%230E7490%22 stroke-width=%222%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2216%22 cy=%223.4%22 r=%222%22 fill=%22%23F59E0B%22/%3E%3Crect x=%222%22 y=%2213%22 width=%223.4%22 height=%227.6%22 rx=%221.7%22 fill=%22%230E7490%22/%3E%3Crect x=%2226.6%22 y=%2213%22 width=%223.4%22 height=%227.6%22 rx=%221.7%22 fill=%22%230E7490%22/%3E%3Crect x=%225%22 y=%228%22 width=%2222%22 height=%2218%22 rx=%227%22 fill=%22url%28%23chGb%29%22/%3E%3Crect x=%225%22 y=%228%22 width=%2222%22 height=%227%22 rx=%223.5%22 fill=%22%23fff%22 opacity=%22.16%22/%3E%3Crect x=%228.2%22 y=%2211.4%22 width=%2215.6%22 height=%2210.8%22 rx=%224.4%22 fill=%22%2306232A%22/%3E%3Ccircle cx=%2212.7%22 cy=%2216.2%22 r=%222.1%22 fill=%22%235EEAD4%22/%3E%3Ccircle cx=%2219.3%22 cy=%2216.2%22 r=%222.1%22 fill=%22%235EEAD4%22/%3E%3Ccircle cx=%2213.3%22 cy=%2215.6%22 r=%22.6%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2219.9%22 cy=%2215.6%22 r=%22.6%22 fill=%22%23fff%22/%3E%3Cpath d=%22M13.2 19.4q2.8 1.7 5.6 0%22 fill=%22none%22 stroke=%22%235EEAD4%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3Crect x=%2211%22 y=%2226.4%22 width=%2210%22 height=%223%22 rx=%221.5%22 fill=%22%230E7490%22 opacity=%22.6%22/%3E%3C/svg%3E") center/contain no-repeat!important;filter:drop-shadow(0 3px 5px rgba(14,116,144,.28))}
