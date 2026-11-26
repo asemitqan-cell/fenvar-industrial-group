@@ -14,7 +14,7 @@ async function loadS(){const cat=P.cat,m=SM[cat];if(!m)return;P.sbusy=1;
   if(r.error)throw r.error;
   let it=(r.data||[]).filter(x=>x.price!=null&&+x.price>0&&!(x.valid_until&&new Date(x.valid_until)<Date.now())&&(!m.only||x.group_key===m.only)&&(!m.not||x.group_key!==m.not));
   const ids=[...new Set(it.map(x=>x.provider_id))],ok=new Set();
-  if(ids.length){const a=await sb.from('hz_providers').select('user_id,verified').in('user_id',ids);(a.data||[]).forEach(p=>{if(p.verified)ok.add(p.user_id)})}
+  if(ids.length){const a=await sb.from('hz_public_providers').select('user_id,verified').in('user_id',ids);(a.data||[]).forEach(p=>{if(p.verified)ok.add(p.user_id)})}
   it=it.filter(x=>ok.has(x.provider_id));
   const by={};it.forEach(x=>{const k=x.group_key+'|'+x.name+'|'+x.unit,g=by[k]=by[k]||{name:x.name,unit:x.unit,p:[],s:new Set(),u:0};g.p.push(+x.price);g.s.add(x.provider_id);g.u=Math.max(g.u,+new Date(x.updated_at||0))});
   P.sup[cat]=Object.values(by).map(g=>{g.p.sort((a,b)=>a-b);const h=Math.floor(g.p.length/2);return{name:g.name,unit:g.unit,n:g.s.size,min:g.p[0],max:g.p[g.p.length-1],med:g.p.length%2?g.p[h]:(g.p[h-1]+g.p[h])/2,u:g.u}}).sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name,'ar'))

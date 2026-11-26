@@ -54,8 +54,8 @@ const statTxt=pid=>{const s=X.stats[pid];if(!s||!(+s.closed||+s.n))return '<span
  return `<span class="qx-s">${+s.n?`★ ${Number(s.avg).toFixed(1)} (${s.n} تقييم) · `:''}${+s.closed} صفقة اتقفلت</span>`};
 
 async function loadNames(ids){ids=ids.filter(x=>x&&!X.names[x]);if(!ids.length)return;
- try{const a=await sb.from('hz_providers').select('user_id,business_name,full_name').in('user_id',ids);(a.data||[]).forEach(p=>{X.names[p.user_id]=p.business_name||p.full_name||''})}catch(_){}
- try{const b=await sb.from('hz_profiles').select('id,full_name,brand').in('id',ids);(b.data||[]).forEach(p=>{if(!X.names[p.id])X.names[p.id]=p.brand||p.full_name||''})}catch(_){}}
+ try{const a=await sb.from('hz_public_providers').select('user_id,business_name,full_name').in('user_id',ids);(a.data||[]).forEach(p=>{X.names[p.user_id]=p.business_name||p.full_name||''})}catch(_){}
+ try{const b=await sb.from('hz_public_profiles').select('id,full_name,brand').in('id',ids);(b.data||[]).forEach(p=>{if(!X.names[p.id])X.names[p.id]=p.brand||p.full_name||''})}catch(_){}}
 const nm=id=>X.names[id]||'—';
 const first=id=>String(X.names[id]||'عميل').split(' ')[0];
 async function loadStats(ids){ids=[...new Set(ids)].filter(Boolean);if(!ids.length)return;try{const r=await sb.rpc('hzq_provider_stats',{p_ids:ids});if(!r.error&&r.data)Object.assign(X.stats,r.data)}catch(_){}}
