@@ -12,7 +12,7 @@ const CT=()=>typeof CATALOG!=='undefined'?CATALOG:[];
 let last='',styled=0,fed=0,obs=0,bgT=null,qb=0;
 
 /* ---- المتاح الآن + التابات ---- */
-const QS=['upvc','glass','furniture','wood'];const NOW=['upvc','furniture'];                       // الأقسام اللي بياناتها جاهزة. زوّد عليها لما تدخل أقسام جديدة
+const QS=['upvc','furniture'];const NOW=['upvc','furniture'];                       // الأقسام اللي بياناتها جاهزة. زوّد عليها لما تدخل أقسام جديدة
 const PRODUCTS=['furniture','wood','glass','upvc','perfumes','realestate','cars','food','learning','used','livestock'];
 const MODES=[['now','المتاح الآن','Available now'],['products','منتجات','Products'],['services','خدمات','Services'],['culture','ثقافة ومجتمع','Culture & community']];
 const ROOT={products:'g_products',services:'g_services',culture:'g_culture'};

@@ -40,7 +40,7 @@ const S=[
  {k:'extra',ar:'إضافات',u:['piece','visit','day'],pre:['زيادة ليلي','زيادة إجازة','مواصلات'],f:[]}]}
 ];
 window.HZ_SECTIONS=S;window.HZ_UNITS=U;
-const OPENS=['upvc','furniture','wood'];
+const OPENS=(window.HZ_AVAIL?HZ_AVAIL.tradeList():['upvc','furniture']);
 const PR={sec:null,gi:0,rows:null,del:[],msg:'',err:0,busy:0};
 const g$=()=>PR.sec.groups[PR.gi];
 const mk=(g,n,it,pre)=>({id:it?it.id:null,g:g.k,name:n,pre,unit:it?it.unit:g.u[0],price:it&&it.price!=null?it.price:'',specs:(it&&it.specs)||{},note:(it&&it.note)||'',open:0,vd:(it&&it.validity_days)||7,vu:it?it.valid_until:null,ua:it?it.updated_at:null});
@@ -107,7 +107,9 @@ async function bulk(){const v=prompt(T('Adjust ALL your prices (all sections) by
   PR.busy=0;await load(PR.sec.id,1);PR.msg='✓ '+T('Updated '+r.data+' prices','تم تحديث '+r.data+' سعر');draw()
  }catch(e){PR.busy=0;PR.err=1;PR.msg=typeof hzErr==='function'?hzErr(e):(e.message||String(e));draw()}}
 
-async function save(){const s=PR.sec,ins=[],upd=[],del=PR.del.slice();PR.busy=1;PR.err=0;PR.msg='…';draw();
+async function save(){const s=PR.sec,ins=[],upd=[],del=PR.del.slice();
+ if(!OPENS.includes(s.id)){PR.err=1;PR.msg=T('Coming soon','قريبًا');draw();return}
+ PR.busy=1;PR.err=0;PR.msg='…';draw();
  PR.rows.forEach(r=>{const p=r.price===''?null:Number(r.price),ok=p!=null&&!isNaN(p)&&r.name.trim();
   if(!ok){if(r.id)del.push(r.id);return}
   const sp={};Object.keys(r.specs).forEach(k=>{if(r.specs[k]!=='')sp[k]=r.specs[k]});

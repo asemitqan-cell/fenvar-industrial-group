@@ -8,7 +8,7 @@ const T=(en,ar)=>typeof L==='function'?L(en,ar):ar;
 const E=s=>typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $q=s=>document.querySelector(s);
 const MAP={upvc:'upvc',glass:'upvc',wood:'wood',furniture:'furniture',health:'nursing',iron:'iron',paints:'paints'};
-const OPEN_SECS=['upvc','furniture','wood'],HUB=['upvc','furniture'];
+const OPEN_SECS=(window.HZ_AVAIL?HZ_AVAIL.tradeList():['upvc','furniture']),HUB=['upvc','furniture'];
 const INTENT=/(عرض\s*(ال)?سعر|عروض\s*(ال)?[اأ]سعار|كوتيشن|تسعير|quotation|\bquote\b|price\s*quote|\bangebot\b)/i;
 const PRICEW=/(بكام|بكم|كام\s*سعر|سعر|اسعار|أسعار|تكلفة|تكلف|price|cost|how much|preis)/i;
 const SEC_WORDS=[['installment',/(قسط|تقسيط|بالقسط|installment)/i],['nursing',/(تمريض|ممرض|حقن|كانيولا|رعاية مسنين|nursing)/i],['accessories',/(مفصلة|كالون|ترباس|مقبض|عين سحرية|اكسسوار|إكسسوار)/i],['upvc',/(upvc|يو\s*بي\s*في\s*سي|قطاع|قطاعات|شباك|شبابيك|شتر|بلكونة|دبل جلاس|سيكوريت|زجاج)/i],['furniture',/(موبيليا|اثاث|أثاث|غرفة نوم|غرف نوم|أوضة|اوضة|سفرة|ركنة|انتريه|أنتريه|دولاب|دريسنج|مطبخ|سرير|تسريحة)/i],['wood',/(خشب|أبلكاش|ابلكاش|mdf)/i],['paints',/(بويات|بويه|بوية|دهان|دهانات|نقاش)/i],['iron',/(حديد|حدادة|درابزين|بوابة|سلم)/i]];
@@ -239,7 +239,7 @@ function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTM
 const fixL=l=>{const it=(Q.prices||[]).find(x=>x.group_key===l.g&&x.name===l.name);return{g:l.g,name:l.name,qty:l.area&&it&&it.unit==='m2'?l.area:(+l.qty>0?+l.qty:1),note:l.note||''}};
 async function openQuote(secId,seed,opt){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
- if(!OPEN_SECS.includes(id)){if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
+ if(!OPEN_SECS.includes(id)){if(window.HZ_AVAIL)HZ_AVAIL.say();else if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
  if(!user){Q.pend=[secId,seed];if(typeof toast==='function')toast(T('Sign in first to request a quote.','سجّل دخول الأول عشان تطلب عرض سعر.'));if(typeof needLogin==='function')needLogin();return true}
  Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=typeof seed==='string'?seed:'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
  opt=opt||{};Q.step=1;Q.system=opt.system||'';Q.ftype=opt.type&&FT[opt.type]?opt.type:'';
@@ -250,7 +250,8 @@ async function openQuote(secId,seed,opt){
  draw();return true}
 
 async function save(chosen){
- const r=Q.res;if(!r)return;Q.msg='…';Q.ok=0;draw();
+ const r=Q.res;if(!r)return;
+ if(!OPEN_SECS.includes(Q.sec)){if(window.HZ_AVAIL)HZ_AVAIL.say();else if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return}Q.msg='…';Q.ok=0;draw();
  const body={user_id:user.id,section:Q.sec,lines:r.lines,custom:[Q.custom,orgNote()].filter(Boolean).join('\n')||null,budget:Q.budget?+Q.budget:null,city:Q.city||null,
   chosen_provider:chosen||null,quote:r.res.map(x=>({provider_id:x.id,total:x.total,covered:x.hit,full:x.full,price_date:x.upd||null})),status:'new'};
  try{const x=await sb.from('hz_quote_requests').insert(body);if(x.error)throw x.error;Q.ok=1;Q.sent=1;Q.msg='✓ '+(chosen?T('Request sent. The supplier will reply with an offer.','الطلب اتبعت. المورد هيرد بعرضه، وهتوصلك إشعار.'):T('Request sent to all matching suppliers. You will get a notification with each offer.','الطلب اتبعت لكل الموردين المناسبين. هيوصلك إشعار مع كل عرض.'))}

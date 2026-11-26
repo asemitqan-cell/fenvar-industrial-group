@@ -1,7 +1,7 @@
 /* Horizon: لينك مباشر لطلب عرض السعر + زرار "شارك مع عملائي" (واتساب / نسخ / QR للطباعة)
    اللينك بالشكل ده: الموقع?req=upvc  أو  ?req=wood  وبيفتح نموذج الطلب على طول (ويطلب تسجيل دخول لو لازم). */
 (function(){'use strict';
-const SECS=[['upvc','🪟','UPVC','شبابيك وأبواب وزجاج UPVC'],['wood','🛋️','موبيليا','موبيليا وخشب ومطابخ ودواليب'],['','🏠','الرئيسية','']];
+const SECS=[['upvc','🪟','UPVC','شبابيك وأبواب وزجاج UPVC'],['furniture','🛋️','موبيليا','موبيليا ومطابخ ودواليب'],['','🏠','الرئيسية','']];
 const base=()=>location.origin+location.pathname;
 const link=s=>s?base()+'?req='+s:base();
 const msg=s=>{const x=SECS.find(a=>a[0]===s);return s?'عايز سعر '+x[3]+'؟ اطلب عرض سعر من أكتر من مورد في دقيقتين، وقارن وتختار: '+link(s):'سوق هورايزن: اطلب عرض سعر من أكتر من مورد (UPVC وموبيليا): '+link('')};
@@ -9,7 +9,7 @@ const tt=t=>{try{toast(t)}catch(_){}};
 /* ---- 1) اللينك المباشر ---- */
 const K='hz_req';
 try{const p=new URLSearchParams(location.search).get('req');
- if(p&&/^(upvc|wood)$/.test(p)){localStorage.setItem(K,p);const u=new URL(location.href);u.searchParams.delete('req');history.replaceState(null,'',u.pathname+(u.search||'')+u.hash)}}catch(_){}
+ if(p&&/^(upvc|furniture|wood)$/.test(p)){localStorage.setItem(K,p==='wood'?'furniture':p);const u=new URL(location.href);u.searchParams.delete('req');history.replaceState(null,'',u.pathname+(u.search||'')+u.hash)}}catch(_){}
 let tries=0,asked=0;
 const iv=setInterval(()=>{let s=null;try{s=localStorage.getItem(K)}catch(_){}
  if(!s||++tries>150){clearInterval(iv);return}

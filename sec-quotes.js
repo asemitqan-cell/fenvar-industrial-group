@@ -196,7 +196,8 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-qx]'
  if(k==='cancelreq'){if(!confirm('تلغي الطلب ده؟'))return;await call('hzq_cancel_request',{p_request:v},'الطلب اتلغى.',re);return}
  if(k==='stage'){if(w==='cancelled'&&!confirm('تلغي الصفقة؟'))return;await call('hzq_stage',{p_deal:v,p_stage:w},'اتحدّثت الحالة.',re);return}
  if(k==='rate'){const n=X.star[v]||0;if(!n){X.msg='اختار عدد النجوم الأول';X.ok=0;draw();return}const t=($q('#qxRv_'+v)||{}).value||'';await call('hzq_rate',{p_deal:v,p_rating:n,p_review:t},'شكراً على تقييمك ⭐',re);return}
- if(k==='send'){const t=+($q('#qxT_'+v)||{}).value,dd=($q('#qxD_'+v)||{}).value,nt=($q('#qxN_'+v)||{}).value||'';if(!(t>0)){X.msg='اكتب إجمالي السعر';X.ok=0;draw();return}
+ if(k==='send'){const rq0=((X.pdata&&X.pdata.reqs)||[]).find(x=>x.id===v);if(rq0&&window.HZ_AVAIL&&!HZ_AVAIL.canTrade(rq0.section)){X.msg='قريبًا. القسم ده لسه مش مفتوح لإرسال العروض.';X.ok=0;draw();return}
+  const t=+($q('#qxT_'+v)||{}).value,dd=($q('#qxD_'+v)||{}).value,nt=($q('#qxN_'+v)||{}).value||'';if(!(t>0)){X.msg='اكتب إجمالي السعر';X.ok=0;draw();return}
   const vd=+(($q('#qxV_'+v)||{}).value)||7,pc=($q('#qxP_'+v)||{}).value;
   await call('hzq_send_offer',{p_request:v,p_total:t,p_days:dd===''?null:Math.round(+dd),p_note:nt,p_valid_days:vd,p_adjust_pct:(pc===''||pc==null)?null:+pc},'العرض اتبعت للعميل ✓',async()=>{X.open=null;X.ptab='offers';await re()});return}
  if(k==='dispute'){const t=prompt('اشرح المشكلة في جملة أو اتنين (فريق Horizon هيراجعها):');if(t===null)return;await call('hzq_open_dispute',{p_deal:v,p_reason:t},'الشكوى اتبعتت لفريق Horizon وهنتواصل معاك.',re);return}
