@@ -17,6 +17,7 @@ PROVIDERS: you may receive a PROVIDERS list (approved Horizon listings, already 
 If audio is attached, listen and answer it. If an image is attached, describe it and help.
 Return ONLY JSON: {"answer": string, "category": string|null}`;
 const MAX_BODY=7_000_000,MAX_ATT=5_000_000,PER_MIN=20,PER_HOUR=120;
+const CATS = new Set(["furniture","wood","glass","upvc","realestate","cars","food","health","learning","events","perfumes","news","livestock","used","offers","consulting"]);
 function allowedOrigin(origin: string | null): boolean {
   if (!origin) return true;
   const configured = Deno.env.get("ALLOWED_ORIGINS");
@@ -152,7 +153,7 @@ Deno.serve(async(req: Request)=>{
     const t = (j.candidates?.[0]?.content?.parts || []).map((p:any)=>p.text || "").join("") || "{}";
     let o: any;
     try { o = JSON.parse(t); } catch { o = { answer:t,category:null }; }
-    const category = typeof o.category === "string" && o.category ? o.category : null;
+    const category = typeof o.category === "string" && CATS.has(o.category) ? o.category : null;
     const answer = typeof o.answer === "string" ? o.answer.slice(0,6000) : "";
     return J(req,{answer,category});
   } catch (e) {
