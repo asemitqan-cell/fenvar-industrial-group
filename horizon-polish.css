@@ -307,3 +307,177 @@ body:not(.ar) #chat .cb:empty:after{content:"Ask about products, services, suppl
  #chat .cf #cGo:before{top:14px;left:13px}
  #chat .cf #cGo:after{top:13px;left:21px}
 }
+
+
+/* =========================================================
+   HORIZON AI — NEW SIDEKICK CONCEPT
+   Replace the centered floating modal with a right-side
+   workspace panel. Existing controls and behavior untouched.
+   ========================================================= */
+#chat{
+ position:fixed!important;z-index:120!important;
+ top:14px!important;right:14px!important;bottom:14px!important;left:auto!important;
+ inset-inline:auto 14px!important;transform:none!important;
+ width:min(448px,calc(100vw - 28px))!important;max-width:448px!important;
+ height:auto!important;max-height:none!important;min-height:0!important;
+ display:flex!important;flex-direction:column!important;overflow:hidden!important;
+ border:1px solid rgba(15,54,58,.12)!important;border-radius:26px!important;
+ background:#f7f9f8!important;color:#153638!important;
+ box-shadow:0 18px 70px rgba(13,42,45,.22)!important;
+}
+#chat[hidden]{display:none!important}
+#chat.lg{
+ width:min(540px,calc(100vw - 28px))!important;max-width:540px!important;
+ height:auto!important;max-height:none!important;top:10px!important;bottom:10px!important;
+}
+#chat.min{height:68px!important;top:auto!important;bottom:14px!important;border-radius:20px!important}
+#chat .ch{
+ flex:0 0 82px!important;min-height:82px!important;box-sizing:border-box!important;
+ display:flex!important;align-items:center!important;gap:12px!important;
+ padding:0 20px!important;background:#123e40!important;color:#fff!important;
+ border:0!important;position:relative!important;
+}
+#chat .ch:after{
+ content:"HORIZON INTELLIGENCE";position:absolute;right:20px;bottom:10px;
+ font:600 8px/1 Arial,sans-serif;letter-spacing:1.5px;color:rgba(255,255,255,.42)
+}
+#chat .ch>span:first-child{
+ order:0!important;flex:0 0 42px!important;width:42px!important;height:42px!important;
+ display:grid!important;place-items:center!important;border-radius:15px!important;
+ background:linear-gradient(145deg,#2bc3a5,#7a8cf5)!important;color:#fff!important;
+ font-size:22px!important;box-shadow:0 6px 18px rgba(36,190,165,.24)!important
+}
+#chat .ch b{
+ order:1!important;display:block!important;flex:1!important;min-width:0!important;
+ color:#fff!important;font-size:16px!important;font-weight:750!important;letter-spacing:0!important
+}
+#chat .ch b:after{
+ content:"مساعدك الذكي جاهز";display:block;margin-top:5px;color:#9ed9cb;
+ font-size:11px;font-weight:500;letter-spacing:0
+}
+body:not(.ar) #chat .ch b:after{content:"Your AI workspace is ready"}
+#chat .ch #cWa{display:none!important}
+#chat .ch button#cMin,#chat .ch button#cX{
+ order:3!important;position:relative!important;flex:0 0 32px!important;
+ width:32px!important;height:32px!important;min-width:32px!important;padding:0!important;
+ display:grid!important;place-items:center!important;border:1px solid rgba(255,255,255,.2)!important;
+ border-radius:10px!important;background:rgba(255,255,255,.08)!important;
+ color:#fff!important;font-size:0!important
+}
+#chat .ch #cMin:before{content:"";width:12px;height:2px;background:#fff;border-radius:2px}
+#chat .ch #cX:before,#chat .ch #cX:after{
+ content:"";position:absolute;width:13px;height:2px;background:#fff;border-radius:2px
+}
+#chat .ch #cX:before{transform:rotate(45deg)}
+#chat .ch #cX:after{transform:rotate(-45deg)}
+#chat .cb{
+ flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;
+ display:flex!important;flex-direction:column!important;gap:18px!important;
+ padding:26px 20px 24px!important;background:#f7f9f8!important;
+ scroll-behavior:smooth!important
+}
+#chat .cb:empty{justify-content:flex-start!important;align-items:stretch!important;gap:0!important}
+#chat .cb:empty:before{
+ content:"مرحباً، أنا مساعد أفق";display:block!important;margin:12px 0 8px!important;
+ max-width:none!important;text-align:right!important;color:#153638!important;
+ font-size:25px!important;font-weight:800!important;letter-spacing:-.6px!important;line-height:1.45!important
+}
+#chat .cb:empty:after{
+ content:"اسألني عن المنتجات والموردين والخدمات، أو اطلب مني مساعدتك في الوصول لما تحتاجه.";
+ display:block!important;max-width:none!important;text-align:right!important;
+ color:#708586!important;font-size:13px!important;line-height:2!important
+}
+body:not(.ar) #chat .cb:empty:before{content:"Hello. I'm Horizon AI";text-align:left!important}
+body:not(.ar) #chat .cb:empty:after{content:"Ask about products, suppliers, and services — or tell me what you're looking for.";text-align:left!important}
+#chat .cb:empty{
+ background:
+ radial-gradient(ellipse at 100% 0%,rgba(48,194,164,.09),transparent 48%),
+ #f7f9f8!important
+}
+#chat .m{
+ max-width:88%!important;padding:12px 15px!important;border-radius:17px!important;
+ font-size:13px!important;line-height:1.9!important;overflow-wrap:anywhere!important;
+ box-shadow:none!important
+}
+#chat .m.u{
+ align-self:flex-start!important;background:#dff4ee!important;color:#174b46!important;
+ border:1px solid #ccebe2!important;border-radius:17px 17px 5px 17px!important
+}
+#chat .m.a{
+ align-self:stretch!important;max-width:100%!important;padding:4px 2px!important;
+ background:transparent!important;color:#243f40!important;border:0!important;
+ border-radius:0!important;font-size:14px!important;line-height:2!important
+}
+#chat #cAtt{flex:0 0 auto!important;padding:0 16px!important;background:#f7f9f8!important}
+#chat #cAtt:empty{display:none!important}
+#chat .cf{
+ flex:0 0 auto!important;position:relative!important;display:flex!important;
+ flex-direction:row!important;direction:rtl!important;align-items:center!important;
+ flex-wrap:nowrap!important;gap:8px!important;padding:13px 14px 16px!important;
+ margin:0 14px 14px!important;border:1px solid #dce8e4!important;
+ border-radius:20px!important;background:#fff!important;
+ box-shadow:0 5px 22px rgba(25,76,68,.07)!important
+}
+#chat .cf #cPlus{
+ order:0!important;flex:0 0 40px!important;width:40px!important;height:40px!important;
+ border:0!important;border-radius:13px!important;background:#edf5f2!important;
+ color:#47716a!important;font-size:0!important;display:grid!important;place-items:center!important
+}
+#chat .cf #cPlus:before{content:"+";font-size:25px!important;font-weight:400!important;line-height:1}
+#chat .cf #cIn{
+ order:1!important;flex:1 1 auto!important;width:0!important;min-width:0!important;
+ height:46px!important;padding:0 14px!important;border:0!important;border-radius:13px!important;
+ outline:none!important;background:#f4f7f6!important;color:#173d3c!important;
+ font-family:inherit!important;font-size:13px!important;font-weight:500!important;line-height:1.5!important;box-shadow:none!important
+}
+#chat .cf #cIn:focus{background:#f0f7f4!important;box-shadow:inset 0 0 0 1px #b8ddd1!important}
+#chat .cf #cIn::placeholder{color:#91a4a0!important}
+#chat .cf #cGo{
+ order:2!important;position:relative!important;flex:0 0 42px!important;
+ width:42px!important;height:42px!important;min-width:42px!important;
+ display:grid!important;place-items:center!important;padding:0!important;margin:0!important;
+ overflow:hidden!important;text-indent:-9999px!important;font-size:0!important;line-height:0!important;
+ border:0!important;border-radius:14px!important;background:#167e72!important;
+ color:#fff!important;box-shadow:0 5px 12px rgba(22,126,114,.22)!important
+}
+#chat .cf #cGo:before{
+ content:"";position:absolute;width:14px;height:14px;top:14px;left:14px;
+ border-top:2px solid #fff;border-right:2px solid #fff;transform:rotate(-45deg)
+}
+#chat .cf #cGo:after{
+ content:"";position:absolute;width:2px;height:18px;top:13px;left:20px;
+ background:#fff;border-radius:2px
+}
+#chat #cPlusMenu{
+ position:absolute!important;bottom:calc(100% + 8px)!important;right:12px!important;left:auto!important;
+ top:auto!important;min-width:190px!important;padding:7px!important;z-index:150!important;
+ border:1px solid #dce8e4!important;border-radius:16px!important;background:#fff!important;
+ box-shadow:0 16px 42px rgba(13,42,45,.16)!important
+}
+#chat #cPlusMenu .mi{
+ display:flex!important;align-items:center!important;gap:11px!important;padding:11px 12px!important;
+ border-radius:11px!important;color:#254b49!important;font-size:13px!important
+}
+#chat #cPlusMenu .mi:hover{background:#edf7f3!important}
+#chat #cPlusMenu .mi svg{width:18px!important;height:18px!important;stroke:#168777!important}
+#chat .chip{margin:6px 0!important}
+#chat .td{background:#168777!important}
+#chat.min .ch{flex-basis:68px!important;min-height:68px!important}
+@media(max-width:640px){
+ #chat,#chat.lg{
+  top:0!important;right:0!important;bottom:0!important;left:0!important;
+  inset:0!important;width:100vw!important;max-width:none!important;height:100dvh!important;
+  max-height:100dvh!important;border-radius:0!important;border:0!important
+ }
+ #chat.min{top:auto!important;bottom:0!important;height:64px!important;min-height:64px!important}
+ #chat .ch{flex-basis:74px!important;min-height:74px!important;padding:0 15px!important}
+ #chat .ch:after{right:15px!important}
+ #chat .cb{padding:24px 17px!important}
+ #chat .cb:empty:before{font-size:23px!important}
+ #chat .cf{margin:0 10px calc(10px + env(safe-area-inset-bottom))!important;padding:10px!important;gap:7px!important}
+ #chat .cf #cPlus{flex-basis:38px!important;width:38px!important;height:38px!important}
+ #chat .cf #cIn{height:44px!important}
+ #chat .cf #cGo{flex-basis:40px!important;width:40px!important;height:40px!important;min-width:40px!important}
+ #chat .cf #cGo:before{top:13px;left:13px}
+ #chat .cf #cGo:after{top:12px;left:19px}
+}
