@@ -90,7 +90,7 @@ async function loadPrices(secId){
   const items=r.data||[];const ids=[...new Set(items.map(x=>x.provider_id))];
   let provs=[],profs=[];
   if(ids.length){
-   const a=await sb.from('hz_providers').select('*').in('user_id',ids);provs=a.data||[];
+   const a=await sb.from('hz_public_providers').select('user_id,verified,business_name,full_name').in('user_id',ids);provs=a.data||[];
    const b=await sb.from('hz_profiles').select('*').in('id',ids);profs=b.data||[]}
   const ok=new Set(provs.filter(p=>p.verified).map(p=>p.user_id));
   const nm={};ids.forEach(id=>{const p=profs.find(x=>x.id===id)||{},v=provs.find(x=>x.user_id===id)||{};nm[id]=p.business_name||p.brand||v.business_name||v.name||p.full_name||T('Supplier','مورد')});
