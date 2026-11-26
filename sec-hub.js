@@ -45,13 +45,13 @@ function hubHTML(id){const u=id==='upvc';
  const rows=(u?row('design',HI.win,T('Window designer','مصمم الشبابيك'),T('Draw your window with real sizes and openings','ارسم شباكك بالمقاسات وأنواع الفتح'))
    +row('design2',HI.door,T('Door designer','مصمم الأبواب'),T('Single, double, sliding or balcony','ضلفة، ضلفتين، سحاب أو بلكونة'),' data-k="door"')
    +row('design2',HI.shut,T('Shutter designer','مصمم الشتر'),T('Size, color, motor and ventilation','المقاس واللون والموتور والتهوية'),' data-k="shutter"')
-   +row('sim',HI.win,T('Window in 3D','عينة شباك 3D'),T('See the window before you order','شوف الشباك قبل ما تطلب'),' data-k="window"')
-   +row('sim',HI.door,T('Door in 3D','عينة باب 3D'),T('See the door before you order','شوف الباب قبل ما تطلب'),' data-k="door"')
+   +row('sim',HI.win,T('Real window photos','صور شبابيك حقيقية'),T('See real installed window examples','شوف صور شبابيك مركبة على الطبيعة'),' data-k="window"')
+   +row('sim',HI.door,T('Real door photos','صور أبواب حقيقية'),T('Browse real door and glass installations','شوف صور أبواب وزجاج مركّب'),' data-k="door"')
   :row('design2',HI.ward,T('Wardrobe designer','مصمم الدولاب'),T('Doors, drawers, mirror and finish','الضلف والأدراج والمراية والتشطيب'),' data-k="wardrobe"')
    +row('design2',HI.bed,T('Bedroom designer','مصمم غرفة النوم'),T('Bed, wardrobe, nightstands and dresser','سرير ودولاب وكومودينو وتسريحة'),' data-k="bedroom"')
    +row('design2',HI.sofa,T('Furniture piece designer','مصمم قطعة موبيليا'),T('Dining, corner, desk, dressing table...','سفرة، ركنة، مكتب، تسريحة...'),' data-k="piece"')
-   +row('sim',HI.ward,T('Wardrobe in 3D','عينة دولاب 3D'),T('See the wardrobe before you order','شوف الدولاب قبل ما تطلب'),' data-k="wardrobe"')
-   +row('sim',HI.bed,T('Bedroom in 3D','عينة غرفة نوم 3D'),T('See the bedroom before you order','شوف غرفة النوم قبل ما تطلب'),' data-k="bed"'))
+   +row('sim',HI.ward,T('Wardrobe photo gallery','معرض صور الدواليب'),T('Browse real furniture examples','شوف نماذج موبيليا حقيقية'),' data-k="wardrobe"')
+   +row('sim',HI.bed,T('Bedroom photo gallery','معرض صور غرف النوم'),T('Browse real bedroom examples','شوف صور غرف نوم حقيقية'),' data-k="bed"'))
   +row('prov',HI.pin,u?T('Find a supplier','ابحث عن مورد'):T('Suppliers & showrooms','الموردين والمعارض'),T('Verified suppliers with prices','موردين موثّقين بأسعارهم'));
  return `<div class="hb" id="hubBox">
  <button type="button" class="hb-go" data-hub="quote"><span><b>${HI.rec} ${T('Request a quote','اطلب عرض سعر')}</b><small>${u?T('Pick a system, list what you need, get supplier offers','اختار النظام والمنشأ، وحدد طلبك، وتوصلك عروض الموردين'):T('Pick a furniture type, list what you need, get offers','اختار نوع الموبيليا، وحدد طلبك، وتوصلك عروض الموردين')}</small></span><em>${chev()}</em></button>
@@ -109,10 +109,7 @@ document.addEventListener('click',async e=>{
  const [k,...r]=a.dataset.hub.split(':'),v=r.join(':'),id=H.sec&&$q('#hubModal')&&!$q('#hubModal').hidden?H.sec:cat;
  if(k==='quote'){closeM();window.hzQuote&&hzQuote(id)}
  else if(k==='design'){if(window.hzDesigner)hzDesigner.open({sys:''})}
- else if(k==='sim'){const kd=a.dataset.k||(cat==='furniture'?'wardrobe':'window');
-  if(kd==='bed'){if(typeof hzLoad==='function')hzLoad('sec-3d').then(()=>{if(window.hz3d)hz3d.open('bed',{title:T('Bedroom','غرفة نوم'),color:'#8B5A2B'})}).catch(()=>{if(typeof toast==='function')toast(T('Needs internet to load the preview.','محتاج إنترنت عشان المعاينة تتحمّل.'))});else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}
-  else{const sp=kd==='wardrobe'?{kind:'wardrobe',type:'hinged',color:'walnut'}:kd==='door'?{kind:'door',type:'hinged',color:'white'}:{kind:'window',type:'casement2',color:'white'};
-   if(window.hzSim)hzSim.open(sp);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}}
+ else if(k==='sim'){const kd=a.dataset.k||(cat==='furniture'?'wardrobe':'window');if(window.hzOpenPhotoSample)window.hzOpenPhotoSample(kd);else if(typeof toast==='function')toast(T('Photo gallery is loading.','معرض الصور لسه بيحمّل.'))}
  else if(k==='design2'){if(window.hzDesign2)hzDesign2.open(a.dataset.k,{onDone:ls=>{window.hzQuoteAdd&&hzQuoteAdd(ls,'',cat,ls[0]&&ls[0].g)}});else if(typeof toast==='function')toast(T('Designer is not loaded yet.','المصمم لسه ما اتحمّلش.'))}
  else if(k==='prov')openProv(cat,'')
 },true);
