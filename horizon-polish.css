@@ -249,3 +249,7 @@ body:not(.ar) #chat .cb:empty:after{content:"Ask about products, services, suppl
 [data-theme=dark] #chat .cb{background:#0e1b1e!important}
 [data-theme=dark] #chat .cf input{background:#0e1b1e!important}
 [data-theme=dark] #chat .m.u{background:color-mix(in srgb,var(--p) 22%,var(--card))!important}
+
+/* Center the desktop assistant consistently in both LTR and RTL layouts. */
+@media(min-width:641px){#chat{left:50%!important;right:auto!important;inset-inline:auto!important;transform:translateX(-50%)!important}}
+@media(max-width:640px){#chat,#chat.lg{left:0!important;right:0!important;inset-inline:0!important;transform:none!important}}
