@@ -368,7 +368,7 @@ function chatOpen(m){const c=$('#chat');c.hidden=false;c.classList.remove('min')
 function addMsg(r,t){const d=document.createElement('div');d.className='m '+r;d.textContent=t||'';$('#cB').append(d);$('#cB').scrollTop=1e9;return d}
 function typeOut(el,t,done){let i=0;const dot=document.createElement('i');dot.className='td';(function step(){i=Math.min(t.length,i+2);el.textContent=t.slice(0,i);if(i<t.length){el.append(dot);$('#cB').scrollTop=1e9;setTimeout(step,22)}else{dot.remove();done&&done()}})()}
 async function askAI(audio,fromChat){if(typeof audio!=='string')audio=null;if(rec){rec.stop();return}const inp=fromChat===true?$('#cIn'):$('#q'),q=inp.value.trim();if(!q&&!att&&!audio)return;inp.value='';$('#q').value='';chatOpen();addMsg('u',q||(att?'📎 '+att.name:'🎤'));const w=addMsg('a','');w.innerHTML='<i class="td"></i>';const img=att&&att.data||null,fn=att&&att.name||null;
-window.HZ_PENDING_MEDIA=[];
+window.HZ_PENDING_MEDIA=Array.isArray(window.HZ_PENDING_MEDIA)?window.HZ_PENDING_MEDIA:[];
 if(audio)window.HZ_PENDING_MEDIA.push({name:'voice-message.webm',data:audio,mime:(audio.match(/^data:([^;]+)/)||[])[1]||'audio/webm',kind:'audio'});
 if(img)window.HZ_PENDING_MEDIA.push({name:fn||'image-attachment',data:img,mime:(img.match(/^data:([^;]+)/)||[])[1]||'image/jpeg',kind:'image'});
 att=null;showAtt();const hist=HIST.slice(-10);HIST.push({role:'user',text:q||fn||'(audio)'});
