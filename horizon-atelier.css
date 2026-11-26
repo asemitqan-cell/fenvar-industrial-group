@@ -93,3 +93,14 @@ footer{padding:36px 18px!important;color:#75817d!important}
 [data-theme=dark] .cta{background:linear-gradient(120deg,#142a2d,#102125)!important}
 [data-theme=dark] .cta h2,[data-theme=dark] .cb h3{color:#edf4f1!important}
 [data-theme=dark] .kind{background:#27332e!important;color:#dfc49d!important}
+
+/* Refinements requested: seamless header/search transition and neutral bottom navigation */
+.top{border-bottom:0!important;box-shadow:none!important}
+.searchbar{border:0!important;box-shadow:none!important;background:var(--hz-paper)!important}
+.bar{border-top:0!important;box-shadow:0 -8px 24px rgba(16,37,43,.045)!important}
+.bar button.on,.bar button:focus,.bar button:active{color:var(--hz-ink)!important;outline:none!important}
+.bar button.on .ib,.bar button:focus .ib,.bar button:active .ib{
+ background:transparent!important;color:var(--hz-ink)!important;
+ transform:none!important;box-shadow:none!important;border-color:transparent!important
+}
+.bar button .ib{transition:color .2s ease!important}
