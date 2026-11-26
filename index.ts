@@ -202,7 +202,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const parts: any[] = [{
-      text: `lang=${lang}\\n${q || (file ? "(file: " + file + ")" : "")}`,
+      text: "lang=" + lang + String.fromCharCode(10) + (q || (file ? "(file: " + file + ")" : "")),
     }];
     const image = inlineMedia(input.image, "image");
     const audio = inlineMedia(input.audio, "audio");
@@ -233,7 +233,7 @@ Deno.serve(async (req: Request) => {
     try {
       let cleaned = answerText.trim();
       if (cleaned.startsWith("```")) {
-        const firstBreak = cleaned.indexOf("\\n");
+        const firstBreak = cleaned.indexOf(String.fromCharCode(10));
         if (firstBreak >= 0) cleaned = cleaned.slice(firstBreak + 1);
         if (cleaned.endsWith("```")) cleaned = cleaned.slice(0, -3);
       }
@@ -252,5 +252,4 @@ Deno.serve(async (req: Request) => {
     console.error("fenvar-ai request failed:", message || "unknown error");
     return reply(req, 503, { error: "The assistant is temporarily unavailable. Please try again." });
   }
-});
 });
