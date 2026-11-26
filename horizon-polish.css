@@ -428,7 +428,7 @@ body:not(.ar) #chat .cb:empty:after{content:"Ask about products, suppliers, and 
  order:1!important;flex:1 1 auto!important;width:0!important;min-width:0!important;
  height:46px!important;padding:0 14px!important;border:0!important;border-radius:13px!important;
  outline:none!important;background:#f4f7f6!important;color:#173d3c!important;
- font:500 13px/1.5 inherit!important;box-shadow:none!important
+ font-family:inherit!important;font-size:13px!important;font-weight:500!important;line-height:1.5!important;box-shadow:none!important
 }
 #chat .cf #cIn:focus{background:#f0f7f4!important;box-shadow:inset 0 0 0 1px #b8ddd1!important}
 #chat .cf #cIn::placeholder{color:#91a4a0!important}
