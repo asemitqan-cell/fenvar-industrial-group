@@ -160,3 +160,20 @@ footer{padding:36px 18px!important;color:#75817d!important}
 @media(min-width:760px){
   .searchbar{margin-top:calc(54px + env(safe-area-inset-top))!important}
 }
+
+
+/* Fix horizontal page drift while keeping the restored fixed header */
+html,body{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:hidden!important;
+}
+.top{
+  left:0!important;
+  right:0!important;
+  width:auto!important;
+  max-width:100%!important;
+}
+.searchbar,main,footer{
+  max-width:100%!important;
+}
