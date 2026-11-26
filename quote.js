@@ -91,7 +91,7 @@ async function loadPrices(secId){
   let provs=[],profs=[];
   if(ids.length){
    const a=await sb.from('hz_public_providers').select('user_id,verified,business_name,full_name').in('user_id',ids);provs=a.data||[];
-   const b=await sb.from('hz_profiles').select('*').in('id',ids);profs=b.data||[]}
+   const b=await sb.from('hz_public_profiles').select('id,full_name,brand').in('id',ids);profs=b.data||[]}
   const ok=new Set(provs.filter(p=>p.verified).map(p=>p.user_id));
   const nm={};ids.forEach(id=>{const p=profs.find(x=>x.id===id)||{},v=provs.find(x=>x.user_id===id)||{};nm[id]=p.business_name||p.brand||v.business_name||v.name||p.full_name||T('Supplier','مورد')});
   Q.prices=items.filter(x=>ok.has(x.provider_id)&&x.price!=null&&!(x.valid_until&&new Date(x.valid_until)<Date.now())).map(x=>Object.assign({},x,{pname:nm[x.provider_id]}));
