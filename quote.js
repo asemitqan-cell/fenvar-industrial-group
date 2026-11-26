@@ -14,7 +14,7 @@ const PRICEW=/(بكام|بكم|كام\s*سعر|سعر|اسعار|أسعار|تك
 const SEC_WORDS=[['installment',/(قسط|تقسيط|بالقسط|installment)/i],['nursing',/(تمريض|ممرض|حقن|كانيولا|رعاية مسنين|nursing)/i],['accessories',/(مفصلة|كالون|ترباس|مقبض|عين سحرية|اكسسوار|إكسسوار)/i],['upvc',/(upvc|يو\s*بي\s*في\s*سي|قطاع|قطاعات|شباك|شبابيك|شتر|بلكونة|دبل جلاس|سيكوريت|زجاج)/i],['furniture',/(موبيليا|اثاث|أثاث|غرفة نوم|غرف نوم|أوضة|اوضة|سفرة|ركنة|انتريه|أنتريه|دولاب|دريسنج|مطبخ|سرير|تسريحة)/i],['wood',/(خشب|أبلكاش|ابلكاش|mdf)/i],['paints',/(بويات|بويه|بوية|دهان|دهانات|نقاش)/i],['iron',/(حديد|حدادة|درابزين|بوابة|سلم)/i]];
 const ORG_G='حسب المنشأ';
 const OR={belgian:['بلجيكي','الخامات عالية الجودة'],turkish:['تركي','عالي - متوسط'],egyptian:['مصري','متوسط - أقل']};
-const Q={sec:null,step:1,system:'',ftype:'',origin:'',stats:{},sent:0,lines:[],custom:'',budget:'',city:'',prices:null,res:null,busy:0,msg:''};
+const Q={sec:null,step:1,system:'',ftype:'',origin:'',stats:{},sent:0,lines:[],custom:'',budget:'',city:'',contactName:'',contactPhone:'',prices:null,res:null,busy:0,msg:''};
 let AVAIL={};
 
 function ensureModal(){if($q('#qtModal'))return;
@@ -153,6 +153,7 @@ function step2HTML(){const s=sec(Q.sec),fur=Q.sec==='furniture';
  ${Q.prices&&!Q.prices.length?`<p class="msg">${T('No supplier prices yet for this section. You can still send a custom request.','لسه مفيش أسعار موردين في القسم ده. تقدر تبعت طلب خاص.')}</p>`:''}
  ${lines}<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>${Q.sec==='upvc'?'<button type="button" class="pill" data-q="design">🪟 صمّم الشباك بالرسم</button><button type="button" class="pill" data-q="design2:door">صمّم باب</button><button type="button" class="pill" data-q="design2:shutter">صمّم شتر</button>':'<button type="button" class="pill" data-q="design2:wardrobe">صمّم دولاب</button><button type="button" class="pill" data-q="design2:bedroom">صمّم غرفة نوم</button><button type="button" class="pill" data-q="design2:piece">صمّم قطعة</button>'}</div>`}
 function step3HTML(){return `<h4 class="qt-h">${T('Details','تفاصيل الطلب')}</h4>
+ <div class="qt-2"><label><span>الاسم</span><input data-qf="contactName" autocomplete="name" value="${E(Q.contactName)}" placeholder="اسم حضرتك"></label><label><span>رقم الموبايل / واتساب</span><input data-qf="contactPhone" type="tel" inputmode="tel" autocomplete="tel" value="${E(Q.contactPhone)}" placeholder="01xxxxxxxxx"></label></div>
  <label style="display:block"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
  <div class="qt-2" style="margin-top:10px"><label><span>${T('Budget (optional)','ميزانيتك كام (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
  ${simBtns(0)}`}
@@ -185,7 +186,7 @@ function resultHTML(){const {res,lines}=Q.res,bud=+Q.budget||0,s=sec(Q.sec);
  const fm=n=>Math.round(n).toLocaleString();
  const best=res.find(r=>r.full);
  const head=!lines.length?`<p class="msg">${T('Add at least one item.','ضيف بند واحد على الأقل.')}</p>`
-  :!res.length?`<p class="hs-box">${T('No supplier has these exact items priced yet. Your request was saved as a custom request and we will source it for you.','مفيش مورد مسعّر البنود دي بالظبط لسه. طلبك اتسجّل كطلب خاص وهنجيبهولك.')}</p>`
+  :!res.length?`<p class="hs-box">${T('No supplier has these exact items priced yet. You can still send a custom request for our team to review.','مفيش مورد مسعّر البنود دي بالظبط لسه. طلبك اتسجّل كطلب خاص وهنجيبهولك.')}</p>`
   :best?`<p class="hs-box"><b>${T('Recommended','ترشيحنا')}: ${E(best.name)}</b><br>${T('Lowest total for everything you asked','أقل إجمالي لكل اللي طلبته')}: <b>${fm(best.total)}</b>${bud?(best.total<=bud?' · '+T('within your budget','داخل ميزانيتك'):' · '+T('above your budget','أعلى من ميزانيتك')):''}${res.filter(r=>r.full).length>1?`<br><span class="qt-s">${T('Next best is','التاني بعده')} ${fm(res.filter(r=>r.full)[1].total)}</span>`:''}</p>`
   :`<p class="hs-box">${T('No single supplier covers everything. Closest options are below.','مفيش مورد واحد بيغطي كل حاجة. دي أقرب العروض.')}</p>`;
  const cards=res.map(r=>`<div class="qt-r${best&&r.id===best.id?' best':''}"><b>${E(r.name)}</b>${best&&r.id===best.id?`<span class="qt-tag">${T('Best','الأنسب')}</span>`:''}${r.full?'':`<span class="qt-s"> · ${r.hit}/${lines.length}</span>`}${statLine(r.id)}${ageTag(r.upd)}
@@ -193,7 +194,7 @@ function resultHTML(){const {res,lines}=Q.res,bud=+Q.budget||0,s=sec(Q.sec);
   <table>${r.rows.map(x=>x.miss?`<tr><td>${E(x.l.name)}</td><td class="qt-s" style="text-align:end">${T('not offered','مش متوفر عنده')}</td></tr>`
    :`<tr><td>${E(x.l.name)} × ${E(x.l.qty)} ${unit(x.it.unit)}${sec(Q.sec).groups[0].inst?instM(x.it,x.sub):''}</td><td style="text-align:end">${fm(x.sub)}</td></tr>`).join('')}</table>
   <button type="button" class="btn" style="margin-top:8px" data-q="send:${r.id}">${T('Send my request to this supplier','ابعت طلبي للمورد ده')}</button></div>`).join('');
- return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${orgNote()?`<p class="qt-s">${E(orgNote())}</p>`:''}${head}${simBtns(1)}${res.length?`<p class="qt-s">🔒 بيانات تواصلك بتفضل مخفية عن المورد لحد ما تقبل عرضه. بعدها بتتابعوا التنفيذ والتقييم من أفق.</p><button type="button" class="btn" data-q="sendall" style="margin:8px 0">📢 ابعت طلبي لكل الموردين المناسبين وخلّيهم يقدّموا عروضهم</button>`:''}${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>${Q.ok&&Q.sent?'<button type="button" class="btn" data-q="mine">🧾 تابع طلباتي وعروضك</button>':''}
+ return `<div class="qt-b"><button type="button" class="pill" data-q="edit">${lang==='ar'?'› ':'‹ '}${T('Edit','تعديل')}</button><h3 style="margin:10px 0">${s.ico} ${T('Your quotes','عروض الأسعار')}</h3>${orgNote()?`<p class="qt-s">${E(orgNote())}</p>`:''}${head}${simBtns(1)}<p class="qt-s">🔒 بيانات تواصلك بتفضل مخفية عن المورد لحد ما تقبل عرضه. بعدها بتتابعوا التنفيذ والتقييم من أفق.</p><button type="button" class="btn" data-q="sendall" style="margin:8px 0">📢 ابعت طلب عرض السعر لفريق Horizon والموردين المناسبين</button>${cards}<p class="msg${Q.ok?' ok':''}">${E(Q.msg)}</p>${Q.ok&&Q.sent?'<button type="button" class="btn" data-q="mine">🧾 تابع طلباتي وعروضك</button>':''}
   <p class="qt-s">${T('Prices come from suppliers and may change at confirmation.','الأسعار من الموردين وممكن تتغير وقت التأكيد.')}</p></div>`}
 
 /* ---- عينة 3D لطلب العميل (بتشتغل من taxonomy.js: window.hzSim) ---- */
@@ -240,7 +241,7 @@ const fixL=l=>{const it=(Q.prices||[]).find(x=>x.group_key===l.g&&x.name===l.nam
 async function openQuote(secId,seed,opt){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
  if(!OPEN_SECS.includes(id)){if(window.HZ_AVAIL)HZ_AVAIL.say();else if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
- if(!user){Q.pend=[secId,seed];if(typeof toast==='function')toast(T('Sign in first to request a quote.','سجّل دخول الأول عشان تطلب عرض سعر.'));if(typeof needLogin==='function')needLogin();return true}
+ if(!user){try{const g=await sb.auth.signInAnonymously({options:{data:{horizon_guest_quote:true}}});if(g.error)throw g.error;user=g.data.user||g.data.session?.user||null;if(!user)throw new Error('anonymous_session_missing')}catch(e){if(typeof toast==='function')toast('طلب الضيف يحتاج تفعيل Anonymous Sign-Ins في Supabase Auth.');Q.msg='تعذر بدء طلب ضيف. يلزم تفعيل Anonymous Sign-Ins في إعدادات Supabase.';return true}}
  Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=typeof seed==='string'?seed:'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
  opt=opt||{};Q.step=1;Q.system=opt.system||'';Q.ftype=opt.type&&FT[opt.type]?opt.type:'';
  show();$q('#qtBody').innerHTML='<p class="hs-box">…</p>';
@@ -251,10 +252,12 @@ async function openQuote(secId,seed,opt){
 
 async function save(chosen){
  const r=Q.res;if(!r)return;
+ if(!Q.contactName.trim()||!Q.contactPhone.trim()){Q.msg='اكتب اسمك ورقم موبايلك عشان نقدر نتابع معاك.';Q.step=3;draw();return}
+ if(!user||!user.id){Q.msg='تعذر تأمين جلسة الطلب. جرّب تاني.';draw();return}
  if(!OPEN_SECS.includes(Q.sec)){if(window.HZ_AVAIL)HZ_AVAIL.say();else if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return}Q.msg='…';Q.ok=0;draw();
- const body={user_id:user.id,section:Q.sec,lines:r.lines,custom:[Q.custom,orgNote()].filter(Boolean).join('\n')||null,budget:Q.budget?+Q.budget:null,city:Q.city||null,
+ const body={user_id:user.id,contact_name:Q.contactName.trim(),contact_phone:Q.contactPhone.trim(),request_source:user.is_anonymous?'guest':'account',section:Q.sec,lines:r.lines,custom:[Q.custom,orgNote()].filter(Boolean).join('\\n')||null,budget:Q.budget?+Q.budget:null,city:Q.city||null,
   chosen_provider:chosen||null,quote:r.res.map(x=>({provider_id:x.id,total:x.total,covered:x.hit,full:x.full,price_date:x.upd||null})),status:'new'};
- try{const x=await sb.from('hz_quote_requests').insert(body);if(x.error)throw x.error;Q.ok=1;Q.sent=1;Q.msg='✓ '+(chosen?T('Request sent. The supplier will reply with an offer.','الطلب اتبعت. المورد هيرد بعرضه، وهتوصلك إشعار.'):T('Request sent to all matching suppliers. You will get a notification with each offer.','الطلب اتبعت لكل الموردين المناسبين. هيوصلك إشعار مع كل عرض.'))}
+ try{const x=await sb.from('hz_quote_requests').insert(body).select('id,req_no').single();if(x.error)throw x.error;Q.ok=1;Q.sent=1;Q.msg='✓ تم تسجيل طلبك بنجاح. رقم الطلب: '+x.data.req_no+'. احتفظ بالرقم للمتابعة.'}
  catch(e){Q.msg=(typeof hzErr==='function'?hzErr(e):T('Something went wrong. Please try again.','حصلت مشكلة. جرّب تاني بعد شوية.'))}
  draw()}
 
@@ -273,11 +276,11 @@ document.addEventListener('click',e=>{
  else if(k==='next')nextStep()
  else if(k==='prev')prevStep()
  else if(k==='del'){Q.lines.splice(+v,1);if(!Q.lines.length)Q.lines.push(newLine());draw()}
- else if(k==='calc'){calc();draw();qStats();if(Q.res&&(!Q.res.lines.length||!Q.res.res.length))save(null)}
+ else if(k==='calc'){if(!Q.contactName.trim()||!Q.contactPhone.trim()){Q.msg='اكتب اسمك ورقم موبايلك الأول.';Q.step=3;draw();return}calc();draw();qStats()}
  else if(k==='edit'){Q.res=null;Q.msg='';Q.step=3;draw()}
  else if(k==='sim')openSim(v)
- else if(k==='send')save(v)
- else if(k==='sendall')save(null)
+ else if(k==='send'){if(confirm('تأكيد إرسال طلب عرض السعر؟'))save(v)}
+ else if(k==='sendall'){if(confirm('تأكيد إرسال طلب عرض السعر إلى الموردين المناسبين؟'))save(null)}
  else if(k==='mine'){hide();if(window.hzQuotes)hzQuotes('mine')}});
 document.addEventListener('change',e=>{const t=e.target;if(!t.closest||!t.closest('#qtModal'))return;
  if(t.dataset.qi!=null){const l=Q.lines[+t.dataset.qi];l[t.dataset.f]=t.value;if(t.dataset.f==='g'){l.name='';draw()}}
