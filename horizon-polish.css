@@ -548,3 +548,11 @@ body.hzg .searchbar{margin-top:12px!important}
  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5m-6 6 6-6 6 6'/%3E%3C/svg%3E") center/contain no-repeat!important
 }
 #chat .cf #cGo:after{display:none!important;content:none!important}
+
+
+/* Category shortcuts become photographic thumbnails; keep icon-only fallback for Home. */
+#chips button.tile .ti{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;position:relative!important}
+#chips button.tile .ti:has(+b){border-radius:12px!important}
+#chips button.tile .ti:empty{background-image:none!important}
+#chips button.tile .ti .gi{display:none!important}
+.demo-photo-tag{display:block!important;color:var(--mut)!important;font-size:10px!important;line-height:1.5!important;font-weight:500!important}
