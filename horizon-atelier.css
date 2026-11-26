@@ -113,3 +113,32 @@ footer{padding:36px 18px!important;color:#75817d!important}
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
 }
+
+/* Restore the original header from Ofuq-updated-full.zip */
+.top{
+  position:sticky!important;
+  top:0!important;
+  z-index:20!important;
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  min-height:0!important;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px!important;
+  background:rgba(246,247,252,.92)!important;
+  border:0!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+  backdrop-filter:blur(10px)!important;
+}
+.brand{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  font-size:18px!important;
+  letter-spacing:.5px!important;
+}
+.searchbar{
+  top:calc(54px + env(safe-area-inset-top))!important;
+  padding:4px 16px 10px!important;
+  background:linear-gradient(var(--bg) 70%,transparent)!important;
+}
