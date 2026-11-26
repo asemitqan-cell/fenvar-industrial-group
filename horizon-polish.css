@@ -48,3 +48,26 @@ main.hmp-mode>#hmp-root{display:block!important;min-height:calc(100vh - 145px);p
 #chat .cf button{min-width:40px;border-radius:12px}
 #chat #cGo{font-size:16px}
 @media(max-width:600px){#hmp-root .hmp-head{align-items:flex-start}#hmp-root .hmp-actions{width:100%}#hmp-root .hmp-actions button{flex:1}.hmp-trend-card{flex-basis:86%;height:150px}#chat{height:68vh;bottom:8px}#chat.lg{height:84vh}}
+
+
+/* Marketplace app shell: compact header launcher + full-screen independent workspace */
+#hmp-market-button.hmp-tab{position:relative;flex:none;width:34px!important;height:34px!important;min-width:34px!important;padding:0!important;border-radius:50%!important;border:1px solid transparent!important;background:color-mix(in srgb,var(--ink) 6%,transparent)!important;color:var(--ink)!important;display:grid!important;place-items:center!important;font-size:0!important;box-shadow:none!important}
+#hmp-market-button.hmp-tab svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#hmp-market-button.hmp-tab:before{content:none!important}
+#hmp-market-button.hmp-tab .hmp-market-dot{position:absolute;width:6px;height:6px;border-radius:50%;top:5px;inset-inline-end:5px;background:#D99B36;box-shadow:0 0 0 2px var(--bg)}
+#hmp-market-button.hmp-tab.active{background:var(--p)!important;color:#fff!important;border-color:var(--p)!important}
+#hmp-market-button.hmp-tab.active .hmp-market-dot{background:#fff}
+body.hmp-open{overflow:hidden!important;padding-bottom:0!important}
+body.hmp-open .searchbar,body.hmp-open>.bar,body.hmp-open #fab,body.hmp-open>footer{display:none!important}
+body.hmp-open main.hmp-mode{position:fixed!important;z-index:21!important;top:var(--hmp-header-height,58px)!important;inset-inline:0!important;bottom:0!important;width:100%!important;max-width:none!important;margin:0!important;padding:0 22px 28px!important;overflow-y:auto!important;overscroll-behavior:contain;background:var(--bg)!important;border-radius:0!important}
+body.hmp-open main.hmp-mode>#hmp-root{display:block!important;width:min(100%,1240px)!important;max-width:1240px!important;min-height:100%!important;margin:0 auto!important;padding:20px 0 36px!important}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-head{padding:12px 0 20px}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-head h2{font-size:clamp(26px,4vw,38px)}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-tools{position:sticky;top:0;z-index:5;padding:8px 0 12px;background:var(--bg)}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-tools input{height:56px;border-radius:16px}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:18px}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-photo{height:190px}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-card{border-radius:18px;transition:transform .2s,box-shadow .2s}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.09)}
+body.hmp-open main.hmp-mode>#hmp-root .hmp-cats{position:sticky;top:76px;z-index:4;padding:8px 0 16px;background:var(--bg)}
+@media(max-width:600px){body.hmp-open main.hmp-mode{padding:0 16px 24px!important}body.hmp-open main.hmp-mode>#hmp-root{padding-top:12px!important}body.hmp-open main.hmp-mode>#hmp-root .hmp-head{align-items:flex-start}body.hmp-open main.hmp-mode>#hmp-root .hmp-actions{width:100%}body.hmp-open main.hmp-mode>#hmp-root .hmp-actions button{flex:1}body.hmp-open main.hmp-mode>#hmp-root .hmp-photo{height:160px}}
