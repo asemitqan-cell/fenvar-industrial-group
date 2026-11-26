@@ -60,53 +60,109 @@ $$;
 revoke all on function public.hz_ai_consume_rate_limit(text, integer, integer) from public, anon, authenticated;
 grant execute on function public.hz_ai_consume_rate_limit(text, integer, integer) to service_role;
 
--- Close the legacy blanket-read policies. Public quote screens use the sanitized views below.
+-- Close the legacy blanket-read policies that expose provider verification fields and profile emails.
 drop policy if exists "providers readable" on public.hz_providers;
 drop policy if exists "profiles readable" on public.hz_profiles;
 
--- Public supplier directory: business-facing fields only. License documents, registration
--- numbers, phone numbers and rejection notes remain in the protected base table.
-create or replace view public.hz_public_providers
-with (security_barrier = true)
-as
-select
-  p.user_id,
-  p.provider_type,
-  p.full_name,
-  p.business_name,
-  p.profession,
-  p.field,
-  p.experience_years,
-  p.areas,
-  p.work_hours,
-  p.website,
-  p.about,
-  p.verified,
-  to_jsonb(p)->>'city' as city,
-  to_jsonb(p)->>'governorate' as governorate
-from public.hz_providers p
-where p.verified is true and p.status = 'approved';
+-- Keep a separate, sanitized public supplier directory. Do not expose license documents,
+-- registration numbers, WhatsApp, private profile email/phone, or rejection notes.
+create table if not exists public.hz_public_providers (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  provider_type text,
+  full_name text,
+  business_name text,
+  profession text,
+  field text,
+  experience_years integer,
+  areas text,
+  work_hours text,
+  website text,
+  about text,
+  city text,
+  governorate text,
+  verified boolean not null default true,
+  created_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+alter table public.hz_public_providers enable row level security;
+drop policy if exists hz_public_providers_read on public.hz_public_providers;
+create policy hz_public_providers_read on public.hz_public_providers
+  for select to anon, authenticated using (true);
+revoke all on table public.hz_public_providers from public, anon, authenticated;
+grant select on table public.hz_public_providers to anon, authenticated;
 
--- Public-facing identity fields only; email and phone stay in the protected base table.
-create or replace view public.hz_public_profiles
-with (security_barrier = true)
-as
-select
-  p.id,
-  p.full_name,
-  p.brand,
-  p.avatar_url,
-  p.bio,
-  to_jsonb(p)->>'city' as city
-from public.hz_profiles p;
+create or replace function public.hz_sync_public_provider()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if tg_op = 'DELETE' then
+    delete from public.hz_public_providers where user_id = old.user_id;
+    return old;
+  end if;
 
-revoke all on public.hz_public_providers from public, anon;
-revoke all on public.hz_public_profiles from public, anon;
-grant select on public.hz_public_providers to authenticated;
-grant select on public.hz_public_profiles to authenticated;
+  if new.verified is true and new.status = 'approved' then
+    insert into public.hz_public_providers (
+      user_id, provider_type, full_name, business_name, profession, field,
+      experience_years, areas, work_hours, website, about, verified, created_at, updated_at
+    ) values (
+      new.user_id, new.provider_type, new.full_name, new.business_name, new.profession, new.field,
+      new.experience_years, new.areas, new.work_hours, new.website, new.about,
+      true, new.created_at, now()
+    )
+    on conflict (user_id) do update set
+      provider_type = excluded.provider_type,
+      full_name = excluded.full_name,
+      business_name = excluded.business_name,
+      profession = excluded.profession,
+      field = excluded.field,
+      experience_years = excluded.experience_years,
+      areas = excluded.areas,
+      work_hours = excluded.work_hours,
+      website = excluded.website,
+      about = excluded.about,
+      verified = true,
+      updated_at = now();
+  else
+    delete from public.hz_public_providers where user_id = new.user_id;
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.hz_sync_public_provider() from public, anon, authenticated;
+drop trigger if exists hz_sync_public_provider on public.hz_providers;
+create trigger hz_sync_public_provider
+  after insert or update or delete on public.hz_providers
+  for each row execute function public.hz_sync_public_provider();
 
--- Keep only the public configuration keys readable by ordinary users.
+-- Initial safe directory backfill.
+insert into public.hz_public_providers (
+  user_id, provider_type, full_name, business_name, profession, field,
+  experience_years, areas, work_hours, website, about, verified, created_at, updated_at
+)
+select user_id, provider_type, full_name, business_name, profession, field,
+       experience_years, areas, work_hours, website, about, true, created_at, now()
+from public.hz_providers
+where verified is true and status = 'approved'
+on conflict (user_id) do update set
+  provider_type = excluded.provider_type,
+  full_name = excluded.full_name,
+  business_name = excluded.business_name,
+  profession = excluded.profession,
+  field = excluded.field,
+  experience_years = excluded.experience_years,
+  areas = excluded.areas,
+  work_hours = excluded.work_hours,
+  website = excluded.website,
+  about = excluded.about,
+  verified = true,
+  updated_at = now();
+
+-- Settings are public only for the three keys used by the public app.
 drop policy if exists "hz_settings read" on public.hz_settings;
+drop policy if exists set_read on public.hz_settings;
 drop policy if exists hz_settings_public_read on public.hz_settings;
 drop policy if exists hz_settings_owner_read on public.hz_settings;
 create policy hz_settings_public_read on public.hz_settings
