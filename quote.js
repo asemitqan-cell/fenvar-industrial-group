@@ -156,7 +156,7 @@ function step3HTML(){return `<h4 class="qt-h">${T('Details','تفاصيل الط
  <div class="qt-2"><label><span>الاسم</span><input data-qf="contactName" autocomplete="name" value="${E(Q.contactName)}" placeholder="اسم حضرتك"></label><label><span>رقم الموبايل / واتساب</span><input data-qf="contactPhone" type="tel" inputmode="tel" autocomplete="tel" value="${E(Q.contactPhone)}" placeholder="01xxxxxxxxx"></label></div>
  <label style="display:block"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
  <div class="qt-2" style="margin-top:10px"><label><span>${T('Budget (optional)','ميزانيتك كام (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
- ${simBtns(0)}`}
+ ${simBtns(1)}`}
 function formHTML(){const s=sec(Q.sec),st=Q.step,last=st===3;
  const body=st===1?step1HTML():st===2?step2HTML():step3HTML();
  return `<div class="qt-b"><h3 style="margin:0 0 4px">${s.ico} ${T('Request a quote','طلب عرض سعر')} · ${s.ar}</h3>${stepsBar()}${body}<p class="msg">${E(Q.msg)}</p>

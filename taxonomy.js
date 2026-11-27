@@ -742,7 +742,7 @@ function studio(){const b=new T.Box3().setFromObject(root),sz=b.getSize(new T.Ve
  if(KL){const e=m*1.4,c=KL.shadow.camera,t=view.t;c.left=-e;c.right=e;c.top=e;c.bottom=-e;c.near=.1;c.far=m*9;c.updateProjectionMatrix();KL.position.set(t.x+m*.9,t.y+m*2.2,t.z+m*1.3);KL.target.position.copy(t);KL.target.updateMatrixWorld()}}
 function put(o,pth,v){const a=pth.split('.');o[a[0]][a[1]]=v}
 function get(o,pth){const a=pth.split('.');return o[a[0]][a[1]]}
-function loop(){raf=requestAnimationFrame(loop);if(!R)return;{const so=document.getElementById('sim');if(so&&so.hidden)return}acts.forEach(a=>a.t.forEach(t=>{const tv=t.v[Math.min(a.st,t.v.length-1)],c=get(t.o,t.p);put(t.o,t.p,c+(tv-c)*.12)}));
+function loop(){raf=requestAnimationFrame(loop);if(!R||!view.t||!sc)return;{const so=document.getElementById('sim');if(so&&so.hidden)return}acts.forEach(a=>a.t.forEach(t=>{const tv=t.v[Math.min(a.st,t.v.length-1)],c=get(t.o,t.p);put(t.o,t.p,c+(tv-c)*.12)}));
  if(VT){view.y+=(VT.y-view.y)*.16;view.p+=(VT.p-view.p)*.16;if(VT.d)view.d+=(VT.d-view.d)*.16;if(Math.abs(VT.y-view.y)+Math.abs(VT.p-view.p)<.004){view.y=VT.y;view.p=VT.p;if(VT.d)view.d=VT.d;VT=null}}else if(!dg){if(Math.abs(view.vy)>.0004){view.y+=view.vy;view.vy*=.93}else if(mode==='360'&&performance.now()-lt>2200)view.y+=.0035}
  cam.position.set(view.t.x+view.d*Math.sin(view.y)*Math.cos(view.p),view.t.y+view.d*Math.sin(view.p),view.t.z+view.d*Math.cos(view.y)*Math.cos(view.p));cam.lookAt(view.t);R.render(sc,cam)}
 function fit(){const b=$('#simV');if(!b||!R)return;const w=b.clientWidth,h=b.clientHeight;R.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}

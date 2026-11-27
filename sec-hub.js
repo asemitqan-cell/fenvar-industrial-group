@@ -32,6 +32,7 @@ function css(){if(css0)return;css0=1;const s=document.createElement('style');s.t
 #hubModal .hp b{font-size:15px}#hubModal .hp small{color:var(--mut)}#hubModal .tg{display:inline-block;background:color-mix(in srgb,var(--p) 14%,transparent);color:var(--p);border-radius:999px;padding:2px 9px;font-size:11.5px;margin:4px 4px 0 0}
 #hubModal .hs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px 0}#hubModal .hs button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}#hubModal .hs button.on{background:var(--p);color:#fff;border-color:var(--p)}
 #hubModal .hn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin:8px 0}#hubModal .hn div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}#hubModal .hn b{display:block;font-size:18px}#hubModal .hn small{color:var(--mut);font-size:11.5px}
+.hb-dz{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.hb-dz[hidden]{display:none}.hb-sq{aspect-ratio:1;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;display:grid;place-items:center;align-content:center;gap:8px;font:inherit;cursor:pointer;padding:6px}.hb-sq .hzi{width:38px;height:38px}.hb-sq b{font-size:13.5px}.hb-sq:active{background:color-mix(in srgb,var(--p) 9%,var(--card))}
 #hubModal input.q{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg)}`;document.head.appendChild(s)}
 
 const chev=()=>(typeof lang!=='undefined'&&lang==='ar')?'‹':'›';
@@ -53,9 +54,12 @@ function hubHTML(id){const u=id==='upvc';
    +row('sim',HI.ward,T('Wardrobe photo gallery','معرض صور الدواليب'),T('Browse real furniture examples','شوف نماذج موبيليا حقيقية'),' data-k="wardrobe"')
    +row('sim',HI.bed,T('Bedroom photo gallery','معرض صور غرف النوم'),T('Browse real bedroom examples','شوف صور غرف نوم حقيقية'),' data-k="bed"'))
   +row('prov',HI.pin,u?T('Find a supplier','ابحث عن مورد'):T('Suppliers & showrooms','الموردين والمعارض'),T('Verified suppliers with prices','موردين موثّقين بأسعارهم'));
+const sq=(k,ic,t,x)=>`<button type="button" class="hb-sq" data-hub="${k}"${x||''}>${ic}<b>${t}</b></button>`;
+ const provRow=row('prov',HI.pin,T('Find a supplier','ابحث عن مورد'),T('Verified suppliers with prices','موردين موثّقين بأسعارهم'));
+ const dz=`<button type="button" class="hb-r" data-hub="dz" aria-expanded="${H.dz?'true':'false'}" style="border:1px solid var(--line);border-radius:20px;background:var(--card)"><i>🎨</i><span><b>${T('Design it your way & preview in 3D','صمّم على زوقك وشاهد عينتك 3D')}</b><small>${T('Window, door or shutter','شباك أو باب أو شتر')}</small></span><em id="hbDzE">${H.dz?'⌃':'⌄'}</em></button><div class="hb-dz" id="hbDz"${H.dz?'':' hidden'}>${sq('design',HI.win,T('Window','شباك'),'')}${sq('design2',HI.door,T('Door','باب'),' data-k="door"')}${sq('design2',HI.shut,T('Shutter','شتر'),' data-k="shutter"')}</div>`;
  return `<div class="hb" id="hubBox">
  <button type="button" class="hb-go" data-hub="quote"><span><b>${HI.rec} ${T('Request a quote','اطلب عرض سعر')}</b><small>${u?T('Pick a system, list what you need, get supplier offers','اختار النظام والمنشأ، وحدد طلبك، وتوصلك عروض الموردين'):T('Pick a furniture type, list what you need, get offers','اختار نوع الموبيليا، وحدد طلبك، وتوصلك عروض الموردين')}</small></span><em>${chev()}</em></button>
- <div class="hb-lst">${rows}</div>
+ ${u?dz:''}<div class="hb-lst">${u?provRow:rows}</div>
  <div class="hb-sep">${T('Designs gallery','معرض التصاميم')}</div></div>`}
 
 function inject(){const g=$q('#grid');if(!g||typeof cat==='undefined'||!HUB[cat]){document.body.classList.remove('hzhub');return}
@@ -108,6 +112,7 @@ document.addEventListener('click',async e=>{
  const a=e.target.closest('[data-hub]');if(!a)return;e.preventDefault();e.stopPropagation();
  const [k,...r]=a.dataset.hub.split(':'),v=r.join(':'),id=H.sec&&$q('#hubModal')&&!$q('#hubModal').hidden?H.sec:cat;
  if(k==='quote'){closeM();window.hzQuote&&hzQuote(id)}
+ else if(k==='dz'){const b=$q('#hbDz');if(b){b.hidden=!b.hidden;H.dz=!b.hidden;a.setAttribute('aria-expanded',H.dz?'true':'false');const e2=$q('#hbDzE');if(e2)e2.textContent=H.dz?'⌃':'⌄'}}
  else if(k==='design'){if(window.hzDesigner)hzDesigner.open({sys:''})}
  else if(k==='sim'){const kd=a.dataset.k||(cat==='furniture'?'wardrobe':'window');if(window.hzOpenPhotoSample)window.hzOpenPhotoSample(kd);else if(typeof toast==='function')toast(T('Photo gallery is loading.','معرض الصور لسه بيحمّل.'))}
  else if(k==='design2'){if(window.hzDesign2)hzDesign2.open(a.dataset.k,{onDone:ls=>{window.hzQuoteAdd&&hzQuoteAdd(ls,'',cat,ls[0]&&ls[0].g)}});else if(typeof toast==='function')toast(T('Designer is not loaded yet.','المصمم لسه ما اتحمّلش.'))}
