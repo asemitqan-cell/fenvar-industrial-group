@@ -94,13 +94,13 @@ function drawProv(){const b=$q('#hubBody');if(!b||!H.sec)return;const s=secOf(H.
  <div class="hs"><button type="button" data-hubg="" class="${!H.grp?'on':''}">${T('All','الكل')}</button>${s.groups.map(g=>`<button type="button" data-hubg="${g.k}" class="${H.grp===g.k?'on':''}">${H.sec==='furniture'&&F[g.k]?F[g.k].n:g.ar}</button>`).join('')}</div>
  ${cities.length?`<div class="hs"><button type="button" data-hubc="" class="${!H.city?'on':''}">${T('All cities','كل المدن')}</button>${cities.map(c=>`<button type="button" data-hubc="${E(c)}" class="${H.city===c?'on':''}">${E(c)}</button>`).join('')}</div>`:''}
  ${H.err?`<p class="msg">${E(H.err)}</p>`:''}
- ${list.length?list.map(p=>{const st=H.stats[p.id];return `<div class="hp"><b>${E(p.name)}</b>${p.city?` <small>· ${E(p.city)}</small>`:''}${st&&+st.n?` <small>· ★ ${Number(st.avg).toFixed(1)} (${st.n})</small>`:''}<div>${[...p.groups].map(k=>`<span class="tg">${E(H.sec==='furniture'&&F[k]?F[k].n:gname(k))}</span>`).join('')}</div><small>${p.n} ${T('priced items','بند مسعّر')}</small></div>`}).join(''):(H.err?'':`<p class="empty">${T('No suppliers match yet.','مفيش موردين مطابقين لسه.')}</p>`)}
+ ${list.length?list.map(p=>{const st=H.stats[p.id];return `<div class="hp"><b>${E(p.name)}</b>${p.city?` <small>· ${E(p.city)}</small>`:''}${st&&+st.n?` <small>· ★ ${Number(st.avg).toFixed(1)} (${st.n})</small>`:''}<div>${[...p.groups].map(k=>`<span class="tg">${E(H.sec==='furniture'&&F[k]?F[k].n:gname(k))}</span>`).join('')}</div><small>${p.n} ${T('priced items','بند مسعّر')}</small></div>`}).join(''):(H.err?'':`<p class="empty">${T('No verified suppliers have added prices here yet.','لسه مفيش مورد موثّق ضاف أسعاره في القسم ده.')}</p>`)}
  <button type="button" class="btn" data-hub="quote" style="margin-top:10px">🧾 ${T('Request a quote','اطلب عرض سعر')}</button>`}
-function openProv(id,grp){modal();H.sec=id;H.grp=grp||'';H.q='';H.city='';$q('#hubModal').hidden=false;loadProv(id)}
+function openProv(id,grp){if(needIn())return;modal();H.sec=id;H.grp=grp||'';H.q='';H.city='';$q('#hubModal').hidden=false;loadProv(id)}
 const closeM=()=>{const m=$q('#hubModal');if(m)m.hidden=true};
 
 /* ---- الأزرار ---- */
-function needIn(){if(typeof user!=='undefined'&&user)return false;if(typeof toast==='function')toast(T('Sign in first.','سجّل دخول الأول.'));if(typeof needLogin==='function')needLogin();return true}
+function needIn(){if(typeof user!=='undefined'&&user)return false;if(typeof toast==='function')toast(T('Sign in first.','سجّل دخول الأول.'));if(typeof needLogin==='function')needLogin();else{const m=$q('#authModal');if(m)m.hidden=false}return true}
 document.addEventListener('click',async e=>{
  if(e.target.closest('[data-hubclose]')){closeM();return}
  const g=e.target.closest('[data-hubg]');if(g&&$q('#hubModal')&&$q('#hubModal').contains(g)){H.grp=g.dataset.hubg;drawProv();return}

@@ -206,7 +206,9 @@ function simSpecs(){const id=Q.sec,lines=(Q.res?Q.res.lines:Q.lines).filter(l=>l
  const all=lines.map(l=>l.name+' '+(l.note||'')).join(' '),tint=/عاكس/.test(all)?'mirror':/ملون|برونز/.test(all)?'bronze':/أخضر|اخضر/.test(all)?'green':/رمادي.*زجاج|زجاج.*رمادي/.test(all)?'gray':'clear',mesh=/سلك/.test(all)?1:0;
  const out=[],seen={};
  lines.forEach(l=>{const n=String(l.name).trim(),nt=String(l.note||''),t=n+' '+nt,sz=simSize(nt);let sp=null;
-  if(id==='upvc'){
+  const ss=Q.sim?Q.sim[n+'|'+nt]:undefined;if(ss===null)return;
+  if(ss){sp=Object.assign({},ss);sp.tint=sp.tint||tint}
+  else if(id==='upvc'){
    if(/شباك سحاب|سحاب/.test(n))sp={kind:'window',type:'sliding',mesh};
    else if(/شباك مفصلي/.test(n))sp={kind:'window',type:/ضلفتين|ضلفتان/.test(nt)?'casement2':'casement1'};
    else if(/فيكس/.test(n))sp={kind:'window',type:'fixed'};
@@ -227,7 +229,7 @@ function simSpecs(){const id=Q.sec,lines=(Q.res?Q.res.lines:Q.lines).filter(l=>l
    else if(/شباك حديد/.test(n))sp={kind:'window',type:'casement1',color:'black',prof:60,tint};
    else if(/بوابة/.test(n))sp={kind:'door',type:'french',glass:0,color:'black',prof:60,w:300,h:200};
    if(sp)sp.color=pickC(SC,t,'black')}
-  if(sp&&!seen[n]){seen[n]=1;if(sz&&sp.kind!=='kitchen'){sp.w=sz[0];sp.h=sz[1]}else if(sz&&sp.kind==='kitchen')sp.w=sz[0];out.push({label:n,spec:sp})}});
+  if(sp&&!seen[n+'|'+nt]){seen[n+'|'+nt]=1;if(sz&&sp.kind!=='kitchen'){sp.w=sz[0];sp.h=sz[1]}else if(sz&&sp.kind==='kitchen')sp.w=sz[0];out.push({label:n+(sz&&sp.kind!=='kitchen'?' '+sz[0]+'×'+sz[1]:''),spec:sp})}});
  return out}
 function simBtns(multi){const a=simSpecs();if(!multi)return `<button type="button" class="pill" style="width:100%;margin:8px 0" data-q="sim:0">🧊 ${T('Preview your order in 3D','شاهد عينة لطلبك 3D')}</button>`;
  if(!a.length)return '';return `<div style="display:grid;gap:6px;margin:10px 0">${a.map((x,i)=>`<button type="button" class="btn" data-q="sim:${i}">🧊 ${T('Preview your order','شاهد عينة لطلبك')}: ${E(x.label)}</button>`).join('')}</div>`}
@@ -237,12 +239,12 @@ function openSim(i){const a=simSpecs(),x=a[+i||0];if(x&&x.spec.kind==='bed'&&typ
 
 function draw(){ensureModal();$q('#qtBody').innerHTML=Q.res?resultHTML():formHTML()}
 
-const fixL=l=>{const it=(Q.prices||[]).find(x=>x.group_key===l.g&&x.name===l.name);return{g:l.g,name:l.name,qty:l.area&&it&&it.unit==='m2'?l.area:(+l.qty>0?+l.qty:1),note:l.note||''}};
+const fixL=l=>{if(l&&l.sim!==undefined){(Q.sim=Q.sim||{})[String(l.name).trim()+'|'+(l.note||'')]=l.sim}const it=(Q.prices||[]).find(x=>x.group_key===l.g&&x.name===l.name);return{g:l.g,name:l.name,qty:l.area&&it&&it.unit==='m2'?l.area:(+l.qty>0?+l.qty:1),note:l.note||''}};
 async function openQuote(secId,seed,opt){
  const id=MAP[secId]||secId;if(!sec(id)){return false}
  if(!OPEN_SECS.includes(id)){if(window.HZ_AVAIL)HZ_AVAIL.say();else if(typeof toast==='function')toast(T('Coming soon. We are focusing on UPVC and furniture for now.','قريبًا. دلوقتي بنركّز على UPVC والموبيليا.'));return true}
  if(!user){try{const g=await sb.auth.signInAnonymously({options:{data:{horizon_guest_quote:true}}});if(g.error)throw g.error;user=g.data.user||g.data.session?.user||null;if(!user)throw new Error('anonymous_session_missing')}catch(e){if(typeof toast==='function')toast('طلب الضيف يحتاج تفعيل Anonymous Sign-Ins في Supabase Auth.');Q.msg='تعذر بدء طلب ضيف. يلزم تفعيل Anonymous Sign-Ins في إعدادات Supabase.';return true}}
- Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.custom=typeof seed==='string'?seed:'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
+ Q.sec=id;Q.res=null;Q.msg='';Q.ok=0;Q.lines=[];Q.sim={};Q.custom=typeof seed==='string'?seed:'';Q.budget='';Q.origin='';Q.sent=0;Q.stats={};
  opt=opt||{};Q.step=1;Q.system=opt.system||'';Q.ftype=opt.type&&FT[opt.type]?opt.type:'';
  show();$q('#qtBody').innerHTML='<p class="hs-box">…</p>';
  await Promise.all([loadPrices(id),id==='upvc'&&!SYSX.loaded?loadSys():0]);Q.lines=[newLine()];

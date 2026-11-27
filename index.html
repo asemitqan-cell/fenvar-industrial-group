@@ -326,7 +326,7 @@ let dp;const ios=/iphone|ipad/i.test(navigator.userAgent);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;instUI()});
 addEventListener('appinstalled',()=>{try{localStorage.setItem('fv_inst','1')}catch(_){}instUI()});
 $('#installBtn').onclick=async()=>{if(dp){dp.prompt();const r=await dp.userChoice;if(r.outcome==='accepted'){try{localStorage.setItem('fv_inst','1')}catch(_){}$('#hero').hidden=true}dp=null;instUI()}else if(ios)toast(L('Tap Share, then Add to Home Screen.','دوس على Share وبعدين Add to Home Screen.'))};
-if('serviceWorker' in navigator)addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const up=()=>{try{r.update()}catch(_){}};up();document.addEventListener('visibilitychange',()=>{if(!document.hidden)up()});setInterval(up,600000)}).catch(()=>{})});
+if('serviceWorker' in navigator)addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const up=()=>{try{r.update()}catch(_){}};up();const sig=async()=>{try{const x=await Promise.all(['index.html','sw.js'].map(f=>fetch(f+'?_hz='+Date.now(),{cache:'no-store'}).then(q=>q.ok?q.text():'')));const s=x.join('|');let k=0;for(let i=0;i<s.length;i++)k=(k*31+s.charCodeAt(i))|0;return k}catch(_){return null}};let base=null;sig().then(k=>{base=k});const chk=async()=>{if(document.hidden||base===null)return;const k=await sig();if(k===null||k===base)return;up();if(document.querySelector('.modal:not([hidden])'))return;location.reload()};document.addEventListener('visibilitychange',()=>{if(!document.hidden){up();chk()}});addEventListener('pageshow',e=>{if(e.persisted)chk()});setInterval(()=>{up();chk()},300000)}).catch(()=>{})});
 let nOn=(()=>{try{return localStorage.getItem('fv_notif')!=='0'}catch(_){return true}})(),att=null;
 function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('fv_theme',t)}catch(_){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0B1416':'#0F766E';if(window.syncUI)syncUI()}
 function setLang(l){lang=l;try{localStorage.setItem('fv_lang',l)}catch(_){}$('#langMenu').hidden=true;applyLang();if(window.syncUI)syncUI()}
@@ -652,7 +652,7 @@ window.loadUL=async function(){await _lu();if(window.hzDemo)hzDemo();await loadS
 loadSocial();setTimeout(loadSocial,1500);setTimeout(loadSocial,4500);
 sb.auth.onAuthStateChange(()=>setTimeout(loadSocial,300));
 
-function needLogin(){authMode='up';authTexts();$('#authMsg').textContent=L('Sign in first.','سجّل أو ادخل الأول.');open('#authModal')}
+function needLogin(){authMode='up';authTexts();$('#authMsg').textContent=L('Sign in first.','سجّل أو ادخل الأول.');open('#authModal')}window.needLogin=needLogin;
 function refreshBars(id){document.querySelectorAll('.soc').forEach(el=>{if(el.dataset.sid===id){const l=UL.find(x=>x.id===id);if(l)el.outerHTML=socBar(l).split('<div class="cmbox')[0]}})}
 async function react(id,k){
  if(!user)return needLogin();
@@ -1454,7 +1454,7 @@ syncUI();
 </script>
 <script src="hz-avail.js?v=2"></script>
 <script src="prices.js?v=8"></script>
-<script src="sec-quotes.js?v=4"></script><script src="quote.js?v=19"></script><script src="taxonomy.js?v=18"></script><script src="hz-core.js?v=9"></script><script src="hz-focus.js?v=2"></script><script src="hz-share.js?v=3"></script><script src="sec-designer.js?v=1"></script><script src="sec-designer2.js?v=1"></script><script src="sec-hub.js?v=6"></script><script src="hz-home.js?v=11"></script><script src="hz-v2.js?v=11"></script><script src="hz-v3.js?v=4"></script>
+<script src="sec-quotes.js?v=4"></script><script src="quote.js?v=20"></script><script src="taxonomy.js?v=18"></script><script src="hz-core.js?v=9"></script><script src="hz-focus.js?v=2"></script><script src="hz-share.js?v=3"></script><script src="sec-designer.js?v=2"></script><script src="sec-designer2.js?v=1"></script><script src="sec-hub.js?v=7"></script><script src="hz-home.js?v=11"></script><script src="hz-v2.js?v=11"></script><script src="hz-v3.js?v=4"></script>
 <script>
 /* ===== v15: phone back button = one step back inside the app (sections, kids/sports screens, popups, chat).
    Works alongside hz-core.js (hzDeeper) and sec-*.js: any pushState made by them is tracked too. ===== */

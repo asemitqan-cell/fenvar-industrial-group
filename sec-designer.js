@@ -96,7 +96,7 @@ function mainName(){const k=kinds();if(k.includes('slide'))return 'شباك سح
 function lines(){const nm=mainName(),area=+(D.w*D.h/10000).toFixed(2),R=rows(),k=[];
  for(let r=0;r<R;r++)for(let c=0;c<D.cols;c++)k.push((R>1?(r===0?'علوي ':'سفلي '):'')+'خانة '+(c+1)+': '+OPEN[getOpen(r,c)][0]);
  const note=`${D.w}×${D.h} سم · ${COLW[D.color]} · ${k.join('، ')}${D.sys?' · '+D.sys:''}`;
- return [{g:'sector',name:nm,note,area},{g:'glass',name:D.glass,note:`${D.w}×${D.h} سم`,area}]}
+ return [{g:'sector',name:nm,note,area,sim:simSpec()},{g:'glass',name:D.glass,note:`${D.w}×${D.h} سم`,area,sim:null}]}
 function simSpec(){const k=kinds(),t=k.includes('slide')?'sliding':k.every(x=>x==='fix')?'fixed':k.every(x=>x==='tilt')?'tilt':(D.cols>=2?'casement2':'casement1'),dr=k.some(x=>x==='dl'||x==='dr');
  return {kind:dr?'door':'window',type:dr?'hinged':t,color:D.color==='anth'?'anth':D.color==='black'?'black':D.color==='oak'?'oak':D.color==='gray'?'gray':'white',w:D.w,h:D.h,tint:D.glass==='عاكس'?'mirror':D.glass==='ملون'?'bronze':'clear'}}
 
