@@ -1521,7 +1521,9 @@ const _r=render;render=function(){const r=_r.apply(this,arguments);queue();retur
 <style>
 body.hzlock{position:fixed!important;left:0;right:0;width:100%;overflow:hidden!important}
 .sheet,#chat .cb,#cB{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-.modal{overscroll-behavior:contain;touch-action:pan-y}
+.modal{overscroll-behavior:contain}
+html,body{overflow-x:clip;max-width:100%}
+html{overscroll-behavior-x:none}
 </style>
 <script>
 /* قفل سكرول الصفحة اللي ورا أي نافذة/فورم/شات مفتوح (وبيرجّع مكانك بعد القفل) */
