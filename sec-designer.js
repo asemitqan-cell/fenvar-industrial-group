@@ -67,9 +67,8 @@ function panel(){const r=+D.sel.split('-')[0],c=+D.sel.split('-')[1],o=getOpen(r
  <div class="wd-ch">${Object.keys(GLASS).map(k=>`<button type="button" data-wdg="${k}" class="${D.glass===k?'on':''}"><i style="background:${GLASS[k]}"></i>${k}</button>`).join('')}</div>
  <p class="wd-sum">${D.w}×${D.h} سم · ${area} م² · ${D.cols*R} ${D.cols*R>1?'خانات':'خانة'}</p><p class="msg">${E(D.msg)}</p>
  <div class="wd-act"><button type="button" class="btn" data-wdb="add">إضافة للمقايسة</button></div>`}
-function p3d(){const k=kinds(),dr=k.some(x=>x==='dl'||x==='dr'),col=COLORS[D.color][1];
- if(dr)return ['door',{w:D.w,h:D.h,glass:'1',color:col}];
- return ['window',{w:D.w,h:D.h,sashes:Math.min(3,D.cols),open:k.includes('slide')?'slide':'hinge',color:col}]}
+function p3d(){const R=rows(),cells={};for(let r=0;r<R;r++)for(let c=0;c<D.cols;c++)cells[r+'-'+c]=getOpen(r,c);
+ return ['wdesign',{w:D.w,h:D.h,cw:D.cw.slice(),tr:D.tr,cells,color:COLORS[D.color][1],glass:D.glass}]}
 function load3d(){return (typeof hzLoad==='function'?hzLoad('sec-3d'):Promise.resolve()).then(()=>window.hz3d)}
 function draw(){const b=$q('#wdBody');if(!b)return;b.innerHTML=panel();
  if(D.view==='3d'){const el=$q('#wd3d');if(el){const a=p3d();load3d().then(h=>{if(h&&h.mount&&D.view==='3d'&&$q('#wd3d')===el)h.mount(el,a[0],a[1])}).catch(()=>{el.innerHTML='<p class="msg" style="padding:30px;text-align:center">المعاينة 3D لسه ما اتحمّلتش.</p>'})}}

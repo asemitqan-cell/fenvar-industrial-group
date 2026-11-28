@@ -1,6 +1,6 @@
 // Horizon service worker v22: network-first بدون كاش المتصفح علشان أي رفع جديد يظهر من أول فتحة.
 // جديد: مكتبات الـCDN (supabase / three.js / الخطوط) بتتخزن بعد أول تحميل ناجح، فالتطبيق يفتح حتى لو الشبكة ضعيفة.
-const V='hz-v46',CDN='hz-cdn-v1';
+const V='hz-v47',CDN='hz-cdn-v1';
 const CDN_HOSTS=['cdn.jsdelivr.net','cdnjs.cloudflare.com','unpkg.com','fonts.googleapis.com','fonts.gstatic.com'];
 self.addEventListener('install',e=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil(

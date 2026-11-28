@@ -15,7 +15,8 @@ Reply in the user's language (Egyptian Arabic if lang=ar, German if lang=de, els
 Only if the user's need is to BUY a product or get consulting from Horizon, also set "category" to one of: furniture, wood, glass, upvc, realestate, cars, food, health, learning, events, perfumes, news, livestock, used, offers, consulting. For translation, general services or general questions set "category" to null.
 PROVIDERS: you may receive a PROVIDERS list (approved Horizon listings, already ordered by priority). When the user asks for a product or service that matches some of them, recommend the best matches by (1) suitability to the request, (2) same country/city as the user if they mention or imply one, (3) the list order, which reflects paid priority. Mention title and city, at most 3. Never invent providers or contact details; if none match, say so and suggest sending a request.
 If audio is attached, listen and answer it. If an image is attached, describe it and help.
-Return ONLY JSON: {"answer": string, "category": string|null}`;
+If the user asks to open, find or read a verse or surah in the Quran/Mushaf (or quotes part of a verse), also set "quran" to {"surah": number 1-114, "ayah": number or null} for the exact verse (null only if they asked for the whole surah); otherwise "quran" is null.
+Return ONLY JSON: {"answer": string, "category": string|null, "quran": {"surah": number, "ayah": number|null}|null}`;
 const MAX_BODY=7_000_000,MAX_ATT=5_000_000,PER_MIN=20,PER_HOUR=120;
 const CATS = new Set(["furniture","wood","glass","upvc","realestate","cars","food","health","learning","events","perfumes","news","livestock","used","offers","consulting"]);
 function allowedOrigin(origin: string | null): boolean {
@@ -152,7 +153,11 @@ Deno.serve(async(req: Request)=>{
     try { o = JSON.parse(t); } catch { o = { answer:t,category:null }; }
     const category = typeof o.category === "string" && CATS.has(o.category) ? o.category : null;
     const answer = typeof o.answer === "string" ? o.answer.slice(0,6000) : "";
-    return J(req,{answer,category});
+    const qz = o && o.quran && typeof o.quran === "object" ? o.quran : null;
+    const qs = qz ? Math.floor(Number(qz.surah)) : 0;
+    const qa = qz && qz.ayah != null ? Math.floor(Number(qz.ayah)) : 0;
+    const quran = qs >= 1 && qs <= 114 ? { surah: qs, ayah: qa >= 1 && qa <= 286 ? qa : null } : null;
+    return J(req,{answer,category,quran});
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
     if (msg === "attachment_too_large") return J(req,{error:"attachment_too_large"},413);

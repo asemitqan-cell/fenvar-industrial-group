@@ -129,10 +129,10 @@ function ctl(f){const v=P[f.k];
  return `<label class="k"><input type="checkbox" data-dg2f="${f.k}"${v?' checked':''}> ${f.l}</label>`}
 function norm(){const d=KINDS[K0];d.f.forEach(f=>{if(f.t==='num'){let n=+P[f.k];if(!isFinite(n))n=f.def;P[f.k]=Math.min(f.max,Math.max(f.min,Math.round(n)))}});if(d.pre)d.pre(P)}
 function p3d(){const c=lc(P.col),n=(v,a,b,df)=>Math.max(a,Math.min(b,Math.round(+v)||df));
- if(K0==='door')return ['door',{w:P.w,h:P.h,glass:P.panel==='solid'?'0':'1',color:c}];
- if(K0==='shutter')return ['shutter',{w:P.w,h:P.h,color:c}];
- if(K0==='wardrobe')return ['wardrobe',{w:P.w,h:P.h,d:P.d,doors:P.doors,drawers:P.drawers,color:c}];
- if(K0==='bedroom')return ['bed',{w:P.bed,l:200,hb:P.hb||115,storage:'1',color:c}];
+ if(K0==='door')return ['ddoor',{w:P.w,h:P.h,type:P.type,panel:P.panel,hand:P.hand,color:c}];
+ if(K0==='shutter')return ['shutter',{w:P.w,h:P.h,color:c,motor:P.motor?'1':'0',vent:P.vent?'1':'0'}];
+ if(K0==='wardrobe')return ['wardrobe',{w:P.w,h:P.h,d:P.d,doors:P.doors,drawers:P.drawers,kind:P.kind,mirror:P.mirror?'1':'0',color:c}];
+ if(K0==='bedroom')return ['bedroom',{bed:P.bed,style:P.style,wardrobe:!!P.wardrobe,ww:P.ww,wh:P.wh,wdoors:P.wdoors,dresser:!!P.dresser,color:c}];
  if(K0==='piece'){const w=+P.w||180;
   if(P.piece==='dining')return ['table',{seats:n(Math.round(w/35/2)*2,4,10,6),shape:'rect',color:c}];
   if(P.piece==='table')return ['table',{seats:4,shape:'rect',color:c}];
