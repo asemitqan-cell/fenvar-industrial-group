@@ -56,10 +56,13 @@ function hubHTML(id){const u=id==='upvc';
   +row('prov',HI.pin,u?T('Find a supplier','ابحث عن مورد'):T('Suppliers & showrooms','الموردين والمعارض'),T('Verified suppliers with prices','موردين موثّقين بأسعارهم'));
 const sq=(k,ic,t,x)=>`<button type="button" class="hb-sq" data-hub="${k}"${x||''}>${ic}<b>${t}</b></button>`;
  const provRow=row('prov',HI.pin,T('Find a supplier','ابحث عن مورد'),T('Verified suppliers with prices','موردين موثّقين بأسعارهم'));
- const dz=`<button type="button" class="hb-r" data-hub="dz" aria-expanded="${H.dz?'true':'false'}" style="border:1px solid var(--line);border-radius:20px;background:var(--card)"><i>🎨</i><span><b>${T('Design it your way & preview in 3D','صمّم على زوقك وشاهد عينتك 3D')}</b><small>${T('Window, door or shutter','شباك أو باب أو شتر')}</small></span><em id="hbDzE">${H.dz?'⌃':'⌄'}</em></button><div class="hb-dz" id="hbDz"${H.dz?'':' hidden'}>${sq('design',HI.win,T('Window','شباك'),'')}${sq('design2',HI.door,T('Door','باب'),' data-k="door"')}${sq('design2',HI.shut,T('Shutter','شتر'),' data-k="shutter"')}</div>`;
+ const dzSub=u?T('Window, door or shutter','شباك أو باب أو شتر'):T('Wardrobe, bedroom or a furniture piece','دولاب أو غرفة نوم أو قطعة موبيليا');
+ const dzSq=u?sq('design',HI.win,T('Window','شباك'),'')+sq('design2',HI.door,T('Door','باب'),' data-k=\"door\"')+sq('design2',HI.shut,T('Shutter','شتر'),' data-k=\"shutter\"')
+  :sq('design2',HI.ward,T('Wardrobe','دولاب'),' data-k=\"wardrobe\"')+sq('design2',HI.bed,T('Bedroom','غرفة نوم'),' data-k=\"bedroom\"')+sq('design2',HI.sofa,T('Piece','قطعة'),' data-k=\"piece\"');
+ const dz=`<button type=\"button\" class=\"hb-r\" data-hub=\"dz\" aria-expanded=\"${H.dz?'true':'false'}\" style=\"border:1px solid var(--line);border-radius:20px;background:var(--card)\"><i>🎨</i><span><b>${T('Design it your way & preview in 3D','صمّم على زوقك وشاهد عينتك 3D')}</b><small>${dzSub}</small></span><em id=\"hbDzE\">${H.dz?'⌃':'⌄'}</em></button><div class=\"hb-dz\" id=\"hbDz\"${H.dz?'':' hidden'}>${dzSq}</div>`;
  return `<div class="hb" id="hubBox">
  <button type="button" class="hb-go" data-hub="quote"><span><b>${HI.rec} ${T('Request a quote','اطلب عرض سعر')}</b><small>${u?T('Pick a system, list what you need, get supplier offers','اختار النظام والمنشأ، وحدد طلبك، وتوصلك عروض الموردين'):T('Pick a furniture type, list what you need, get offers','اختار نوع الموبيليا، وحدد طلبك، وتوصلك عروض الموردين')}</small></span><em>${chev()}</em></button>
- ${u?dz:''}<div class="hb-lst">${u?provRow:rows}</div>
+ ${dz}<div class="hb-lst">${provRow}</div>
  <div class="hb-sep">${T('Designs gallery','معرض التصاميم')}</div></div>`}
 
 function inject(){const g=$q('#grid');if(!g||typeof cat==='undefined'||!HUB[cat]){document.body.classList.remove('hzhub');return}

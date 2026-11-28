@@ -150,11 +150,11 @@ function step2HTML(){const s=sec(Q.sec),fur=Q.sec==='furniture';
    :`<input data-qi="${i}" data-f="name" list="qtdl${i}" value="${E(l.name)}" placeholder="${T('Type or pick what you need','اكتب أو اختار اللي محتاجه')}"><datalist id="qtdl${i}">${g.pre.map(n=>`<option value="${E(n)}">`).join('')}</datalist>`}
   <div class="qt-2"><input type="number" min="0" step="any" inputmode="decimal" data-qi="${i}" data-f="qty" value="${E(l.qty)}" placeholder="${T('Quantity','الكمية')}"><input data-qi="${i}" data-f="note" value="${E(l.note)}" placeholder="${T('Size / color (optional)','المقاس / اللون (اختياري)')}"></div></div>`}).join('');
  return `<h4 class="qt-h">${fur&&FT[Q.ftype]?FT[Q.ftype].ico+' '+FT[Q.ftype].n+' · ':''}${T('What do you need?','محتاج إيه؟')}</h4>
- ${Q.prices&&!Q.prices.length?`<p class="msg">${T('No supplier prices yet for this section. You can still send a custom request.','لسه مفيش أسعار موردين في القسم ده. تقدر تبعت طلب خاص.')}</p>`:''}
+ ${Q.prices&&!Q.prices.length?`<p class="msg">${T('No supplier prices yet for this section. You can still send your request.','لسه مفيش أسعار موردين في القسم ده. تقدر تبعت طلبك وهنوصّله للموردين.')}</p>`:''}
  ${lines}<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pill" data-q="add">+ ${T('Add another item','ضيف بند تاني')}</button>${Q.sec==='upvc'?'<button type="button" class="pill" data-q="design">🪟 صمّم الشباك بالرسم</button><button type="button" class="pill" data-q="design2:door">صمّم باب</button><button type="button" class="pill" data-q="design2:shutter">صمّم شتر</button>':'<button type="button" class="pill" data-q="design2:wardrobe">صمّم دولاب</button><button type="button" class="pill" data-q="design2:bedroom">صمّم غرفة نوم</button><button type="button" class="pill" data-q="design2:piece">صمّم قطعة</button>'}</div>`}
 function step3HTML(){return `<h4 class="qt-h">${T('Details','تفاصيل الطلب')}</h4>
  <div class="qt-2"><label><span>الاسم</span><input data-qf="contactName" autocomplete="name" value="${E(Q.contactName)}" placeholder="اسم حضرتك"></label><label><span>رقم الموبايل / واتساب</span><input data-qf="contactPhone" type="tel" inputmode="tel" autocomplete="tel" value="${E(Q.contactPhone)}" placeholder="01xxxxxxxxx"></label></div>
- <label style="display:block"><span>${T('Special request (optional)','طلب خاص (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything not in the list','أي حاجة مش موجودة في الاختيارات')}">${E(Q.custom)}</textarea></label>
+ <label style="display:block"><span>${T('Extra notes (optional)','ملاحظات إضافية (اختياري)')}</span><textarea data-qf="custom" rows="3" placeholder="${T('Anything else the supplier should know','أي تفاصيل تانية عايز المورد يعرفها (مش لازم)')}">${E(Q.custom)}</textarea></label>
  <div class="qt-2" style="margin-top:10px"><label><span>${T('Budget (optional)','ميزانيتك كام (اختياري)')}</span><input type="number" min="0" inputmode="decimal" data-qf="budget" value="${E(Q.budget)}"></label><label><span>${T('City','المدينة')}</span><input data-qf="city" value="${E(Q.city)}"></label></div>
  ${simBtns(1)}`}
 function formHTML(){const s=sec(Q.sec),st=Q.step,last=st===3;
@@ -186,7 +186,7 @@ function resultHTML(){const {res,lines}=Q.res,bud=+Q.budget||0,s=sec(Q.sec);
  const fm=n=>Math.round(n).toLocaleString();
  const best=res.find(r=>r.full);
  const head=!lines.length?`<p class="msg">${T('Add at least one item.','ضيف بند واحد على الأقل.')}</p>`
-  :!res.length?`<p class="hs-box">${T('No supplier has these exact items priced yet. You can still send a custom request for our team to review.','مفيش مورد مسعّر البنود دي بالظبط لسه. طلبك اتسجّل كطلب خاص وهنجيبهولك.')}</p>`
+  :!res.length?`<p class="hs-box">${T('No supplier has these exact items priced yet. You can still send a custom request for our team to review.','مفيش مورد مسعّر البنود دي بالظبط لسه. ابعت الطلب لفريق Horizon وهنجيبلك عروض من الموردين.')}</p>`
   :best?`<p class="hs-box"><b>${T('Recommended','ترشيحنا')}: ${E(best.name)}</b><br>${T('Lowest total for everything you asked','أقل إجمالي لكل اللي طلبته')}: <b>${fm(best.total)}</b>${bud?(best.total<=bud?' · '+T('within your budget','داخل ميزانيتك'):' · '+T('above your budget','أعلى من ميزانيتك')):''}${res.filter(r=>r.full).length>1?`<br><span class="qt-s">${T('Next best is','التاني بعده')} ${fm(res.filter(r=>r.full)[1].total)}</span>`:''}</p>`
   :`<p class="hs-box">${T('No single supplier covers everything. Closest options are below.','مفيش مورد واحد بيغطي كل حاجة. دي أقرب العروض.')}</p>`;
  const cards=res.map(r=>`<div class="qt-r${best&&r.id===best.id?' best':''}"><b>${E(r.name)}</b>${best&&r.id===best.id?`<span class="qt-tag">${T('Best','الأنسب')}</span>`:''}${r.full?'':`<span class="qt-s"> · ${r.hit}/${lines.length}</span>`}${statLine(r.id)}${ageTag(r.upd)}
@@ -231,8 +231,8 @@ function simSpecs(){const id=Q.sec,lines=(Q.res?Q.res.lines:Q.lines).filter(l=>l
    if(sp)sp.color=pickC(SC,t,'black')}
   if(sp&&!seen[n+'|'+nt]){seen[n+'|'+nt]=1;if(sz&&sp.kind!=='kitchen'){sp.w=sz[0];sp.h=sz[1]}else if(sz&&sp.kind==='kitchen')sp.w=sz[0];out.push({label:n+(sz&&sp.kind!=='kitchen'?' '+sz[0]+'×'+sz[1]:''),spec:sp})}});
  return out}
-function simBtns(multi){const a=simSpecs();if(!multi)return `<button type="button" class="pill" style="width:100%;margin:8px 0" data-q="sim:0">🧊 ${T('Preview your order in 3D','شاهد عينة لطلبك 3D')}</button>`;
- if(!a.length)return '';return `<div style="display:grid;gap:6px;margin:10px 0">${a.map((x,i)=>`<button type="button" class="btn" data-q="sim:${i}">🧊 ${T('Preview your order','شاهد عينة لطلبك')}: ${E(x.label)}</button>`).join('')}</div>`}
+function simBtns(multi){const a=simSpecs();if(!a.length)return '';if(!multi)return `<button type="button" class="pill" style="width:100%;margin:8px 0" data-q="sim:0">🧊 ${T('Preview your order in 3D','شوف شكل طلبك 3D')}</button>`;
+ if(!a.length)return '';return `<div style="display:grid;gap:6px;margin:10px 0">${a.map((x,i)=>`<button type="button" class="btn" data-q="sim:${i}">🧊 ${T('Preview in 3D','شوف شكله 3D')}: ${E(x.label)}</button>`).join('')}</div>`}
 const WH={walnut:'#6B4423',oak:'#B58B52',white:'#EDEBE6',wenge:'#3A2A22',gray:'#8D9196'};
 function openSim(i){const a=simSpecs(),x=a[+i||0];if(x&&x.spec.kind==='bed'&&typeof hzLoad==='function'){const sp=x.spec;hzLoad('sec-3d').then(()=>{if(window.hz3d)hz3d.open('bed',{title:x.label,color:WH[sp.color]||'#8B5A2B',w:sp.w,l:sp.h})}).catch(()=>{});return}
  if(!x){if(typeof toast==='function')toast(T('Pick an item like a window, door or wardrobe first.','اختار بند زي شباك أو باب أو دولاب الأول.'));return}if(window.hzSim)hzSim.open(x.spec);else if(typeof toast==='function')toast(T('3D preview is not loaded yet.','العينة 3D لسه ما اتحمّلتش.'))}

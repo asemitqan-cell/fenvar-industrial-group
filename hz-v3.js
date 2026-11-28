@@ -51,6 +51,18 @@ const st=document.createElement('style');st.textContent=`
 .ow-bars{display:flex;align-items:flex-end;gap:4px;height:70px;padding:6px 2px}.ow-bars i{flex:1;min-width:6px;background:var(--p);border-radius:5px 5px 0 0;opacity:.85}
 .ow-ck{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.6;padding:6px 2px;border-bottom:1px solid var(--line)}
 .ow-ck i{font-style:normal;flex:none}
+/* ترتيب العناوين في لوحة المالك: مسافة بعيد عن زرار الإغلاق، وكل عنوان ليه فاصل واضح وخلفية مضمونة */
+#ownModal .sheet,#ordModal .sheet{color:var(--ink);background:var(--bg,#fff)}
+#ownModal .ow-h,#ordModal .od-h{padding-inline-end:40px;line-height:1.35;margin:0 0 6px;color:var(--ink)}
+#ownModal .od-p{margin:0 0 10px}
+#ownModal .ow-s{margin:20px 0 8px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink);font-size:14px;line-height:1.4}
+#ownModal .ow-s:first-of-type{border-top:0;padding-top:0}
+#ownModal .ow-k{overflow:hidden;min-width:0}
+#ownModal .ow-k b{font-size:19px;word-break:keep-all;overflow-wrap:anywhere}
+#ownModal .ow-k small{display:block;margin-top:2px;line-height:1.5}
+#ownModal .ow-card>b{display:block;line-height:1.5;color:var(--ink);padding-bottom:4px;border-bottom:1px dashed var(--line);margin-bottom:2px}
+#ownModal .ow-row{align-items:flex-start;line-height:1.6}#ownModal .ow-row span:last-child{text-align:end;color:var(--ink);font-weight:600}
+#ownModal .pill{margin:0 0 8px}
 /* أيقونات SVG حقيقية بدل الإيموجي */
 .hzi{width:1.2em;height:1.2em;vertical-align:-.22em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .hzi.f{fill:currentColor;stroke:none}

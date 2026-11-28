@@ -403,15 +403,16 @@ const HIST=[],OWNER='https://wa.me/201040930136?text=';
 function chatOpen(m){const c=$('#chat');c.hidden=false;c.classList.remove('min');if(m==='lg')c.classList.toggle('lg');$('#cIn').placeholder=L('Ask anything…','اسأل أي حاجة…','Frag alles…');$('#cWa').textContent='💬 '+L('Customer service','خدمة العملاء','Kundenservice');const lu=[...HIST].reverse().find(x=>x.role==='user');$('#cWa').href=$('#fabWa').href=OWNER+encodeURIComponent(lu?lu.text:L('Hello, I need help','مرحبا، محتاج مساعدة','Hallo, ich brauche Hilfe'))}
 function addMsg(r,t){const welcome=$('#chatWelcome');if(welcome)welcome.remove();const d=document.createElement('div');d.className='m '+r;d.textContent=t||'';$('#cB').append(d);$('#cB').scrollTop=1e9;return d}
 function typeOut(el,t,done){let i=0;const dot=document.createElement('i');dot.className='td';(function step(){i=Math.min(t.length,i+2);el.textContent=t.slice(0,i);if(i<t.length){el.append(dot);$('#cB').scrollTop=1e9;setTimeout(step,22)}else{dot.remove();done&&done()}})()}
-async function askAI(audio,fromChat){if(typeof audio!=='string')audio=null;if(rec){rec.stop();return}const inp=fromChat===true?$('#cIn'):$('#q'),q=inp.value.trim();if(!q&&!att&&!audio)return;inp.value='';$('#q').value='';chatOpen();addMsg('u',q||(att?'📎 '+att.name:'🎤'));const w=addMsg('a','');w.innerHTML='<i class="td"></i>';const img=att&&att.img?att.data:null,fileData=att&&!att.img?att.data:null,fn=att&&att.name||null;
+async function askAI(audio,fromChat){if(typeof audio!=='string')audio=null;if(rec){rec.stop();return}const inp=fromChat===true?$('#cIn'):$('#q'),q=inp.value.trim();if(!q&&!att&&!audio)return;inp.value='';$('#q').value='';chatOpen();addMsg('u',q||(att?'📎 '+att.name:'🎤'));const w=addMsg('a','');w.innerHTML='<i class="td"></i>';const img0=att&&att.img?att.data:null,fileData=att&&!att.img?att.data:null,fn=att&&att.name||null;
+const img=img0||(/صور|image|photo|bild|pic/i.test(q)&&window.HZ_LAST_IMG)||null;if(img0)window.HZ_LAST_IMG=img0;
 window.HZ_PENDING_MEDIA=Array.isArray(window.HZ_PENDING_MEDIA)?window.HZ_PENDING_MEDIA:[];
 if(audio)window.HZ_PENDING_MEDIA.push({name:'voice-message.webm',data:audio,mime:(audio.match(/^data:([^;]+)/)||[])[1]||'audio/webm',kind:'audio'});
-if(img)window.HZ_PENDING_MEDIA.push({name:fn||'attachment',data:img,mime:(img.match(/^data:([^;]+)/)||[])[1]||'application/octet-stream',kind:att&&att.img?'image':'file'});
+if(img0)window.HZ_PENDING_MEDIA.push({name:fn||'attachment',data:img0,mime:(img0.match(/^data:([^;]+)/)||[])[1]||'application/octet-stream',kind:att&&att.img?'image':'file'});
 if(fileData)window.HZ_PENDING_MEDIA.push({name:fn||'file-attachment',data:fileData,mime:(fileData.match(/^data:([^;]+)/)||[])[1]||'application/octet-stream',kind:'file'});
 att=null;showAtt();const hist=HIST.slice(-10);HIST.push({role:'user',text:q||fn||'(audio)'});
 try{let r;for(let a=0;a<3;a++){r=await fetch(SB_URL+'/functions/v1/fenvar-ai',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify({q,lang,image:img,audio,file_data:fileData,file:fn,history:hist})});if(r.status<500)break;await new Promise(z=>setTimeout(z,1500*(a+1)))}if(!r.ok){let t='';try{t=(await r.text()).slice(0,200)}catch(_){}throw new Error(r.status+' '+t)}const d=await r.json();if(audio&&d.transcript){window.HZ_PENDING_TRANSCRIPT=[window.HZ_PENDING_TRANSCRIPT||'',d.transcript].filter(Boolean).join('\\n');const lastAudio=[...(window.HZ_PENDING_MEDIA||[])].reverse().find(x=>x.kind==='audio');if(lastAudio)lastAudio.transcript=d.transcript}const ans=d.answer||L('Sorry, I could not answer that. Try rephrasing.','معرفتش أجاوب. جرّب تصيغ السؤال بشكل تاني.','Keine Antwort. Bitte umformulieren.');HIST.push({role:'model',text:ans});typeOut(w,ans,()=>{window.hzSpeakBtn&&hzSpeakBtn(w,ans);const pk=window.hzPick?hzPick(q,ans,d.category||route(q)):{id:d.category||route(q)};if(pk&&pk.id&&CATALOG.some(x=>x.id===pk.id)){const x=document.createElement('button');x.className='btn';x.textContent=window.hzSecLabel?hzSecLabel(pk):L('Open section','افتح القسم','Bereich öffnen');x.onclick=()=>{window.hzOpenSec?hzOpenSec(pk):goCat(pk.id);$('#chat').classList.add('min')};w.append(document.createElement('br'),x);
 if(d.quote_request===true&&window.hzQuote){const qb=document.createElement('button');qb.className='btn';qb.style.marginTop='8px';qb.textContent='🧾 استكمل طلب عرض السعر';qb.onclick=()=>{window.hzQuote(pk.id,window.HZ_PENDING_TRANSCRIPT||q||'');$('#chat').classList.add('min')};w.append(document.createElement('br'),qb)}}})}
-catch(err){HIST.pop();w.innerHTML=`${L('Could not reach the assistant. Try again.','المساعد مردش دلوقتي. جرّب تاني.','Assistent nicht erreichbar.')}<br><small style="opacity:.65;direction:ltr;display:block;word-break:break-all">[${esc(String(err&&err.message||'network').slice(0,3))}]</small>`}}
+catch(err){HIST.pop();const sc=String(err&&err.message||'').slice(0,3),msg=sc==='413'?L('The file is too large. Try a smaller one.','الملف كبير. جرّب ملف أصغر.','Datei zu groß.'):sc==='400'?L('I could not read the attachment. Try another photo.','معرفتش أقرا المرفق. جرّب صورة تانية أو ابعت السؤال بالنص.','Anhang nicht lesbar.'):sc==='429'?L('Too many requests. Wait a minute.','طلبات كتير. استنى دقيقة وجرّب.','Zu viele Anfragen.'):L('Could not reach the assistant. Try again.','المساعد مردش دلوقتي. جرّب تاني.','Assistent nicht erreichbar.');w.innerHTML=`${msg}<br><small style="opacity:.65;direction:ltr;display:block;word-break:break-all">[${esc(sc||'net')}]</small>`}}
 $('#cGo').onclick=()=>askAI(null,true);$('#cIn').addEventListener('keydown',e=>{if(e.key==='Enter')askAI(null,true)});$('#cX').onclick=()=>{$('#chat').hidden=true};$('#cMin').onclick=()=>$('#chat').classList.toggle('min');$('#cPlus').onclick=e=>{e.stopPropagation();const m=$('#cPlusMenu');m.hidden=!m.hidden;$('#cPlus').classList.toggle('open',!m.hidden)};$('#cPlusMenu').addEventListener('click',()=>{setTimeout(()=>{$('#cPlusMenu').hidden=true;$('#cPlus').classList.remove('open')},60)});$('#cMic').onclick=()=>toggleMic(true);document.addEventListener('click',e=>{if(!e.target.closest('#cPlusMenu'))$('#cPlusMenu').hidden=true;if(!e.target.closest('#cPlus'))$('#cPlus').classList.remove('open')});
 $('#aiGo').onclick=askAI;$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')askAI()});$('#q').addEventListener('input',()=>{if(!$('#q').value)$('#ai').hidden=true});
 $('#fab').onclick=()=>{chatOpen();setTimeout(()=>$('#cIn').focus(),200)};$('#accOptB').onclick=$('#accEmail').previousElementSibling.onclick=()=>{$('#accOpts').hidden=!$('#accOpts').hidden};
@@ -430,7 +431,15 @@ $('#accIn').onclick=()=>{close();authBtn()};
 $('#invBtn').onclick=async()=>{const u=location.href.split('#')[0],t=L('Join me on Horizon','انضم معايا على أفق','Komm zu Horizon');try{if(navigator.share)await navigator.share({title:'Horizon',text:t,url:u});else{await navigator.clipboard.writeText(t+' '+u);$('#notifMsg').className='msg ok';$('#notifMsg').textContent=L('Link copied','اتنسخ الرابط','Link kopiert')}}catch(_){}};
 document.addEventListener('click',e=>{const l=e.target.closest('[data-l]');if(l)setLang(l.dataset.l);if(e.target.closest('#micBtn'))toggleMic();
 if(!e.target.closest('.menu,#plus,#langBtn')){$('#langMenu').hidden=true;$('#plusMenu').hidden=true;$('#plus').classList.remove('open')}});
-const pick=el=>el.onchange=()=>{const f=el.files[0];el.value='';if(!f)return;if(f.size>4e6){$('#att').textContent=L('File too large (max 4MB)','الملف كبير (الحد 4MB)');return}const r=new FileReader();r.onload=()=>{att={name:f.name,img:f.type.startsWith('image/')?r.result:null,data:r.result};showAtt();$('#plusMenu').hidden=true;$('#plus').classList.remove('open')};r.readAsDataURL(f)};pick($('#fPhoto'));pick($('#fCam'));pick($('#fFile'));
+const attErr=m=>{[$('#att'),$('#cAtt')].forEach(a=>{if(a)a.textContent=m})};
+const shrinkImg=f=>new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{try{const M=1600,s=Math.min(1,M/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*s));c.height=Math.max(1,Math.round(im.naturalHeight*s));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);let q=.82,d=c.toDataURL('image/jpeg',q);while(d.length>1.8e6&&q>.4){q-=.12;d=c.toDataURL('image/jpeg',q)}URL.revokeObjectURL(u);ok(d)}catch(e){URL.revokeObjectURL(u);no(e)}};im.onerror=()=>{URL.revokeObjectURL(u);no(new Error('img'))};im.src=u});
+const pick=el=>el.onchange=async()=>{const f=el.files[0];el.value='';if(!f)return;const isImg=(f.type||'').startsWith('image/');
+if(isImg){if(f.size>25e6){attErr(L('Image too large','الصورة كبيرة أوي'));return}
+try{const d=await shrinkImg(f);att={name:(f.name||'photo').replace(/\.[^.]+$/,'')+'.jpg',img:d,data:d}}catch(_){attErr(L('Could not read this image','مقدرتش أقرا الصورة دي. جرّب صورة تانية'));return}}
+else{if(f.size>4e6){attErr(L('File too large (max 4MB)','الملف كبير (الحد 4MB)'));return}
+if(!/^(application\/pdf|text\/plain)$/i.test(f.type||'')){attErr(L('Only images, PDF or text files','مسموح بالصور وملفات PDF أو النص بس'));return}
+const d=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.onerror=()=>r(null);fr.readAsDataURL(f)});if(!d){attErr(L('Could not read the file','مقدرتش أقرا الملف'));return}att={name:f.name,img:null,data:d}}
+showAtt();$('#plusMenu').hidden=true;$('#plus').classList.remove('open')};pick($('#fPhoto'));pick($('#fCam'));pick($('#fFile'));
 $('#barHome').onclick=()=>{cat='all';typ=null;$('#q').value='';renderChips();render();window.scrollTo({top:0,behavior:'smooth'});setBar('barHome')};
 setBar('barHome');
 document.addEventListener('click',e=>{if(e.target.matches('[data-close]')||e.target.classList.contains('modal'))setBar(cat==='fav'?'barFav':'barHome')});
@@ -1094,11 +1103,11 @@ if(sv==='pw'){b.innerHTML=hsHead(L('Change password','تغيير كلمة الس
 if(sv==='legal'){b.innerHTML=hsHead(L('Privacy & terms','الخصوصية والشروط'),1)+`<div class="hs-box"><p><a href="privacy.html" target="_blank" rel="noopener">${L('Privacy policy','سياسة الخصوصية')}</a></p><p><a href="terms.html" target="_blank" rel="noopener">${L('Terms of use','شروط الاستخدام')}</a></p></div>`;return}
 if(sv==='fb'){b.innerHTML=hsHead(L('Suggestions & complaints box','صندوق المقترحات والشكاوي'),1)+`<form id="hsFb" class="hs-box"><p style="margin:0 0 10px;color:var(--mut);font-size:13px">${L('Tell us what to improve. Your message reaches the owner directly.','قولنا إيه اللي نطوّره. رسالتك بتوصل للإدارة مباشرة.')}</p><div class="hs-seg"><label><input type="radio" name="k" value="suggestion" checked><span>💡 ${L('Suggestion','اقتراح')}</span></label><label><input type="radio" name="k" value="complaint"><span>⚠️ ${L('Complaint','شكوى')}</span></label></div><textarea name="b" rows="6" maxlength="1500" required placeholder="${L('Write here…','اكتب هنا…')}"></textarea><p class="msg" id="hsMsg"></p><button class="btn">${L('Send','إرسال')}</button></form>`}}
 async function loadInb(){const b=$('#hsBody'),h=hsHead(L('Suggestions & complaints inbox','وارد المقترحات والشكاوي'),1);b.innerHTML=h+'<p class="hs-box">…</p>';try{const r=await sb.from('hz_feedback').select('*').order('created_at',{ascending:false}).limit(60);if(r.error)throw r.error;b.innerHTML=h+((r.data||[]).map(f=>`<div class="hs-box"><b>${f.kind==='complaint'?'⚠️ '+L('Complaint','شكوى'):'💡 '+L('Suggestion','اقتراح')}</b> · ${esc(f.user_name||'')} <small>${esc(f.user_email||'')}</small><p style="margin:8px 0 4px;white-space:pre-wrap">${esc(f.body)}</p><small>${new Date(f.created_at).toLocaleString()}</small></div>`).join('')||`<p class="empty">${L('Nothing yet.','لسه مفيش حاجة.')}</p>`)}catch(err){b.innerHTML=h+`<p class="msg" style="padding:0 18px">${hzErr(err)}</p>`}}
-window.hzSettings=()=>{sv='home';drawSet();open('#setModal');setBar('barAuth')};
+window.hzSettings=()=>{sv='home';drawSet();open('#setModal');setBar('barAuth')};window.hzSv={get:()=>sv,set:v=>{sv=v;drawSet()}};
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-hs]');if(!a)return;const k=a.dataset.hs;
-if(k==='ord'){const sm=$('#setModal');if(sm)sm.hidden=true;if(window.hzOrders)window.hzOrders();return}
-if(k==='own'){const sm=$('#setModal');if(sm)sm.hidden=true;if(window.hzOwner)window.hzOwner();return}
-if(['home','acc','lang','fb','pw','legal'].includes(k)){sv=k;drawSet();return}
+if(k==='ord'){const sm=$('#setModal');if(sm){sm.hidden=true;if(MS[MS.length-1]!=='#setModal')MS.push('#setModal')}if(window.hzOrders)window.hzOrders();return}
+if(k==='own'){const sm=$('#setModal');if(sm){sm.hidden=true;if(MS[MS.length-1]!=='#setModal')MS.push('#setModal')}if(window.hzOwner)window.hzOwner();return}
+if(['home','acc','lang','fb','pw','legal'].includes(k)){sv=k;drawSet();window.hzNavQ&&hzNavQ();return}
 if(k==='install'){$('#setInst').click();return}
 if(k==='signin'){close();authBtn();return}
 if(k==='inv'){const u=location.href.split('#')[0],t=L('Join me on Horizon','انضم معايا على أفق','Komm zu Horizon');try{if(navigator.share)await navigator.share({title:'Horizon',text:t,url:u});else{await navigator.clipboard.writeText(t+' '+u);toast(L('Link copied','اتنسخ الرابط'),1)}}catch(_){}return}
@@ -1454,7 +1463,7 @@ syncUI();
 </script>
 <script src="hz-avail.js?v=2"></script>
 <script src="prices.js?v=8"></script>
-<script src="sec-quotes.js?v=4"></script><script src="quote.js?v=21"></script><script src="taxonomy.js?v=19"></script><script src="hz-core.js?v=9"></script><script src="hz-focus.js?v=2"></script><script src="hz-share.js?v=3"></script><script src="sec-designer.js?v=2"></script><script src="sec-designer2.js?v=1"></script><script src="sec-hub.js?v=8"></script><script src="hz-home.js?v=11"></script><script src="hz-v2.js?v=11"></script><script src="hz-v3.js?v=5"></script>
+<script src="sec-quotes.js?v=4"></script><script src="quote.js?v=22"></script><script src="taxonomy.js?v=19"></script><script src="hz-core.js?v=9"></script><script src="hz-focus.js?v=2"></script><script src="hz-share.js?v=3"></script><script src="sec-designer.js?v=2"></script><script src="sec-designer2.js?v=1"></script><script src="sec-hub.js?v=9"></script><script src="hz-home.js?v=11"></script><script src="hz-v2.js?v=11"></script><script src="hz-v3.js?v=6"></script>
 <script>
 /* ===== v15: phone back button = one step back inside the app (sections, kids/sports screens, popups, chat).
    Works alongside hz-core.js (hzDeeper) and sec-*.js: any pushState made by them is tracked too. ===== */
@@ -1462,7 +1471,7 @@ syncUI();
 if(window.__hzNav)return;window.__hzNav=1;
 const $=s=>document.querySelector(s);
 const nv=()=>{try{return window.hzNav?hzNav.get():{}}catch(_){return{}}};
-const snap=()=>{const ch=$('#chat');return{c:cat,t:typ==null?null:typ,n:nv(),m:[...document.querySelectorAll('.modal')].filter(m=>!m.hidden).map(m=>m.id),h:!!(ch&&!ch.hidden&&!ch.classList.contains('min'))}};
+const snap=()=>{const ch=$('#chat');return{c:cat,t:typ==null?null:typ,n:nv(),m:[...document.querySelectorAll('.modal')].filter(m=>!m.hidden).map(m=>m.id),v:(window.hzSv&&$('#setModal')&&!$('#setModal').hidden&&hzSv.get()!=='home')?hzSv.get():null,h:!!(ch&&!ch.hidden&&!ch.classList.contains('min'))}};
 const key=s=>JSON.stringify(s);
 let i=0,busy=false,tm=0;const stk=[];
 try{history.scrollRestoration='manual'}catch(_){}
@@ -1479,6 +1488,7 @@ const want=s.m||[];
 document.querySelectorAll('.modal').forEach(m=>{if(!m.hidden&&!want.includes(m.id))m.hidden=true});
 want.forEach(id=>{const m=document.getElementById(id);if(m&&m.hidden){m.hidden=false;try{hzBk(m)}catch(_){}}});
 try{MS.length=0;want.slice(0,-1).forEach(id=>MS.push('#'+id))}catch(_){}
+try{if(window.hzSv&&want.includes('setModal')){const v=s.v||'home';if(hzSv.get()!==v)hzSv.set(v)}}catch(_){}
 const ch=$('#chat');
 if(ch){if(s.h&&(ch.hidden||ch.classList.contains('min'))){ch.hidden=false;ch.classList.remove('min')}else if(!s.h&&!ch.hidden&&!ch.classList.contains('min'))ch.classList.add('min')}
 if(s.c!==cat||(s.t==null?null:s.t)!==(typ==null?null:typ)||key(s.n||{})!==key(nv())){
@@ -1498,7 +1508,7 @@ addEventListener('popstate',e=>{const st=e.state,h=st&&st.hzn;if(!h)return;
 if(window.hz3dOpen){i=h.i;return}
 busy=true;try{apply(h.s)}catch(_){}
 const dp=stk[h.i]&&stk[h.i].deep;i=h.i;stk.length=i;stk[i]={k:key(snap()),deep:dp};busy=false});
-const mo=new MutationObserver(queue);
+window.hzNavQ=queue;const mo=new MutationObserver(queue);
 const watch=()=>{document.querySelectorAll('.modal').forEach(m=>mo.observe(m,{attributes:true,attributeFilter:['hidden']}));const ch=$('#chat');if(ch)mo.observe(ch,{attributes:true,attributeFilter:['hidden','class']})};
 watch();
 new MutationObserver(ms=>{let add=false;ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1&&(n.classList.contains('modal')||(n.querySelector&&n.querySelector('.modal'))))add=true}));if(add){watch();queue()}}).observe(document.body,{childList:true});
@@ -1507,4 +1517,20 @@ const _r=render;render=function(){const r=_r.apply(this,arguments);queue();retur
 </script>
 <script src="marketplace.js?v=6"></script>
 <script src="horizon-section-photos.js?v=1"></script>
+<style>
+body.hzlock{position:fixed!important;left:0;right:0;width:100%;overflow:hidden!important}
+.sheet,#chat .cb,#cB{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.modal{overscroll-behavior:contain;touch-action:pan-y}
+</style>
+<script>
+/* قفل سكرول الصفحة اللي ورا أي نافذة/فورم/شات مفتوح (وبيرجّع مكانك بعد القفل) */
+(function(){if(window.__hzLock)return;window.__hzLock=1;let on=false,sy=0,raf=0;
+const open=()=>{if([...document.querySelectorAll('.modal')].some(m=>!m.hidden))return true;const c=document.getElementById('chat');if(c&&!c.hidden&&!c.classList.contains('min'))return true;const s=document.getElementById('sim');return !!(s&&!s.hidden)};
+function upd(){raf=0;const w=open(),b=document.body;
+if(w&&!on){on=true;sy=window.scrollY||document.documentElement.scrollTop||0;b.style.top=(-sy)+'px';b.classList.add('hzlock')}
+else if(!w&&on){on=false;b.classList.remove('hzlock');b.style.top='';window.scrollTo(0,sy)}}
+const q=()=>{if(!raf)raf=requestAnimationFrame(upd)};
+new MutationObserver(q).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','class']});
+document.addEventListener('visibilitychange',q);q()})();
+</script>
 </body></html>
