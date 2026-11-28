@@ -145,12 +145,11 @@ function ensure(){if($q('#ordModal'))return;
  document.body.insertAdjacentHTML('beforeend','<div class="modal" id="ordModal" hidden><div class="sheet st"><button type="button" class="x" data-close>×</button><div id="ordBody"></div></div></div>')}
 function draw(){const b=$q('#ordBody');if(!b)return;
  b.innerHTML=`<h3 class="od-h">📦 ${T('Orders','الطلبات')}</h3><p class="od-p">${T('Everything about your orders in one place.','كل حاجة تخص طلباتك في مكان واحد.')}</p>
+ <button type="button" class="od-r" data-od="mine"><i>🧾</i><span><b>${T('My requests','طلباتي')}</b><small>${T('Your requests, the offers you received and your deals','طلباتك والعروض اللي وصلتلك وصفقاتك وتقييم الموردين')}</small></span><em>${chev()}</em></button>
+ <button type="button" class="od-r" data-od="prov"><i>📥</i><span><b>${T('Customer requests','طلبات العملاء')}</b><small>${T('For suppliers: requests sent to you, send your offer','للموردين: الطلبات اللي جاية ليك وقدّم عرضك')}</small></span><em>${chev()}</em></button>
  <div class="od-sec">${T('Track my order','تتبع طلبي')}</div>
  <label class="od-q"><svg class="hzi" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="odQ" type="search" inputmode="search" autocomplete="off" placeholder="${T('Type your request number or name','اكتب رقم طلبك أو اسم الطلب')}"></label>
- <div id="odTrack"><p class="od-e">…</p></div>
- <div class="od-sec">${T('Manage','إدارة الطلبات')}</div>
- <button type="button" class="od-r" data-od="mine"><i>🧾</i><span><b>${T('My requests','طلباتي')}</b><small>${T('Your requests, the offers you received and your deals','طلباتك والعروض اللي وصلتلك وصفقاتك وتقييم الموردين')}</small></span><em>${chev()}</em></button>
- <button type="button" class="od-r" data-od="prov"><i>📥</i><span><b>${T('Customer requests','طلبات العملاء')}</b><small>${T('For suppliers: requests sent to you, send your offer','للموردين: الطلبات اللي جاية ليك وقدّم عرضك')}</small></span><em>${chev()}</em></button>`}
+ <div id="odTrack"><p class="od-e">…</p></div>`}
 let ORD=[],ORDX={deals:[],offs:[]};
 function ordCard(q){const dl=ORDX.deals.find(x=>x.request_id===q.id&&x.stage!=='cancelled'),no=ORDX.offs.filter(x=>x.request_id===q.id&&x.status==='sent').length;
  const i=dl?(DMAP[dl.stage]!=null?DMAP[dl.stage]:2):(q.status==='offered'||no>0?1:0);

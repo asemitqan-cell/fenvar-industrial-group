@@ -28,7 +28,7 @@ function css(){if(css0)return;css0=1;const s=document.createElement('style');s.t
 .hb-r span{flex:1;display:grid;gap:1px;min-width:0}.hb-r b{font-size:14.5px}.hb-r small{color:var(--mut);font-size:12px;line-height:1.5}
 .hb-r em{font-style:normal;color:var(--mut);font-size:22px;line-height:1}
 .hb-sep{grid-column:1/-1;margin:6px 2px 0;font-size:14px;font-weight:800}
-#hubModal .hp{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px;margin:8px 0}
+#hubModal .hp{position:static!important;left:auto!important;display:block;width:100%;cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:12px;margin:8px 0}
 #hubModal .hp b{font-size:15px}#hubModal .hp small{color:var(--mut)}#hubModal .tg{display:inline-block;background:color-mix(in srgb,var(--p) 14%,transparent);color:var(--p);border-radius:999px;padding:2px 9px;font-size:11.5px;margin:4px 4px 0 0}
 #hubModal .hs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px 0}#hubModal .hs button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}#hubModal .hs button.on{background:var(--p);color:#fff;border-color:var(--p)}
 #hubModal .hn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin:8px 0}#hubModal .hn div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px}#hubModal .hn b{display:block;font-size:18px}#hubModal .hn small{color:var(--mut);font-size:11.5px}
@@ -101,9 +101,9 @@ function drawProv(){const b=$q('#hubBody');if(!b||!H.sec)return;const s=secOf(H.
  <div class="hs"><button type="button" data-hubg="" class="${!H.grp?'on':''}">${T('All','الكل')}</button>${s.groups.map(g=>`<button type="button" data-hubg="${g.k}" class="${H.grp===g.k?'on':''}">${H.sec==='furniture'&&F[g.k]?F[g.k].n:g.ar}</button>`).join('')}</div>
  ${cities.length?`<div class="hs"><button type="button" data-hubc="" class="${!H.city?'on':''}">${T('All cities','كل المدن')}</button>${cities.map(c=>`<button type="button" data-hubc="${E(c)}" class="${H.city===c?'on':''}">${E(c)}</button>`).join('')}</div>`:''}
  ${H.err?`<p class="msg">${E(H.err)}</p>`:''}
- ${list.length?list.map(p=>{const st=H.stats[p.id];return `<div class="hp"><b>${E(p.name)}</b>${p.city?` <small>· ${E(p.city)}</small>`:''}${st&&+st.n?` <small>· ★ ${Number(st.avg).toFixed(1)} (${st.n})</small>`:''}<div>${[...p.groups].map(k=>`<span class="tg">${E(H.sec==='furniture'&&F[k]?F[k].n:gname(k))}</span>`).join('')}</div><small>${p.n} ${T('priced items','بند مسعّر')}</small></div>`}).join(''):(H.err?'':`<p class="empty">${T('No verified suppliers have added prices here yet.','لسه مفيش مورد موثّق ضاف أسعاره في القسم ده.')}</p>`)}
+ ${list.length?list.map(p=>{const st=H.stats[p.id];return `<div class="hp" data-hubprof="${E(p.id)}" role="button" tabindex="0"><b>${E(p.name)}</b>${p.city?` <small>· ${E(p.city)}</small>`:''}${st&&+st.n?` <small>· ★ ${Number(st.avg).toFixed(1)} (${st.n})</small>`:''}<div>${[...p.groups].map(k=>`<span class="tg">${E(H.sec==='furniture'&&F[k]?F[k].n:gname(k))}</span>`).join('')}</div><small>${p.n} ${T('priced items','بند مسعّر')}</small></div>`}).join(''):(H.err?'':`<p class="empty">${T('No verified suppliers have added prices here yet.','لسه مفيش مورد موثّق ضاف أسعاره في القسم ده.')}</p>`)}
  <button type="button" class="btn" data-hub="quote" style="margin-top:10px">🧾 ${T('Request a quote','اطلب عرض سعر')}</button>`}
-function openProv(id,grp){if(needIn())return;modal();H.sec=id;H.grp=grp||'';H.q='';H.city='';$q('#hubModal').hidden=false;loadProv(id)}
+function openProv(id,grp){modal();H.sec=id;H.grp=grp||'';H.q='';H.city='';$q('#hubModal').hidden=false;loadProv(id)}
 const closeM=()=>{const m=$q('#hubModal');if(m)m.hidden=true};
 
 /* ---- الأزرار ---- */
@@ -111,6 +111,7 @@ function needIn(){if(typeof user!=='undefined'&&user)return false;if(typeof toas
 document.addEventListener('click',async e=>{
  if(e.target.closest('[data-hubclose]')){closeM();return}
  const g=e.target.closest('[data-hubg]');if(g&&$q('#hubModal')&&$q('#hubModal').contains(g)){H.grp=g.dataset.hubg;drawProv();return}
+ const pf=e.target.closest('[data-hubprof]');if(pf&&$q('#hubModal')&&$q('#hubModal').contains(pf)){if(typeof openProfile==='function'){try{if(MS[MS.length-1]!=='#hubModal')MS.push('#hubModal')}catch(_){}$q('#hubModal').hidden=true;openProfile(pf.dataset.hubprof)}return}
  const c=e.target.closest('[data-hubc]');if(c&&$q('#hubModal')&&$q('#hubModal').contains(c)){H.city=c.dataset.hubc;drawProv();return}
  const a=e.target.closest('[data-hub]');if(!a)return;e.preventDefault();e.stopPropagation();
  const [k,...r]=a.dataset.hub.split(':'),v=r.join(':'),id=H.sec&&$q('#hubModal')&&!$q('#hubModal').hidden?H.sec:cat;
