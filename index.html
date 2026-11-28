@@ -581,7 +581,7 @@ b.innerHTML=h+`<button class="pill" data-ab>${L('← Back','← رجوع')}</but
 drawPh();$('#adFiles').onchange=async e=>{for(const f of e.target.files){if(ad.files.length>=4)break;try{if(f.type.startsWith('video/')){if(f.size>12e6||ad.files.some(x=>x.type.startsWith('video/'))){toast(L('One short video up to 12MB.','فيديو واحد قصير لحد 12 ميجا.'));continue}ad.files.push(f)}else if(f.type==='image/gif'&&f.size<3.5e6)ad.files.push(f);else ad.files.push(await shrink(f))}catch(_){}}e.target.value='';drawPh()};
 $('#adForm').onsubmit=submitAd}
 async function submitAd(e){e.preventDefault();if(window.HZ_AVAIL&&!HZ_AVAIL.canTrade(ad&&ad.cat)){HZ_AVAIL.say();return}const fm=new FormData(e.target),m=$('#adMsg'),go=$('#adGo'),qs=FORMS[ad.kind][ad.cat]||[];m.className='msg';m.textContent='';
-if(ad.kind==='product'&&!ad.files.length){const fr=window.hz3dFrames?hz3dFrames():[],md=window.hz3dMode?hz3dMode():'';if(md==='spin'&&fr.length>=12)ad.files.push(fr[0]);else if(md==='param'){}else{m.textContent=L('Add at least one photo.','ضيف صورة واحدة على الأقل (أو اعمل معاينة 360 / مجسم).');return}}
+if(ad.kind==='product'&&!ad.files.length){const fr=window.hz3dFrames?hz3dFrames():[],md=window.hz3dMode?hz3dMode():'';if((md==='spin'||md==='vid')&&fr.length>=12)ad.files.push(fr[0]);else if(md==='param'){}else{m.textContent=L('Add at least one photo.','ضيف صورة واحدة على الأقل (أو اعمل معاينة 360 / مجسم).');return}}
 go.disabled=true;go.textContent='…';
 try{const attrs={},sm=[];qs.forEach(q=>{const v=String(fm.get('a_'+q[0])||'').trim();if(!v)return;attrs[q[0]]=v;const o=(q[4]||[]).find(x=>x[0]===v);sm.push(q[2]+': '+(o?o[1]:v))});
 const urls=[];for(let i=0;i<ad.files.length;i++){const bl=ad.files[i],ex=bl.type==='image/gif'?'gif':bl.type==='video/mp4'?'mp4':bl.type==='video/webm'?'webm':bl.type==='video/quicktime'?'mov':'jpg',p=`${user.id}/${Date.now()}_${i}.${ex}`,u=await sb.storage.from('listings').upload(p,bl,{contentType:bl.type||'image/jpeg'});if(u.error)throw u.error;urls.push(sb.storage.from('listings').getPublicUrl(p).data.publicUrl)}
@@ -1464,7 +1464,7 @@ syncUI();
 </script>
 <script src="hz-avail.js?v=2"></script>
 <script src="prices.js?v=8"></script>
-<script src="sec-quotes.js?v=4"></script><script src="quote.js?v=23"></script><script src="taxonomy.js?v=19"></script><script src="hz-core.js?v=9"></script><script src="hz-focus.js?v=2"></script><script src="hz-share.js?v=3"></script><script src="sec-designer.js?v=2"></script><script src="sec-designer2.js?v=1"></script><script src="sec-hub.js?v=10"></script><script src="hz-home.js?v=11"></script><script src="hz-v2.js?v=11"></script><script src="hz-v3.js?v=7"></script>
+<script src="sec-quotes.js?v=4"></script><script src="quote.js?v=23"></script><script src="taxonomy.js?v=19"></script><script src="hz-core.js?v=9"></script><script src="hz-focus.js?v=2"></script><script src="hz-share.js?v=3"></script><script src="sec-designer.js?v=3"></script><script src="sec-designer2.js?v=2"></script><script src="sec-hub.js?v=10"></script><script src="hz-home.js?v=11"></script><script src="hz-v2.js?v=11"></script><script src="hz-v3.js?v=7"></script>
 <script>
 /* ===== v15: phone back button = one step back inside the app (sections, kids/sports screens, popups, chat).
    Works alongside hz-core.js (hzDeeper) and sec-*.js: any pushState made by them is tracked too. ===== */

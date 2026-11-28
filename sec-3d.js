@@ -2,7 +2,7 @@
    وضع "3D" خلفية بيضاء، وضع "تجربة" خلفية مكان حقيقي. بيتحمّل لما تضغط معاينة فقط. */
 (function(){'use strict';
 const $=s=>document.querySelector(s);
-let T,R,sc,cam,root,acts=[],cvs,ov,raf=0,kind='phone',mode='try',tgt,pushed=0,skip=0,P={},spinOn=0,ticks=[];
+let EMBED=null,T,R,sc,cam,root,acts=[],cvs,ov,raf=0,kind='phone',mode='try',tgt,pushed=0,skip=0,P={},spinOn=0,ticks=[];
 const view={y:.5,p:.15,d:5,fit:5,vy:0};let drag=0,lastT=0,VT=null,KL=null;const UP=['window','door','shutter','profile'],FU=['wardrobe','bed','kitchen','sofa','table'],PRO=UP.concat(FU);
 function goV(y,p,d){const k=Math.PI*2;VT={y:y+k*Math.round((view.y-y)/k),p:p,d:d};view.vy=0}
 const NAMES={phone:'موبايل',laptop:'لابتوب',pc:'كمبيوتر',fridge:'ثلاجة',washer:'غسالة',pot:'حلة',plates:'أطباق وصيني',pharmacy:'علبة وشريط وزجاجة دواء',perfume:'عطر',tv:'شاشة تلفزيون',microwave:'ميكروويف',earbuds:'سماعات أذن (علبة وسماعتين)'};
@@ -133,19 +133,20 @@ function css3(){if($('#h3css3'))return;const s=document.createElement('style');s
 function build(){if(root)sc.remove(root);acts=[];ticks=[];root=new T.Group();sc.add(root);M[kind]();const b=new T.Box3().setFromObject(root),s=b.getSize(new T.Vector3());tgt=b.getCenter(new T.Vector3());view.fit=view.d=Math.max(s.x,s.y,s.z)*1.9+.4;shadow(b,s);studio(b,s)}
 function shadow(b,s){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,4,64,64,62);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,128,128);
  const z=Math.max(s.x,s.z)*1.6+.3,p=new T.Mesh(new T.PlaneGeometry(z,z),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true,depthWrite:false}));p.rotation.x=-Math.PI/2;p.position.set((b.min.x+b.max.x)/2,b.min.y+.002,(b.min.z+b.max.z)/2);root.add(p)}
-function fit(){const v=$('#h3v');if(!v||!R)return;R.setSize(v.clientWidth,v.clientHeight);cam.aspect=v.clientWidth/Math.max(1,v.clientHeight);cam.updateProjectionMatrix()}
-function loop(){raf=requestAnimationFrame(loop);if(!ov||ov.hidden||spinOn||!root||!tgt)return;acts.forEach(a=>{a.t+=(a.g-a.t)*a.sp;if(Math.abs(a.g-a.t)<.002)a.t=a.g;a.fn(a.t)});ticks.forEach(f=>f(.016));
+function fit(){const v=(cvs&&cvs.parentElement)||$('#h3v');if(!v||!R)return;R.setSize(v.clientWidth,v.clientHeight);cam.aspect=v.clientWidth/Math.max(1,v.clientHeight);cam.updateProjectionMatrix()}
+const live=()=>(EMBED&&EMBED.isConnected&&!EMBED.closest('[hidden]'))||(ov&&!ov.hidden);
+function loop(){raf=requestAnimationFrame(loop);if(!live()||spinOn||!root||!tgt)return;acts.forEach(a=>{a.t+=(a.g-a.t)*a.sp;if(Math.abs(a.g-a.t)<.002)a.t=a.g;a.fn(a.t)});ticks.forEach(f=>f(.016));
  if(VT){view.y+=(VT.y-view.y)*.16;view.p+=(VT.p-view.p)*.16;if(VT.d)view.d+=(VT.d-view.d)*.16;if(Math.abs(VT.y-view.y)+Math.abs(VT.p-view.p)<.004){view.y=VT.y;view.p=VT.p;if(VT.d)view.d=VT.d;VT=null}}else if(!drag){if(Math.abs(view.vy)>.0004){view.y+=view.vy;view.vy*=.93}else if(mode==='360'&&performance.now()-lastT>2200)view.y+=.0035}
 const c=Math.cos(view.p);cam.position.set(tgt.x+view.d*c*Math.sin(view.y),tgt.y+view.d*Math.sin(view.p),tgt.z+view.d*c*Math.cos(view.y));cam.lookAt(tgt);R.render(sc,cam)}
 function pick(e){if(spinOn||!root||!cvs)return;const r=cvs.getBoundingClientRect(),m=new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),rc=new T.Raycaster();rc.setFromCamera(m,cam);for(const x of rc.intersectObjects(root.children,true)){const a=x.object.userData.act;if(a){if(a.tap)a.tap(a);else a.g=a.g?0:1;return}}}
-function wire(){const v=$('#h3v');let pts={},moved=0,pd=0;
+function wire(v0){const v=v0||$('#h3v');let pts={},moved=0,pd=0;
  v.addEventListener('pointerdown',e=>{v.setPointerCapture&&v.setPointerCapture(e.pointerId);pts[e.pointerId]=[e.clientX,e.clientY];moved=0;drag=1;VT=null;view.vy=0;lastT=performance.now();const hh=$('#h3hint');if(hh)hh.remove();const k=Object.values(pts);pd=k.length==2?Math.hypot(k[0][0]-k[1][0],k[0][1]-k[1][1]):0});
  v.addEventListener('pointermove',e=>{const p=pts[e.pointerId];if(!p)return;const dx=e.clientX-p[0],dy=e.clientY-p[1];pts[e.pointerId]=[e.clientX,e.clientY];const k=Object.values(pts);
   if(k.length==2){const d=Math.hypot(k[0][0]-k[1][0],k[0][1]-k[1][1]);if(pd)view.d=Math.max(view.fit*.35,Math.min(view.fit*2.6,view.d*pd/d));pd=d;moved=9;return}
   moved+=Math.abs(dx)+Math.abs(dy);view.y-=dx*.008;view.vy=-dx*.008;view.p=Math.max(-1.45,Math.min(1.45,view.p+dy*.006))});
  const up=e=>{const was=pts[e.pointerId];delete pts[e.pointerId];drag=Object.keys(pts).length?1:0;lastT=performance.now();if(was&&moved<8&&mode==='try'&&e.type==='pointerup')pick(e)};v.addEventListener('pointerup',up);v.addEventListener('pointercancel',up);
  v.addEventListener('wheel',e=>{e.preventDefault();view.d=Math.max(view.fit*.35,Math.min(view.fit*2.6,view.d*(1+e.deltaY*.001)))},{passive:false});
- ov.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(!v0)ov.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
   if(t.id==='h3x'){closeOv();return}
   if(t.id==='h3r'){goV(.5,.15,view.fit);return}
   if(t.id==='h3f'){ov.classList.toggle('fs');setTimeout(fit,60);return}
@@ -165,6 +166,26 @@ async function open(k,p){P=p||{};spinOn=0;kind=M[k]?k:'phone';mode=PRO.includes(
  if(!R){v.innerHTML='';R=new T.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));v.appendChild(R.domElement);cvs=R.domElement;sc=new T.Scene();cam=new T.PerspectiveCamera(40,1,.05,100);sc.add(new T.HemisphereLight(0xffffff,0x667788,.8));R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;KL=new T.DirectionalLight(0xffffff,.85);KL.castShadow=true;KL.shadow.mapSize.set(1024,1024);KL.shadow.bias=-.0004;KL.position.set(2,4,3);sc.add(KL);sc.add(KL.target);const fl=new T.DirectionalLight(0xdbeafe,.28);fl.position.set(-3,2,-2);sc.add(fl);const rm=new T.DirectionalLight(0xffffff,.22);rm.position.set(-1,3,-4);sc.add(rm);addEventListener('resize',fit);loop()}
  else if(!v.contains(cvs)){v.innerHTML='';v.appendChild(cvs)}
  view.y=.5;view.p=.15;view.vy=0;VT=null;lastT=performance.now();build();panel();fit();setTimeout(fit,60);addHint()}
+
+/* ===== وضع العرض المضمّن (جوه صفحة التصميم): hz3d.mount(el,kind,params) / unmount() ===== */
+function ensureR(){if(!R){R=new T.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));cvs=R.domElement;sc=new T.Scene();cam=new T.PerspectiveCamera(40,1,.05,100);sc.add(new T.HemisphereLight(0xffffff,0x667788,.8));R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;KL=new T.DirectionalLight(0xffffff,.85);KL.castShadow=true;KL.shadow.mapSize.set(1024,1024);KL.shadow.bias=-.0004;KL.position.set(2,4,3);sc.add(KL);sc.add(KL.target);const fl=new T.DirectionalLight(0xdbeafe,.28);fl.position.set(-3,2,-2);sc.add(fl);const rm=new T.DirectionalLight(0xffffff,.22);rm.position.set(-1,3,-4);sc.add(rm);addEventListener('resize',fit);loop()}}
+async function mount(el,k,p){
+ css();css2();css3();
+ if(!document.getElementById('h3eCss')){const st=document.createElement('style');st.id='h3eCss';st.textContent='.h3ev{height:300px;position:relative;touch-action:none;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#fff 0,#eef3f1 58%,#dce6e3 100%)}[data-theme=dark] .h3ev{background:radial-gradient(ellipse at 50% 38%,#223a3f 0,#122428 60%,#0b1416 100%)}.h3ev canvas{display:block;width:100%;height:100%}.h3eh{margin:6px 0 0;text-align:center;font-size:12px;color:var(--mut)}.h3ev .h3em{padding:30px 14px;text-align:center;color:#475569;font-size:13.5px;line-height:1.7}';document.head.appendChild(st)}
+ if(!M[k]){EMBED=null;el.innerHTML='<div class="h3ev"><p class="h3em">المعاينة 3D مش متاحة للقطعة دي لسه. استخدم 2D.</p></div>';return}
+ let host=el.querySelector('.h3ev');
+ if(!host||host.__bad){el.innerHTML='<div class="h3ev"><p class="h3em">جاري تحميل المعاينة…</p></div><p class="h3eh">↔ اسحب للف · اضغط على الضلفة أو الدرج عشان يتحرك</p>';host=el.querySelector('.h3ev')}
+ EMBED=el;P=p||{};spinOn=0;const first=kind!==k||!host.__w;kind=k;mode='try';
+ try{await loadT()}catch(_){host.__bad=1;host.innerHTML='<p class="h3em">محتاج إنترنت عشان تتحمّل المعاينة.</p>';return}
+ if(!el.isConnected||EMBED!==el)return;
+ T=window.THREE;ensureR();
+ if(cvs.parentElement!==host){host.innerHTML='';host.appendChild(cvs)}
+ if(!host.__w){host.__w=1;wire(host)}if(!window.__h3ei||window.__h3ek!==k){view.y=.5;view.p=.15;view.vy=0;VT=null}window.__h3ei=1;window.__h3ek=k;
+ lastT=performance.now();const y0=view.y,p0=view.p;
+ if(first)acts.forEach(a=>a.g=0);
+ build();if(!first){view.y=y0;view.p=p0}
+ fit();setTimeout(fit,60)}
+function unmount(){EMBED=null}
 /* ===== v16: new 3D kinds (parametric: they read P = supplier/product params) + 360 photo viewer ===== */
 Object.assign(NAMES,{wardrobe:'دولاب',bed:'سرير',door:'باب',window:'شباك UPVC',kitchen:'مطبخ',sofa:'ركنة / كنب',table:'سفرة',car:'سيارة',shutter:'شتر',profile:'قطاع UPVC',planks:'خشب',glass:'زجاج',house:'عقار (نموذج مبسّط)'});
 Object.assign(BG,{wardrobe:'room',bed:'room',door:'wall',window:'wall',kitchen:'kitchen',sofa:'living',table:'living',car:'garage',shutter:'wall',profile:'white',planks:'shop',glass:'shop',house:'living'});
@@ -387,5 +408,5 @@ M.hen=function(){
 
 const ANIMALS=['cow','sheep','goat','camel','horse','hen'];
 
-window.hz3d={open,openSpin,specsOf:(k,p)=>{const k0=kind,p0=P;kind=k;P=p||{};try{return specs()}finally{kind=k0;P=p0}},kinds:Object.keys(M),names:NAMES,_t:M,_dbg:()=>({acts,ticks})};
+window.hz3d={open,openSpin,mount,unmount,specsOf:(k,p)=>{const k0=kind,p0=P;kind=k;P=p||{};try{return specs()}finally{kind=k0;P=p0}},kinds:Object.keys(M),names:NAMES,_t:M,_dbg:()=>({acts,ticks})};
 })();

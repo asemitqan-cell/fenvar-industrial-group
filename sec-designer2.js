@@ -117,9 +117,10 @@ const st0=document.createElement('style');st0.textContent=`
 .dg2-sw{display:flex;gap:8px;flex-wrap:wrap}.dg2-sw button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
 .dg2-sw button.on{border-color:var(--p);box-shadow:0 0 0 2px color-mix(in srgb,var(--p) 25%,transparent)}
 .dg2-sm{margin:12px 0;padding:11px 12px;border-radius:14px;background:color-mix(in srgb,var(--p) 8%,var(--card));font-size:13.5px;line-height:1.7}
+.dg2-vt{display:flex;gap:8px;margin:-4px 0 12px}.dg2-vt button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}.dg2-vt button.on{background:var(--p);border-color:var(--p);color:#fff}
 .dg2-a{display:flex;gap:8px}.dg2-a .btn{flex:1}`;document.head.appendChild(st0);
 
-let K0=null,P=null,OPT={};
+let K0=null,P=null,OPT={},VW='2d';
 function ensure(){if($q('#dg2Modal'))return;document.body.insertAdjacentHTML('beforeend','<div class="modal" id="dg2Modal" hidden><div class="sheet st"><button type="button" class="x" data-close>×</button><div id="dg2Body"></div></div></div>')}
 function ctl(f){const v=P[f.k];
  if(f.t==='num')return `<label><span>${f.l}</span><input type="number" inputmode="numeric" data-dg2f="${f.k}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v}"></label>`;
@@ -127,8 +128,23 @@ function ctl(f){const v=P[f.k];
  if(f.t==='col')return `<label class="w"><span>${f.l}</span><div class="dg2-sw">${COLO.map(c=>`<button type="button" data-dg2c="${f.k}:${c[0]}" class="${v===c[0]?'on':''}" style="background:${COL[c[0]][1]}" aria-label="${c[1]}" title="${c[1]}"></button>`).join('')}</div></label>`;
  return `<label class="k"><input type="checkbox" data-dg2f="${f.k}"${v?' checked':''}> ${f.l}</label>`}
 function norm(){const d=KINDS[K0];d.f.forEach(f=>{if(f.t==='num'){let n=+P[f.k];if(!isFinite(n))n=f.def;P[f.k]=Math.min(f.max,Math.max(f.min,Math.round(n)))}});if(d.pre)d.pre(P)}
-function preview(){const d=KINDS[K0];norm();const pv=$q('#dg2Pv');if(pv)pv.innerHTML=d.draw(P);const sm=$q('#dg2Sm');if(sm)sm.innerHTML=d.lines(P).map(l=>E(l.note)).join('<br>')}
-function draw(){const d=KINDS[K0];$q('#dg2Body').innerHTML=`<div class="dg2-h">${icon(d.ico)}<h3>${d.ar}</h3></div><div class="dg2-pv" id="dg2Pv"></div><div class="dg2-f">${d.f.map(ctl).join('')}</div><div class="dg2-sm" id="dg2Sm"></div><div class="dg2-a"><button type="button" class="btn" data-dg2="add">${T('Add to my request','أضف للطلب')}</button></div>`;preview()}
+function p3d(){const c=lc(P.col),n=(v,a,b,df)=>Math.max(a,Math.min(b,Math.round(+v)||df));
+ if(K0==='door')return ['door',{w:P.w,h:P.h,glass:P.panel==='solid'?'0':'1',color:c}];
+ if(K0==='shutter')return ['shutter',{w:P.w,h:P.h,color:c}];
+ if(K0==='wardrobe')return ['wardrobe',{w:P.w,h:P.h,d:P.d,doors:P.doors,drawers:P.drawers,color:c}];
+ if(K0==='bedroom')return ['bed',{w:P.bed,l:200,hb:P.hb||115,storage:'1',color:c}];
+ if(K0==='piece'){const w=+P.w||180;
+  if(P.piece==='dining')return ['table',{seats:n(Math.round(w/35/2)*2,4,10,6),shape:'rect',color:c}];
+  if(P.piece==='table')return ['table',{seats:4,shape:'rect',color:c}];
+  if(P.piece==='corner')return ['sofa',{seats:n(w/72,2,5,3),corner:'1',color:c}];
+  if(P.piece==='living')return ['sofa',{seats:n(w/72,2,5,3),corner:'0',color:c}]}
+ return [null,{}]}
+function load3d(){return (typeof hzLoad==='function'?hzLoad('sec-3d'):Promise.resolve()).then(()=>window.hz3d)}
+function mount3d(){const pv=$q('#dg2Pv');if(!pv)return;const a=p3d();
+ if(!a[0]){if(window.hz3d&&hz3d.unmount)hz3d.unmount();pv.innerHTML='<p style="padding:34px 14px;text-align:center;color:var(--mut);line-height:1.8">'+T('3D preview is not available for this piece yet. Use 2D.','المعاينة 3D مش متاحة للقطعة دي لسه (المكتب والتسريحة). استخدم 2D.')+'</p>';return}
+ load3d().then(h=>{if(h&&h.mount&&VW==='3d'&&$q('#dg2Pv')===pv)h.mount(pv,a[0],a[1])}).catch(()=>{pv.innerHTML='<p style="padding:34px;text-align:center">'+T('3D preview not loaded.','المعاينة 3D لسه ما اتحمّلتش.')+'</p>'})}
+function preview(){const d=KINDS[K0];norm();const pv=$q('#dg2Pv');if(pv){if(VW==='3d')mount3d();else{if(window.hz3d&&hz3d.unmount)hz3d.unmount();pv.innerHTML=d.draw(P)}}const sm=$q('#dg2Sm');if(sm)sm.innerHTML=d.lines(P).map(l=>E(l.note)).join('<br>')}
+function draw(){const d=KINDS[K0];$q('#dg2Body').innerHTML=`<div class="dg2-h">${icon(d.ico)}<h3>${d.ar}</h3></div><div class="dg2-pv" id="dg2Pv"></div><div class="dg2-vt"><button type="button" data-dg2v="2d" class="${VW==='2d'?'on':''}">2D</button><button type="button" data-dg2v="3d" class="${VW==='3d'?'on':''}">3D</button></div><div class="dg2-f">${d.f.map(ctl).join('')}</div><div class="dg2-sm" id="dg2Sm"></div><div class="dg2-a"><button type="button" class="btn" data-dg2="add">${T('Add to my request','أضف للطلب')}</button></div>`;preview()}
 function show(){ensure();const el=$q('#dg2Modal'),cur=[...document.querySelectorAll('.modal')].filter(m=>!m.hidden&&m!==el).pop();
  try{if(cur&&MS[MS.length-1]!=='#'+cur.id)MS.push('#'+cur.id)}catch(_){}
  el.hidden=false;try{hzBk(el)}catch(_){}}
@@ -139,13 +155,14 @@ function done(lines){const d=KINDS[K0];const el=$q('#dg2Modal');
  if(typeof window.hzQuoteAdd==='function'){pop();window.hzQuoteAdd(lines,'',d.sec,lines[0]&&lines[0].g)}
  else if(typeof window.hzQuote==='function'){pop();window.hzQuote(d.sec,'',{lines})}}
 window.hzDesign2={kinds:Object.keys(KINDS),label:k=>KINDS[k]&&KINDS[k].ar,sec:k=>KINDS[k]&&KINDS[k].sec,
- open(k,opt){if(!KINDS[k])return;K0=k;OPT=opt||{};P=def(k);show();draw()}};
+ open(k,opt){if(!KINDS[k])return;K0=k;OPT=opt||{};P=def(k);VW='2d';show();draw()}};
 document.addEventListener('input',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.dg2f||!P)return;P[t.dataset.dg2f]=t.type==='checkbox'?t.checked:t.type==='number'?t.value:t.value;
  if(t.tagName==='SELECT'&&/^\d+$/.test(t.value))P[t.dataset.dg2f]=+t.value;
  if(t.type==='number'&&t.value==='')return;
  preview();if(t.type==='checkbox')draw()});
 document.addEventListener('change',e=>{const t=e.target;if(!t||!t.dataset||!t.dataset.dg2f||!P)return;if(t.type==='number'){norm();t.value=P[t.dataset.dg2f]}preview()});
-document.addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('[data-dg2c]');
+document.addEventListener('click',e=>{const vt=e.target.closest&&e.target.closest('[data-dg2v]');if(vt&&P){VW=vt.dataset.dg2v;draw();return}
+ const c=e.target.closest&&e.target.closest('[data-dg2c]');
  if(c&&P){const [k,v]=c.dataset.dg2c.split(':');P[k]=v;draw();return}
  const a=e.target.closest&&e.target.closest('[data-dg2="add"]');if(a&&P){norm();done(KINDS[K0].lines(P))}});
 })();

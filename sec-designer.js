@@ -9,7 +9,7 @@ const OPEN={fix:['ثابت','▫'],hl:['مفصلي شمال','◁'],hr:['مفص�
 const COLORS={white:['أبيض','#F4F4F2'],anth:['أنثراسيت','#3B4048'],oak:['بلوط ذهبي','#B07A3C'],gray:['رمادي','#8D9196'],black:['أسود','#1F2124']};
 const COLW={white:'أبيض',anth:'أنثراسيت',oak:'بلوط ذهبي',gray:'رمادي',black:'أسود'};
 const GLASS={'زجاج مفرد':'#CFE8F3','دبل جلاس':'#BFE0F0','سيكوريت':'#C6E6EE','عاكس':'#8FA6B3','ملون':'#C9B48A'};
-const D={w:150,h:120,cols:2,cw:[75,75],tr:0,cells:{},sel:'0-0',sys:'',color:'white',glass:'دبل جلاس',msg:''};
+const D={view:'2d',w:150,h:120,cols:2,cw:[75,75],tr:0,cells:{},sel:'0-0',sys:'',color:'white',glass:'دبل جلاس',msg:''};
 let built=0;
 
 const rows=()=>D.tr>0?2:1;
@@ -51,7 +51,9 @@ function svg(){clampAll();const W=D.w,H=D.h,maxW=250,maxH=290,s=Math.min(maxW/W,
 function names(){const hz=window.hzSys;return hz?hz.get().map(x=>x.n):[]}
 function panel(){const r=+D.sel.split('-')[0],c=+D.sel.split('-')[1],o=getOpen(r,c),R=rows(),area=(D.w*D.h/10000).toFixed(2);
  const sysOpts=['<option value="">أي نظام</option>'].concat(names().map(n=>`<option${D.sys===n?' selected':''}>${E(n)}</option>`)).join('');
- return `<div class="wd-svg">${svg()}</div>
+ return `<div class="wd-svg">${D.view==='3d'?'<div id="wd3d"></div>':svg()}</div>
+ <div class="wd-vt"><button type="button" data-wdb="v2d" class="${D.view==='3d'?'':'on'}">2D</button><button type="button" data-wdb="v3d" class="${D.view==='3d'?'on':''}">3D</button></div>
+ ${D.view==='3d'&&D.cols*R>1?`<div class="wd-ch">${Array.from({length:R*D.cols},(_,n)=>{const rr=Math.floor(n/D.cols),cc=n%D.cols,k=rr+'-'+cc;return `<button type="button" data-wcell="${k}" class="${D.sel===k?'on':''}">${R>1?(rr===0?'علوية ':'سفلية '):''}خانة ${cc+1}</button>`}).join('')}</div>`:''}
  <div class="wd-row"><label>العرض (سم)<input type="number" inputmode="numeric" data-wd="w" value="${D.w}"></label><label>الارتفاع (سم)<input type="number" inputmode="numeric" data-wd="h" value="${D.h}"></label></div>
  <div class="wd-row"><div class="wd-st"><span>الأعمدة</span><button type="button" data-wdb="cols-">−</button><b>${D.cols}</b><button type="button" data-wdb="cols+">＋</button></div>
   <div class="wd-st"><span>سوفاليس علوي</span><button type="button" data-wdb="tr0" class="${D.tr?'':'on'}">لا</button><button type="button" data-wdb="tr1" class="${D.tr?'on':''}">أيوه</button></div></div>
@@ -64,8 +66,14 @@ function panel(){const r=+D.sel.split('-')[0],c=+D.sel.split('-')[1],o=getOpen(r
  <div class="wd-ch">${Object.keys(COLORS).map(k=>`<button type="button" data-wdcol="${k}" class="${D.color===k?'on':''}"><i style="background:${COLORS[k][1]}"></i>${COLORS[k][0]}</button>`).join('')}</div>
  <div class="wd-ch">${Object.keys(GLASS).map(k=>`<button type="button" data-wdg="${k}" class="${D.glass===k?'on':''}"><i style="background:${GLASS[k]}"></i>${k}</button>`).join('')}</div>
  <p class="wd-sum">${D.w}×${D.h} سم · ${area} م² · ${D.cols*R} ${D.cols*R>1?'خانات':'خانة'}</p><p class="msg">${E(D.msg)}</p>
- <div class="wd-act"><button type="button" class="pill" data-wdb="sim">🧊 معاينة 3D</button><button type="button" class="btn" data-wdb="add">إضافة للمقايسة</button></div>`}
-function draw(){const b=$q('#wdBody');if(b)b.innerHTML=panel()}
+ <div class="wd-act"><button type="button" class="btn" data-wdb="add">إضافة للمقايسة</button></div>`}
+function p3d(){const k=kinds(),dr=k.some(x=>x==='dl'||x==='dr'),col=COLORS[D.color][1];
+ if(dr)return ['door',{w:D.w,h:D.h,glass:'1',color:col}];
+ return ['window',{w:D.w,h:D.h,sashes:Math.min(3,D.cols),open:k.includes('slide')?'slide':'hinge',color:col}]}
+function load3d(){return (typeof hzLoad==='function'?hzLoad('sec-3d'):Promise.resolve()).then(()=>window.hz3d)}
+function draw(){const b=$q('#wdBody');if(!b)return;b.innerHTML=panel();
+ if(D.view==='3d'){const el=$q('#wd3d');if(el){const a=p3d();load3d().then(h=>{if(h&&h.mount&&D.view==='3d'&&$q('#wd3d')===el)h.mount(el,a[0],a[1])}).catch(()=>{el.innerHTML='<p class="msg" style="padding:30px;text-align:center">المعاينة 3D لسه ما اتحمّلتش.</p>'})}}
+ else if(window.hz3d&&hz3d.unmount)hz3d.unmount()}
 
 function css(){if($q('#wdCss'))return;const s=document.createElement('style');s.id='wdCss';s.textContent=`
 #wdModal{position:fixed;inset:0;z-index:70;background:var(--bg);overflow:auto;padding:0 0 30px}
@@ -81,13 +89,14 @@ function css(){if($q('#wdCss'))return;const s=document.createElement('style');s.
 #wdModal .wd-h{font-weight:800;font-size:14px;margin-top:4px}
 #wdModal .wd-op{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}#wdModal .wd-op button{display:grid;gap:2px;place-items:center;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 2px;font:inherit;font-size:11px;font-weight:600;cursor:pointer}#wdModal .wd-op button i{font-style:normal;font-size:16px}#wdModal .wd-op button.on{border:2px solid var(--p);color:var(--p)}
 #wdModal .wd-ch{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}#wdModal .wd-ch button{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}#wdModal .wd-ch button.on{border:2px solid var(--p);color:var(--p)}#wdModal .wd-ch i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+#wdModal .wd-vt{display:flex;gap:8px;margin:-2px 0 2px}#wdModal .wd-vt button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:10px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}#wdModal .wd-vt button.on{background:var(--p);border-color:var(--p);color:#fff}#wdModal .wd-svg #wd3d{width:100%}
 #wdModal .wd-sum{margin:2px 0;font-weight:800}#wdModal .wd-act{display:flex;gap:8px}#wdModal .wd-act .btn{flex:1}`;document.head.appendChild(s)}
 
 function open(pre){css();if(!built){built=1;document.body.insertAdjacentHTML('beforeend','<div id="wdModal" hidden><div class="wd-top"><div><b>🪟 مصمم الشبابيك</b><small>اضغط على أي خانة وغيّر نوع الفتح</small></div><button type="button" class="pill" data-wdb="close">✕ إغلاق</button></div><div id="wdBody"></div></div>')}
- if(pre&&pre.w){D.w=pre.w;D.h=pre.h}if(pre&&pre.sys!=null)D.sys=pre.sys;clampAll();even();D.cells={};D.sel='0-0';D.msg='';
+ if(pre&&pre.w){D.w=pre.w;D.h=pre.h}if(pre&&pre.sys!=null)D.sys=pre.sys;clampAll();even();D.cells={};D.sel='0-0';D.msg='';D.view='2d';
  $q('#wdModal').hidden=false;document.body.style.overflow='hidden';draw();
  if(window.hzSys&&!window.hzSys._d){window.hzSys._d=1;hzSys.load().then(draw)}}
-function close(){const m=$q('#wdModal');if(m)m.hidden=true;document.body.style.overflow=''}
+function close(){const m=$q('#wdModal');if(m)m.hidden=true;document.body.style.overflow='';try{window.hz3d&&hz3d.unmount()}catch(_){}}
 
 /* ---------- تحويل التصميم لبنود عرض سعر ---------- */
 function kinds(){const a=[];for(let r=0;r<rows();r++)for(let c=0;c<D.cols;c++)a.push(getOpen(r,c));return a}
@@ -111,7 +120,8 @@ document.addEventListener('click',e=>{const m=$q('#wdModal');if(!m||m.hidden||!m
  else if(k==='cols-'){if(D.cols>1){D.cols--;even();D.cells={};D.sel='0-0';draw()}}
  else if(k==='tr0'){D.tr=0;D.cells={};D.sel='0-0';draw()}
  else if(k==='tr1'){D.tr=D.tr||Math.round(D.h*.25);D.cells={};D.sel='1-0';draw()}
- else if(k==='sim'){if(window.hzSim)hzSim.open(simSpec());else D.msg='المعاينة 3D لسه ما اتحمّلتش.';draw()}
+ else if(k==='v2d'){D.view='2d';draw()}
+ else if(k==='v3d'){D.view='3d';draw()}
  else if(k==='add'){if(typeof user==='undefined'||!user){D.msg='سجّل دخول الأول عشان تضيف للمقايسة.';draw();if(typeof needLogin==='function')needLogin();return}
   if(!window.hzQuoteAdd){D.msg='نموذج عرض السعر لسه ما اتحمّلش.';draw();return}
   const l=lines(),sys=D.sys;close();window.hzQuoteAdd(l,sys)}});
